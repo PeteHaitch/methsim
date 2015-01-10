@@ -1,0 +1,51 @@
+---
+title: "TODOs"
+author: "Peter Hickey"
+date: "19 November 2014"
+output: html_document
+---
+
+# Partioning a methylome
+
+The steps to partitioning a single methylome are:
+
+1. Read in the CpG 1-tuples data and create a `GenomicRanges::GRanges` object with `mcols` named `T` and `M` storing the total number of reads and number of methylated reads, respectively. This object must also contain the `seqlengths`, which are most easily stored as a complete `Seqinfo` object in the `seqinfo` slot.
+2. Remove CpGs overlapping known SNPs.
+3. Identify PMRs
+    - Compute the $\alpha$ distribution for a single chromosome. If the $\alpha$ distribution is "bimodal or long-tailed with a significant fraction of $\alpha$ values larger or equal to 1", the `MethylSeekR` authors take this as evidence of PMRs and recommend that these by masked.
+    - If required, mask the PMRs.
+4. Identify UMRs and LMRs
+    - Selection of parameters to control FDR. Requires CGIs.
+    - Identification of UMRs and LMRs
+5. Post-processing
+    - Identify MMRs, really the 'rest of the methylome'.
+    - Ensure this is a true partition, i.e., no overlapping regions.
+    
+Steps 1-4 are basically the job of `MethylSeekR`. Step 5, however, is specific to `methsim`.
+    
+# Implementation
+
+## Option 1: The `MethlySeekR` way
+
+Just follow the `MethylSeekR` vignette to achieve Steps 1-4. Step 5 is specific to `methsim`.
+
+## Option 2: The `MethylationTuples` way
+
+Use the convenience functions provided by `methsim` to work with existing `MethylationTuples::MethtPat` objects to achieve Steps 1-4. Step 5 is specific to `methsim`.
+
+1. Steps 1-4 
+    - Option A: Just use `MethylSeekR` from 1-4.
+    - Option B: Provide some convenience functions to work with `MethPat` objects.
+2. Step 5
+    - General post-processing functions
+
+# Key functions and classes
+
+- [x] `MethylSeekRGR
+  - A S4 class to formalise the informal `GRanges`-based object used as input by `MethylSeekR`.
+- [x] `as(MethPat, "MethylSeekRGR")`
+- [ ] `findPMDs`
+  - A wrapper(s) around `MethylSeekR::plotAlphaDistributionOneChr` and `MethylSeekR::segmentPMDs`.
+  - Or just use these directly? (Will need to move `MethylSeekR` to `DEPENDS` rather than `IMPORTS`.)
+- [ ] `partitionMethylome`
+__UP TO HERE__
