@@ -69,8 +69,8 @@ MethylSeekRGR <- function(seqnames = Rle(), ranges = IRanges(),
 ### Coercion
 ###
 
-#' Coerce a MethPat object of CG 1-tuples to MethylSeekR-compatible GRanges
-#' object(s).
+#' Coerce a MethPat object of CG 1-tuples to a list of MethylSeekR-compatible
+#' GRanges object(s), one list element per sample.
 #'
 #' @param methpat A \code{\link[MethylationTuples]{MethPat}} object containing CpG
 #' 1-tuples. The \code{\link[MethylationTuples]{MethPat}} object should already
@@ -85,14 +85,14 @@ setAs("MethPat",
       "MethylSeekRGR",
       function(from) {
         # Adapted from MethylSeekR::readMethylome
-        if (size(methpat) != 1L) {
-          stop("'methpat' must contain data for 1-tuples.")
+        if (size(from) != 1L) {
+          stop("'MethPat' object must contain data for 1-tuples.")
         }
-        if (!identical(methtype(methpat), "CG")) {
-          stop("'methpat' must have CG 'methtype'.")
+        if (!identical(methtype(from), "CG")) {
+          stop("'MethPat' object must have CG 'methtype'.")
         }
-        if (!all(strand(methpat) == "*")) {
-          stop(paste0("'methpat' must have processed by ",
+        if (!all(strand(from) == "*")) {
+          stop(paste0("'MethPat' object must have processed by ",
                       "'MethylationTuples::collapseStrand'."))
         }
         list_of_msrgr <- mapply(function(T, M, seqnames, ranges, strand,
@@ -100,22 +100,23 @@ setAs("MethPat",
           msrgr <- MethylSeekRGR(seqnames, ranges, strand, T, M, seqinfo)
           msrgr <- msrgr[!is.na(T)]
           sort(msrgr)
-        }, T = split(getCoverage(methpat), rep(1:ncol(methpat),
-                                               each = nrow(methpat))),
-        M = split(assay(methpat, "M"), rep(1:ncol(methpat),
-                                           each = nrow(methpat))),
-        MoreArgs = list(seqnames = seqnames(methpat), ranges = ranges(methpat),
-                        strand = strand(methpat), seqinfo = seqinfo(methpat)))
-        names(list_of_msrgr) <- colnames(methpat)
+        }, T = split(getCoverage(from), rep(1:ncol(from),
+                                               each = nrow(from))),
+        M = split(assay(from, "M"), rep(1:ncol(from),
+                                           each = nrow(from))),
+        MoreArgs = list(seqnames = seqnames(from), ranges = ranges(from),
+                        strand = strand(from), seqinfo = seqinfo(from)))
+        names(list_of_msrgr) <- colnames(from)
         mapply(function(msrgr, nm) {
           mean_cov <- mean(msrgr$T)
           if (mean_cov < 10) {
             warning(paste0("For CpGs with at least one read, sample '", nm,
                            "' ", "has mean coverage = ", mean_cov, "\nThe ",
-                           "MethylSeekR developers do not the use of ",
-                           "MethylSeekR for methylomes with mean coverage < ",
-                           "10X."))
+                           "MethylSeekR developers do not recommend the use ",
+                           "of MethylSeekR for methylomes with mean coverage ",
+                           "< 10X."))
           }
-        }, msrgr = list_of_msrgr, nm = names(msrgr))
+        }, msrgr = list_of_msrgr, nm = names(list_of_msrgr))
+        list_of_msrgr
       }
 )

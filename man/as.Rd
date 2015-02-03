@@ -2,8 +2,8 @@
 \name{as}
 \alias{MethylSeekRGR}
 \alias{as}
-\title{Coerce a MethPat object of CG 1-tuples to MethylSeekR-compatible GRanges
-object(s).}
+\title{Coerce a MethPat object of CG 1-tuples to a list of MethylSeekR-compatible
+GRanges object(s), one list element per sample.}
 \arguments{
 \item{methpat}{A \code{\link[MethylationTuples]{MethPat}} object containing CpG
 1-tuples. The \code{\link[MethylationTuples]{MethPat}} object should already
@@ -16,7 +16,7 @@ A list of \code{\link{MethylSeekRGR}} objects, which are
 compatible with the \code{MethylSeekR} Bioconductor package.
 }
 \description{
-Coerce a MethPat object of CG 1-tuples to MethylSeekR-compatible GRanges
-object(s).
+Coerce a MethPat object of CG 1-tuples to a list of MethylSeekR-compatible
+GRanges object(s), one list element per sample.
 }
 
