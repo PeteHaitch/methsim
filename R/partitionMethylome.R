@@ -33,4 +33,5 @@ partitionMethylome <- function(umrs_lmrs, pmrs) {
   m <- sort(m)
   m_disjoint <- disjoin(m)
   mo_idx <- findMostOverlapping(m, m_disjoint)
+  # UP TO HERE
 }

@@ -35,17 +35,51 @@ Use the convenience functions provided by `methsim` to work with existing `Methy
 
 1. Steps 1-4 
     - Option A: Just use `MethylSeekR` from 1-4.
-    - Option B: Provide some convenience functions to work with `MethPat` objects.
+    - Option B: Provide some convenience functions to work with `MethPat` 
+    objects.
+      - Step 1 and 2: Use `MethylationTuples::readMethtuple` -> 
+      `MethylationTuples::filterOutVariants` -> `as(MethPat, "MethylSeekRGR")` 
+      __or__ `MethylationTuples::readMethtuple` -> 
+      `as(MethPat, "MethylSeekRGR")` -> 
+      `lapply(list_of_msrgr, MethylSeekR::removeSNPs)`.
+      - Step 3: __UP TO HERE__
+
 2. Step 5
     - General post-processing functions
+    
+__TODO__: Run a `MethylSeekRGR` object through the `MethylSeekR` pipeline and get to writing the "Step 5" functionality, i.e., `partitionMethylome`.
 
 # Key functions and classes
 
 - [x] `MethylSeekRGR
   - A S4 class to formalise the informal `GRanges`-based object used as input by `MethylSeekR`.
 - [x] `as(MethPat, "MethylSeekRGR")`
-- [ ] `findPMDs`
-  - A wrapper(s) around `MethylSeekR::plotAlphaDistributionOneChr` and `MethylSeekR::segmentPMDs`.
+- [ ] `partitionMethylome`, ``
+  - A wrapper(s) around `MethylSeekR::plotAlphaDistributionOneChr`,  `MethylSeekR::segmentPMDs`, `MethylSeekR::segmentUMRsLMRs`.
   - Or just use these directly? (Will need to move `MethylSeekR` to `DEPENDS` rather than `IMPORTS`.)
-- [ ] `partitionMethylome`
-__UP TO HERE__
+
+# Test script
+
+```{r}
+library("BSgenome.Hsapiens.UCSC.hg18")
+library(MethylSeekR)
+seq_lengths <- seqlengths(Hsapiens)
+x <- readMethylome(system.file("extdata", "Lister2009_imr90_hg18_chr22.tab", 
+                               package = "MethylSeekR"), seq_lengths)
+x <- MethPat(SimpleList(M = matrix(x$M, dimnames = list(NULL, "IMR90")), 
+                        U = matrix(x$T - x$M, dimnames = list(NULL, "IMR90"))), 
+             MTuples(GTuples(seqnames(x), tuples = as.matrix(start(x)), 
+                             strand(x), seqinfo = seqinfo(x)),
+                     MethInfo("CG"))
+             )
+y <- as(x, "MethylSeekRGR")[[1]]
+
+snps <- readSNPTable(system.file("extdata", "SNVs_hg18_chr22.tab", 
+                                 package="MethylSeekR"), 
+                     seq_lengths)
+```
+
+# TODO for tomorrow (04/02/2015)
+
+- [ ] Create a list of `methsim::MethylSeekRGR` objects for the EPISCOPE, Lister, Seisenberger and Ziller datasets.
+- [ ] Process each with `MethylSeekR` to create a partitioned methylome for each sample.
