@@ -13,10 +13,9 @@
 #' of the \code{subject} that it most overlaps.
 #' @export
 findMostOverlapping <- function(query, subject) {
-  stopifnot(isDisjoint(subject))
   ol <- findOverlaps(query, subject)
   wol <- ranges(ol, ranges(query), ranges(subject))
-  x <- data.table(qh = queryHits(ol), sh = subjectHits(ol), w = width(wol),
-                  key = "qh")
-  x[, sh[nnet::which.is.max(w)], by = qh][, V1]
+  mapply(function(x, i) x[i], x = split(subjectHits(ol), queryHits(ol)),
+         i = tapply(width(wol), queryHits(ol), nnet::which.is.max),
+         SIMPLIFY = TRUE, USE.NAMES = FALSE)
 }

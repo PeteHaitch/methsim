@@ -28,7 +28,6 @@ Imports:
     Biobase,
     S4Vectors,
     GenomicRanges,
-    data.table,
     nnet
 LinkingTo: Rcpp
 VignetteBuilder: knitr
