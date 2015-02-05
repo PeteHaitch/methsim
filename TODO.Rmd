@@ -42,10 +42,12 @@ Use the convenience functions provided by `methsim` to work with existing `Methy
       __or__ `MethylationTuples::readMethtuple` -> 
       `as(MethPat, "MethylSeekRGR")` -> 
       `lapply(list_of_msrgr, MethylSeekR::removeSNPs)`.
-      - Step 3: __UP TO HERE__
-
+      - Step 3: Use `MethylSeekR::plotAlphaDistributionOneChr` and 
+      `MethylSeekR::segmentPMDs`.
+      - Step 4: Use `MethylSeekR::calculateFDRs` and 
+      `MethylSeekR::segmentUMRsLMRs`.
 2. Step 5
-    - General post-processing functions
+    - Use `methsim::partitionMethylome`
     
 __TODO__: Run a `MethylSeekRGR` object through the `MethylSeekR` pipeline and get to writing the "Step 5" functionality, i.e., `partitionMethylome`.
 
@@ -54,32 +56,76 @@ __TODO__: Run a `MethylSeekRGR` object through the `MethylSeekR` pipeline and ge
 - [x] `MethylSeekRGR
   - A S4 class to formalise the informal `GRanges`-based object used as input by `MethylSeekR`.
 - [x] `as(MethPat, "MethylSeekRGR")`
-- [ ] `partitionMethylome`, ``
-  - A wrapper(s) around `MethylSeekR::plotAlphaDistributionOneChr`,  `MethylSeekR::segmentPMDs`, `MethylSeekR::segmentUMRsLMRs`.
-  - Or just use these directly? (Will need to move `MethylSeekR` to `DEPENDS` rather than `IMPORTS`.)
+- [ ] `PartitionedMethylome`
+- [x] `partitionMethylome`
 
-# Test script
+# Example script
 
-```{r}
+To be adapted for processing all methylomes.
+```{r, eval = FALSE}
+# TODO: Investigate "chr.sel" argument
 library("BSgenome.Hsapiens.UCSC.hg18")
-library(MethylSeekR)
 seq_lengths <- seqlengths(Hsapiens)
 x <- readMethylome(system.file("extdata", "Lister2009_imr90_hg18_chr22.tab", 
                                package = "MethylSeekR"), seq_lengths)
-x <- MethPat(SimpleList(M = matrix(x$M, dimnames = list(NULL, "IMR90")), 
-                        U = matrix(x$T - x$M, dimnames = list(NULL, "IMR90"))), 
+x <- MethPat(SimpleList(M = matrix(as.integer(x$M), 
+                                   dimnames = list(NULL, "IMR90")), 
+                        U = matrix(as.integer(x$T - x$M), 
+                                   dimnames = list(NULL, "IMR90"))), 
              MTuples(GTuples(seqnames(x), tuples = as.matrix(start(x)), 
                              strand(x), seqinfo = seqinfo(x)),
                      MethInfo("CG"))
              )
-y <- as(x, "MethylSeekRGR")[[1]]
+msrgr <- as(x, "MethylSeekRGR")[[1]]
 
+# TODO: Use MethylationTuples::filterVariants
 snps <- readSNPTable(system.file("extdata", "SNVs_hg18_chr22.tab", 
-                                 package="MethylSeekR"), 
+                                 package = "MethylSeekR"), 
                      seq_lengths)
+
+msrgr <- removeSNPs(msrgr, snps)
+# TODO: Save plot as PDF
+plotAlphaDistributionOneChr(m = msrgr, chr.sel = "chr22", num.cores = 1)
+# TODO: Save plot as PDF
+pmrs <- segmentPMDs(m = msrgr, chr.sel = "chr22", seqLengths = seq_lengths, 
+                    num.cores = 1)
+plotAlphaDistributionOneChr(m = subsetByOverlaps(
+  msrgr, pmrs[values(pmrs)$type == "notPMD"]), chr.sel = "chr22", num.cores = 1)
+# plotPMDSegmentation(m = msrgr, segs = pmrs)
+
+# TODO: Update with path to appropriate CGI definition
+cgi_file <- "~/Downloads/model-based-cpg-islands-hg18.txt"
+cgi <- read.table(cgi_file, header = TRUE, as.is = TRUE)
+cgi <- sort(GRanges(cgi$chr, IRanges(cgi$start, cgi$end), seqinfo = seqinfo(msrgr)))
+cgi <- trim(resize(cgi, 5000, fix = "center"))
+
+# TODO: Save plot as PDF
+# TODO: If sample has no PMRs then the "PMDs" argument should be omitted.
+fdrs <- calculateFDRs(m = msrgr, CGIs = cgi, PMDs = pmrs, num.cores = 1)
+fdr_cutoff <- 5 
+methylation_cutoff <- 0.5
+minimum_number_cpgs <- as.integer(
+  names(fdrs$FDRs[as.character(methylation_cutoff), ]
+        [fdrs$FDRs[as.character(methylation_cutoff), ] < fdr_cutoff])[1])
+
+# TODO: Update "myGenomeSeq" parameter according to sample.
+# TODO: Save plot as PDF
+# TODO: If sample has no PMRs then the "PMDs" argument should be omitted.
+umrs_lmrs <- segmentUMRsLMRs(m = msrgr, meth.cutoff = methylation_cutoff,
+                             nCpG.cutoff = minimum_number_cpgs, PMDs = pmrs, 
+                             num.cores = 1, myGenomeSeq = Hsapiens, 
+                             seqLengths = seq_lengths)
+# plotFinalSegmentation(m = m, segs = umrs_lmrs, PMDs = pmrs, 
+#                       meth.cutoff = methylation_cutoff)
+
+pm <- partitionMethylome(umrs_lmrs = umrs_lmrs, pmrs = pmrs)
 ```
 
-# TODO for tomorrow (04/02/2015)
+# TODO for tomorrow (06/02/2015)
 
 - [ ] Create a list of `methsim::MethylSeekRGR` objects for the EPISCOPE, Lister, Seisenberger and Ziller datasets.
 - [ ] Process each with `MethylSeekR` to create a partitioned methylome for each sample.
+- [ ] Write `estModelParams(pm, 1-tuples or methLevel(), 2-tuples or cometh, higher-order tuples)`. For each type of region it should return the distribution of beta-values, co-methylation and haplotype frequencies.
+  - Should return `params`, an S4 class with the necessary simulation parameters.
+- [ ] Write `simulate(params, nsim, seed, ...)` to simulate a methylome with the given parameters.
+- [ ] Write `addDMRs(params)` to return a modified version of `params` with DMRs.

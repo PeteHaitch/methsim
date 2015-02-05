@@ -15,7 +15,9 @@ BugReports: https://github.com/PeteHaitch/methsim/issues
 biocViews: DNAMethylation, Software, MethylSeq
 License: Artistic-2.0
 Depends:
-    R (>= 3.0)
+    R (>= 3.0),
+    MethylationTuples (>= 0.2.21),
+    MethylSeekR
 Suggests:
     testthat,
     knitr,
@@ -23,8 +25,6 @@ Suggests:
 Imports:
     methods,
     Rcpp (>= 0.11.2),
-    MethylationTuples (>= 0.2.5),
-    MethylSeekR,
     Biobase,
     S4Vectors,
     GenomicRanges,
