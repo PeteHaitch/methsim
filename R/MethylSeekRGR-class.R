@@ -27,6 +27,7 @@ setClass("MethylSeekRGR",
   if (any(object$M > object$T)) {
     msg <- validMsg(msg, "'M' > 'T' should not occur.")
   }
+  msg
 }
 
 .valid.MethylSeekRGR.seqlengths <- function(object) {
@@ -81,6 +82,7 @@ MethylSeekRGR <- function(seqnames = Rle(), ranges = IRanges(),
 #' compatible with the \code{MethylSeekR} Bioconductor package.
 #' @name as
 #' @aliases MethylSeekRGR
+#' @export
 setAs("MethPat",
       "MethylSeekRGR",
       function(from) {
