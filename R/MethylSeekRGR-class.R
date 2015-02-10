@@ -19,7 +19,7 @@ setClass("MethylSeekRGR",
   msg <- NULL
   if (!all(c("T", "M") %in% colnames(mcols(object)))) {
     msg <- validMsg(msg, paste0("Must contain metadata columns 'T' ",
-                                         "and 'M'"))
+                                "and 'M'"))
   }
   if (!is(object$T, "integer") || !is(object$M, "integer")) {
     msg <- validMsg(msg, "'T' and 'M' must be 'integer' valued.")
@@ -97,28 +97,29 @@ setAs("MethPat",
           stop(paste0("'MethPat' object must have processed by ",
                       "'MethylationTuples::collapseStrand'."))
         }
-        list_of_msrgr <- mapply(function(T, M, seqnames, ranges, strand,
-                                         seqinfo) {
-          msrgr <- MethylSeekRGR(seqnames, ranges, strand, T, M, seqinfo)
-          msrgr <- msrgr[!is.na(T)]
-          sort(msrgr)
-        }, T = split(getCoverage(from), rep(1:ncol(from),
-                                               each = nrow(from))),
-        M = split(assay(from, "M"), rep(1:ncol(from),
-                                           each = nrow(from))),
-        MoreArgs = list(seqnames = seqnames(from), ranges = ranges(from),
-                        strand = strand(from), seqinfo = seqinfo(from)))
-        names(list_of_msrgr) <- colnames(from)
-        mapply(function(msrgr, nm) {
-          mean_cov <- mean(msrgr$T)
-          if (mean_cov < 10) {
-            warning(paste0("For CpGs with at least one read, sample '", nm,
-                           "' ", "has mean coverage = ", mean_cov, "\nThe ",
-                           "MethylSeekR developers do not recommend the use ",
-                           "of MethylSeekR for methylomes with mean coverage ",
-                           "< 10X."))
-          }
-        }, msrgr = list_of_msrgr, nm = names(list_of_msrgr))
-        list_of_msrgr
+        if (ncol(from) != 1L) {
+          stop(paste0("'MethPat' object must only contain data on one sample. ",
+                      "For multiple samples please use the ",
+                      "as(MethPat, 'MethylSeekRGRList') method."))
+        }
+        idx <- !is.na(getCoverage(from))
+        if (!any(idx)) {
+          return(MethylSeekRGR())
+        } else {
+          msrgr <- MethylSeekRGR(seqnames[idx], ranges[idx], strand[idx],
+                                 getCoverage(from)[idx], assay(from, "M")[idx],
+                                 seqinfo)
+          msrgr <- sort(msrgr)
+        }
+        sn <- colnames(from)
+        mean_cov <- mean(mcols(msrgr)$T)
+        if (mean_cov < 10L) {
+          warning(paste0("For CpGs with at least one read, sample '", sn,
+                         "' ", "has mean coverage = ", mean_cov, "\nThe ",
+                         "MethylSeekR developers do not recommend the use ",
+                         "of MethylSeekR for methylomes with mean coverage ",
+                         "< 10X."))
+        }
+        msrgr
       }
 )
