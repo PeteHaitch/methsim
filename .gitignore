@@ -4,3 +4,5 @@ packrat/src/
 .Rprofile
 .Rhistory
 TODO.html
+src/*.o
+src/*.so
