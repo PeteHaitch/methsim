@@ -106,9 +106,9 @@ setAs("MethPat",
         if (!any(idx)) {
           return(MethylSeekRGR())
         } else {
-          msrgr <- MethylSeekRGR(seqnames[idx], ranges[idx], strand[idx],
-                                 getCoverage(from)[idx], assay(from, "M")[idx],
-                                 seqinfo)
+          msrgr <- MethylSeekRGR(seqnames(from)[idx], ranges(from)[idx],
+                                 strand(from)[idx], getCoverage(from)[idx],
+                                 assay(from, "M")[idx], seqinfo(from))
           msrgr <- sort(msrgr)
         }
         sn <- colnames(from)
