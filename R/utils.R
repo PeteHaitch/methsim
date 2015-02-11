@@ -75,7 +75,7 @@ trainPMDHMM <- function(m, chr.sel, nCGbin, plot = FALSE) {
   }
   T <- as.numeric(values(m[indx])[, 1])
   M <- as.numeric(values(m[indx])[, 2])
-  score <- MethylSeekR::calculateAlphaDistr(M, T, nCGbin, num.cores = 1L)
+  score <- MethylSeekR:::calculateAlphaDistr(M, T, nCGbin, num.cores = 1L)
   J = 2
   init0 <- c(0, 1)
   P0 <- t(matrix(c(0.998297563, 0.001702437, 0.002393931, 0.997606069),
