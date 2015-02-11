@@ -59,8 +59,8 @@ segmentPMDs <- function(m, chr.sel, seqLengths, nCGbin = 101, plot = FALSE) {
   segments <- MethylSeekR:::createGRangesObjectPMDSegmentation(m, y.list,
                                                                num.cores = 1L,
                                                                seqLengths)
-  list(segments = segments, hist = hmm.model$hist, lines1 = hmm.model$lines1,
-       lines2 = hmm.model$lines2)
+  list(segments = segments, hist = hmm.model$hist, x = hmm.model$x,
+       lines1 = hmm.model$lines1, lines2 = hmm.model$lines2)
 }
 
 # A copy of MethylSeekR::trainPMDHMM that can be safely run in
@@ -90,18 +90,18 @@ trainPMDHMM <- function(m, chr.sel, nCGbin, plot = FALSE) {
   hist <- hist(score, probability = TRUE, breaks = 30,
                xlab = sprintf("posterior mean of alpha (%s)", chr.sel),
                plot = plot)
-  lines1 <- lines(x, dnorm(x, mean = startval$parms.emission$mu[1],
-                           sd = sqrt(startval$parms.emission$sigma[1])),
-                  type = "l", col = "red")
-  lines2 <- lines(x, dnorm(x, mean = startval$parms.emission$mu[2],
-                           sd = sqrt(startval$parms.emission$sigma[2])),
-                  type = "l", col = "green")
+  lines1 <- dnorm(x, mean = startval$parms.emission$mu[1],
+                  sd = sqrt(startval$parms.emission$sigma[1]))
+  lines2 <- dnorm(x, mean = startval$parms.emission$mu[2],
+                  sd = sqrt(startval$parms.emission$sigma[2]))
   if (plot) {
     hist
-    lines1
-    lines2
-    return(startval = startval, hist = hist, lines1 = lines1, lines2 = lines2)
+    lines(x, lines1, type = "l", col = "red")
+    lines(x, lines2, type = "l", col = "green")
+    return(list(startval = startval, hist = hist, x = x, lines1 = lines1,
+           lines2 = lines2))
   } else {
-    list(startval = startval, hist = hist, lines1 = lines1, lines2 = lines2)
+    list(startval = startval, hist = hist, x = x, lines1 = lines1,
+         lines2 = lines2)
   }
 }
