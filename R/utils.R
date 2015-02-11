@@ -53,8 +53,7 @@ plotAlphaDistributionOneChr_2 <- function(l_msrgr, sn, chr.sel, ncol, nrow,
 # parallel because it does not create the plot but returns it as an object.
 # TODO: Document and robust-ify (long-term)
 segmentPMDs <- function(m, chr.sel, seqLengths, nCGbin = 101, plot = FALSE) {
-  hmm.model <- methsim:::trainPMDHMM(m, chr.sel, nCGbin, num.cores = 1L,
-                                     plot = FALSE)
+  hmm.model <- methsim:::trainPMDHMM(m, chr.sel, nCGbin, plot = FALSE)
   y.list <- MethylSeekR:::PMDviterbiSegmentation(m, hmm.model$startval,
                                                  nCGbin, num.cores = 1L)
   segments <- MethylSeekR:::createGRangesObjectPMDSegmentation(m, y.list,
