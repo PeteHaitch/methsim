@@ -181,6 +181,8 @@ segmentUMRsLMRs <- function(m, meth.cutoff = 0.5, nCpG.cutoff = 3, PMDs = NA,
   nCG.classification <- 30
   message("identifying UMRs and LMRs")
   m = m[values(m)[, 1] >= minCover]
+  # TODO: Not sure why I have to explicitly coerce to a character vector but
+  # the Rle,table-method isn't working as expected.
   nCGsPerChr = table(as.character(seqnames(m)))
   chrs = names(nCGsPerChr)[nCGsPerChr >= nCpG.smoothing]
   res <- mclapply(chrs, function(chr) {
@@ -261,7 +263,7 @@ plotFinalSegmentation <- function(m, sn, segs, PMDs = NA, meth.cutoff,
   chrs = unique(as.character(seqnames(m)))
   height = 1
   len = 5000
-  nCGperChr = table(seqnames(m))
+  nCGperChr = table(as.character(seqnames(m)))
   indx = which(nCGperChr[chrs] < 3 * len)
   if (length(indx) > 0) {
     chrs = chrs[-indx]
