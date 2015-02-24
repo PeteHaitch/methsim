@@ -11,9 +11,6 @@ partitionMethylome(umrs_lmrs, pmrs)
 \code{MethylSeekR::\link[MethylSeekR]{segmentUMRsLMRs}}.}
 
 \item{pmrs}{The output of \code{MethylSeekR\link[MethylSeekR]{segmentPMDs}}.}
-
-\item{bsgenome}{A \code{BSgenome::\link[BSgenome]{BSgenome}} object of the
-relevant organism.}
 }
 \value{
 A \code{\link{PartitionedMethylome}}.

@@ -5,9 +5,9 @@
 
 #' Find "most overlapping" range in subject for each element of query.
 #' @param query Any object for which a `findOverlaps` method is defined, e.g.,
-#' a \code{\link[GenomicRange]{GRanges}}.
+#' a \code{\link[GenomicRanges]{GRanges}}.
 #' @param subject Any object for which a `findOverlaps` method is defined, e.g.,
-#' a \code{\link[GenomicRange]{GRanges}}.
+#' a \code{\link[GenomicRanges]{GRanges}}.
 #' @details Ties are broken at random.
 #' @return An \code{integer} vector containing for each \code{query} the index
 #' of the \code{subject} that it most overlaps.

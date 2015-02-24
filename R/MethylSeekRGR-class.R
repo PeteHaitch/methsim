@@ -4,6 +4,13 @@
 ### -------------------------------------------------------------------------
 ###
 
+#' MethylSeekRGR class
+#'
+#' An S4 class to formalise the informal
+#' \code{GenomicRanges::\link[GenomicRanges]{GRanges}}-based class used by
+#' \code{\link[MethylSeekR]{MethylSeekR-package}}.
+#' @aliases MethylSeekRGR
+#'
 #' @export
 setClass("MethylSeekRGR",
          contains = "GRanges"

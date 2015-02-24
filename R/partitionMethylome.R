@@ -3,7 +3,6 @@
 ### -------------------------------------------------------------------------
 ###
 
-# TODO: Create the PartionedMethylome class and return an object of this class.
 #' Partition a methylome into UMRs, LMRs, PMRs and others.
 #'
 #' Paritition a methylome into unmethylated regions (UMRs), lowly-methylated
@@ -13,8 +12,6 @@
 #' @param umrs_lmrs The output of
 #' \code{MethylSeekR::\link[MethylSeekR]{segmentUMRsLMRs}}.
 #' @param pmrs The output of \code{MethylSeekR\link[MethylSeekR]{segmentPMDs}}.
-#' @param bsgenome A \code{BSgenome::\link[BSgenome]{BSgenome}} object of the
-#' relevant organism.
 #' @return A \code{\link{PartitionedMethylome}}.
 #' @export
 partitionMethylome <- function(umrs_lmrs, pmrs) {

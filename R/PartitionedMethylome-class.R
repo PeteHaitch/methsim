@@ -4,6 +4,9 @@
 ### -------------------------------------------------------------------------
 ###
 
+#' PartitionedMethylome class.
+#' @aliases PartitionedMethylome
+#'
 #' @export
 setClass("PartitionedMethylome",
          contains = "GRanges"

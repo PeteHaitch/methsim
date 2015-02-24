@@ -8,10 +8,10 @@ findMostOverlapping(query, subject)
 }
 \arguments{
 \item{query}{Any object for which a `findOverlaps` method is defined, e.g.,
-a \code{\link[GenomicRange]{GRanges}}.}
+a \code{\link[GenomicRanges]{GRanges}}.}
 
 \item{subject}{Any object for which a `findOverlaps` method is defined, e.g.,
-a \code{\link[GenomicRange]{GRanges}}.}
+a \code{\link[GenomicRanges]{GRanges}}.}
 }
 \value{
 An \code{integer} vector containing for each \code{query} the index
