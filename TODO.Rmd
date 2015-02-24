@@ -121,10 +121,10 @@ umrs_lmrs <- segmentUMRsLMRs(m = msrgr, meth.cutoff = methylation_cutoff,
 pm <- partitionMethylome(umrs_lmrs = umrs_lmrs, pmrs = pmrs)
 ```
 
-# TODO for tomorrow (06/02/2015)
+# TODO
 
-- [ ] Create a list of `methsim::MethylSeekRGR` objects for the EPISCOPE, Lister, Seisenberger and Ziller datasets.
-- [ ] Process each with `MethylSeekR` to create a partitioned methylome for each sample.
+- [x] Create a list of `methsim::MethylSeekRGR` objects for the EPISCOPE, Lister, Seisenberger and Ziller datasets.
+- [x] Process each with `MethylSeekR` to create a partitioned methylome for each sample.
 - [ ] Write `estModelParams(pm, 1-tuples or methLevel(), 2-tuples or cometh, higher-order tuples)`. For each type of region it should return the distribution of beta-values, co-methylation and haplotype frequencies.
   - Should return `params`, an S4 class with the necessary simulation parameters.
 - [ ] Write `simulate(params, nsim, seed, ...)` to simulate a methylome with the given parameters.
