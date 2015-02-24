@@ -1,3 +1,7 @@
 ^packrat/
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^\.Rprofile$
+TODO.rmd
+.travis.yml
+.coveralls.R
