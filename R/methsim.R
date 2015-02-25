@@ -15,6 +15,7 @@
 #' @import Rcpp
 #' @import MethylationTuples
 #' @import MethylSeekR
+#' @import data.table
 #' @importFrom Biobase validMsg
 #' @importFrom mhsmm hmmspec hmmfit
 NULL

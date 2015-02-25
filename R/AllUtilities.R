@@ -383,7 +383,7 @@ funByPM <- function(FUN, pm, methpat, min_cov, ...) {
   type <- mcols(pm)$type[subjectHits(ol)]
   val <- FUN(methpat, min_cov = min_cov, ...)
   if (!is(val, "data.table")) {
-    val <- as.data.table(val)
+    val <- data.table::as.data.table(val)
   }
   val[, type := type]
   val
