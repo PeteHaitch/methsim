@@ -1,7 +1,7 @@
 Package: methsim
 Type: Package
 Title: An R package to simulate DNA methylation data
-Version: 0.1.1
+Version: 0.1.2
 Date: 2015-02-24
 Author: Peter Hickey <peter.hickey@gmail.com>
 Maintainer: Peter Hickey <peter.hickey@gmail.com>
@@ -26,8 +26,7 @@ Imports:
     methods,
     Rcpp (>= 0.11.2),
     Biobase,
-    S4Vectors,
-    GenomicRanges,
-    nnet
+    nnet,
+    mhsmm
 LinkingTo: Rcpp
 VignetteBuilder: knitr
