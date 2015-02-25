@@ -18,17 +18,10 @@ env:
     - R_BUILD_ARGS="--no-manual"
     - R_CHECK_ARGS="--no-manual --as-cran"
     - _R_CHECK_FORCE_SUGGESTS_=false
-    # Need LaTeX? (very time consuming!)
-    - BOOTSTRAP_LATEX=""
-    # Skip building vignettes, which iff LaTeX-based are very
-    # time consuming because LaTeX needs to be installed
-#    - R_BUILD_ARGS="--no-build-vignettes ${R_BUILD_ARGS}"
-#    - R_CHECK_ARGS="--no-build-vignettes ${R_CHECK_ARGS}"
+    - BOOTSTRAP_PANDOC="true"
 
   # R versions r-builder should test on (ignored by r-travis)
   matrix:
-#    - RVERSION=3.0.3
-#    - RVERSION=3.1.2
     - RVERSION=devel
 
 before_install:
@@ -36,23 +29,15 @@ before_install:
   - curl -OL https://raw.githubusercontent.com/HenrikBengtsson/r-builder/master/pkg-build.sh;
   - chmod 755 $RENV
   - $RENV bootstrap
-  - if [ "BOOTSTRAP_LATEX" == "true" ]; then
-      (cd /tmp && curl -OL http://mirrors.ctan.org/macros/latex/contrib/xcolor.zip && cd /usr/share/texmf/tex/latex && sudo unzip /tmp/xcolor.zip && cd xcolor && sudo latex xcolor.ins && sudo texhash);
-    else
-      export R_RSP_COMPILELATEX_FALLBACK="copy-force";
-    fi
 
 install:
-  # Install binary pandoc from Rstudio
-  - export PATH="$HOME/pandoc:$PATH"
-  - mkdir $HOME/pandoc
-  - curl -O https://s3.amazonaws.com/rstudio-buildtools/pandoc-1.12.3.zip
-  - unzip -j pandoc-1.12.3.zip pandoc-1.12.3/linux/debian/x86_64/pandoc
-      -d $HOME/pandoc
-  - chmod +x $HOME/pandoc/pandoc
-  - pandoc --version
   # Install bioc deps
   - $RENV install_bioc_deps
+  # Need to specify VariantAnnotation and GenomicRanges because, although not
+  # dependencies of methsim per se, they are dependencies of MethylationTuples
+  # and these BioConductor package dependencies are not automatically installed
+  # by devtools::install_github("PeteHaitch/MethylationTuples")
+  - $RENV install_bioc GenomicTuples VariantAnnotation
   # Install GitHub deps
   - $RENV install_github PeteHaitch/MethylationTuples
 

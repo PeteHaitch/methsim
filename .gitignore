@@ -1,6 +1,5 @@
 packrat/lib*/
 .Rproj.user
-packrat/src/
 .Rprofile
 .Rhistory
 TODO.html
