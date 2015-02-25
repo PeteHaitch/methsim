@@ -3,6 +3,7 @@
 export(MethylSeekRGR)
 export(as)
 export(findMostOverlapping)
+export(funByPM)
 export(partitionMethylome)
 exportClasses(MethylSeekRGR)
 exportClasses(PartitionedMethylome)
