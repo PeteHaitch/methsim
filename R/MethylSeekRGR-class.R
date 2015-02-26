@@ -25,14 +25,14 @@ setClass("MethylSeekRGR",
 .valid.MethylSeekRGR.mcols <- function(object) {
   msg <- NULL
   if (!all(c("T", "M") %in% colnames(mcols(object)))) {
-    msg <- validMsg(msg, paste0("Must contain metadata columns 'T' ",
+    msg <- Biobase::validMsg(msg, paste0("Must contain metadata columns 'T' ",
                                 "and 'M'"))
   }
   if (!is(object$T, "integer") || !is(object$M, "integer")) {
-    msg <- validMsg(msg, "'T' and 'M' must be 'integer' valued.")
+    msg <- Biobase::validMsg(msg, "'T' and 'M' must be 'integer' valued.")
   }
   if (any(object$M > object$T)) {
-    msg <- validMsg(msg, "'M' > 'T' should not occur.")
+    msg <- Biobase::validMsg(msg, "'M' > 'T' should not occur.")
   }
   msg
 }
@@ -41,7 +41,7 @@ setClass("MethylSeekRGR",
   msg <- NULL
   if (length(object)) {
     if (any(is.na(seqlengths(object)))) {
-      msg <- validMsg(msg, "Require valid seqlengths.")
+      msg <- Biobase::validMsg(msg, "Require valid seqlengths.")
     }
   }
   msg

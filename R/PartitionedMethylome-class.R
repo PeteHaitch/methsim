@@ -9,18 +9,30 @@
 #'
 #' @export
 setClass("PartitionedMethylome",
-         contains = "GRanges"
+         contains = "GRanges",
+         prototype = GenomicRanges::GRanges(
+           type = factor(levels = c("UMR", "LMR", "PMR", "other")))
 )
+
+# TODO: Should 'type' be an extraColumnSlot? (NB: the below doesn't work)
+# If so, then I will need to change the PartitionedMethylome class and update
+# all instances of it :(
+# setMethod(GenomicRanges:::extraColumnSlotNames,
+#           "PartitionedMethylome",
+#           function(x) {
+#             c("type")
+#           }
+# )
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Validity
 ###
 
-
 .valid.PartitionedMethylome.mcols <- function(object) {
   msg <- NULL
   if (!is.factor(mcols(object)$type) ||
-        !identical(levels(mcols(object)$type), c("UMR", "LMR", "PMR", "other"))) {
+        !identical(levels(mcols(object)$type),
+                   c("UMR", "LMR", "PMR", "other"))) {
     msg <- validMsg(msg, paste0("'type' must be a factor with levels ",
                                 "'UMR', 'LMR', 'PMR' and 'other'."))
   }
