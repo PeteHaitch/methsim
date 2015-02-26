@@ -5,6 +5,13 @@ date: "19 November 2014"
 output: html_document
 ---
 
+# Package name
+
+Consider alternative names for package and GitHub repo, e.g., `bsbs`, `bssim`. Should package name be `CamelCase`, `lowercase`, etc., e.g.:
+
+- __`MethSim`__: Consistent with `GenomicTuples`, `MethylationTuples`, etc.
+- __`methsim`__: Simpler to type.
+
 # Partioning a methylome
 
 The steps to partitioning a single methylome are:
@@ -126,6 +133,109 @@ pm <- partitionMethylome(umrs_lmrs = umrs_lmrs, pmrs = pmrs)
 - [x] Create a list of `methsim::MethylSeekRGR` objects for the EPISCOPE, Lister, Seisenberger and Ziller datasets.
 - [x] Process each with `MethylSeekR` to create a partitioned methylome for each sample.
 - [ ] Write `estModelParams(pm, 1-tuples or methLevel(), 2-tuples or cometh, higher-order tuples)`. For each type of region it should return the distribution of beta-values, co-methylation and haplotype frequencies.
+  - See `process\_\[one | two | three\]\_tuples()` functions shown below (noting that these are designed for processing multiple samples from a single dataset).
   - Should return `params`, an S4 class with the necessary simulation parameters.
 - [ ] Write `simulate(params, nsim, seed, ...)` to simulate a methylome with the given parameters.
 - [ ] Write `addDMRs(params)` to return a modified version of `params` with DMRs.
+
+```{r, eval = FALSE}
+process_one_tuples <- function(dataset, seqlevels, min_cov) {
+  
+  if (missing(seqlevels)) {
+    stop("Must supply 'seqlevels'.")
+  }
+  
+  # Read in data
+  methpat <- readRDS(paste0("../processed_data/", dataset, "/", dataset,
+                            "_1_tuples_strand_collapsed.rds"))
+  l_pm <- readRDS(paste0("rds/", dataset, "/PartitionedMethylome/", dataset, 
+                       "_pm.rds"))
+  
+  # Compute beta-values and annotate by region type
+  beta <- bplapply(names(l_pm), function(sn, methpat, l_pm, min_cov, 
+                                         seqlevels) {
+    pm <- l_pm[[sn]]
+    # Only want data on sample 'sn'.
+    methpat <- methpat[, sn]
+    # Retain only the relevant seqlevels.
+    methpat <- keepSeqlevels(methpat, seqlevels)
+    # Apply MethylationTuples::methLevel()
+    val <- funByPM(FUN = MethylationTuples::methLevel, pm = pm, 
+                   methpat = methpat, min_cov = min_cov)
+    # Add information not returned by methLevel()
+    val[, sample := sn]
+    setnames(val, c("beta", "type", "sample"))
+    setkeyv(val, c("sample", "type", "beta"))
+    val
+    }, methpat = methpat, l_pm = l_pm, min_cov = min_cov, seqlevels = seqlevels)
+  beta <- rbindlist(beta)
+  # Tabulate frequency of each beta-value by sample and type.
+  beta[, .N, by = list(sample, type, beta)]
+}
+
+process_two_tuples <- function(dataset, seqlevels, min_cov) {
+  
+  if (missing(seqlevels)) {
+    stop("Must supply 'seqlevels'.")
+  }
+  
+  # Read in data
+  methpat <- readRDS(paste0("../processed_data/", dataset, "/", dataset,
+                            "_2_tuples_strand_collapsed.rds"))
+  l_pm <- readRDS(paste0("rds/", dataset, "/PartitionedMethylome/", dataset, 
+                       "_pm.rds"))
+  
+  # Compute beta-values and annotate by region type
+  lor <- bplapply(names(l_pm), function(sn, methpat, l_pm, min_cov, seqlevels,  
+                                        method, offset) {
+    pm <- l_pm[[sn]]
+    # Only want data on sample 'sn'.
+    methpat <- methpat[, sn]
+    # Retain only the relevant seqlevels.
+    methpat <- keepSeqlevels(methpat, seqlevels)
+    # Apply MethylationTuples::cometh()
+    funByPM(MethylationTuples::cometh, pm = pm, methpat = methpat, 
+            min_cov = min_cov, method = method, offset = offset)
+    }, methpat = methpat, l_pm = l_pm, min_cov = min_cov, seqlevels = seqlevels, 
+    method = "lor", offset = 0.5)
+  lor <- rbindlist(lor)
+  # NOTE: This ignores strand.
+  lor_reduced <- lor[, IPD := pos2 - pos1][
+    , list(IPD, sample, type, statistic)][
+      , .N, by = list(sample, IPD, type, statistic)]
+  setorder(lor_reduced, sample, IPD, type, -N)
+  lor_reduced
+}
+
+process_three_tuples <- function(dataset, seqlevels, min_cov) {
+  
+  if (missing(seqlevels)) {
+    stop("Must supply 'seqlevels'.")
+  }
+  
+  # Read in data
+  methpat <- readRDS(paste0("../processed_data/", dataset, "/", dataset,
+                            "_3_tuples_strand_collapsed.rds"))
+  l_pm <- readRDS(paste0("rds/", dataset, "/PartitionedMethylome/", dataset, 
+                       "_pm.rds"))
+  
+  # Estimate the relative frequencies of methylation patterns at m-tuples
+  pattern_freqs <- bplapply(names(l_pm), function(sn, methpat, l_pm, min_cov, 
+                                                  seqlevels) {
+    pm <- l_pm[[sn]]
+    # Only want data on sample 'sn'.
+    methpat <- methpat[, sn]
+    # Retain only the relevant seqlevels.
+    methpat <- keepSeqlevels(methpat, seqlevels)
+    # Apply MethylationTuples::patternFreqs()
+    funByPM(MethylationTuples::patternFreqs, pm = pm, methpat = methpat, 
+            min_cov = min_cov)
+    }, methpat = methpat, l_pm = l_pm, min_cov = min_cov, seqlevels = seqlevels)
+  pattern_freqs <- rbindlist(pattern_freqs)
+  grp <- c("sample", "type", grep("^h[0-9]", colnames(pattern_freqs), 
+                                  value = TRUE))
+  pattern_freqs_reduced <- pattern_freqs[, .N, by = grp]
+  setorder(pattern_freqs_reduced, sample, type, -N)
+  pattern_freqs_reduced
+}
+```
