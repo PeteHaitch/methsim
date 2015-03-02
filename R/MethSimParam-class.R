@@ -6,6 +6,7 @@
 #' MethSimParam class
 #'
 #' An S4 class for the parameters used by \code{\link{simulate}}.
+#' @include PartitionedMethylome-class.R
 #' @aliases MethSimParam
 #'
 #' @export
@@ -17,7 +18,7 @@ setClass("MethSimParam",
            patternFreqs = "data.table",
            sampleName = "character"),
          prototype = list(
-           PartitionedMethylome = new("PartitionedMethylome"),
+           partitionedMethylome = PartitionedMethylome(),
            methLevel = data.table(type = character(0),
                                   beta = numeric(0),
                                   N = integer(0)),
@@ -35,8 +36,7 @@ setClass("MethSimParam",
                                      h7 = numeric(0),
                                      h8 = numeric(0),
                                      N = integer(0)),
-           sampleName = character(0)
-
+           sampleName = NA_character_
          )
 )
 
@@ -44,10 +44,10 @@ setClass("MethSimParam",
 ### Validity
 ###
 
-.valid.MethSimParam.PartitionedMethylome <- function(object) {
+.valid.MethSimParam.partitionedMethylome <- function(object) {
   msg <- NULL
-  if (!is(object@PartitionedMethylome, "PartitionedMethylome")) {
-    msg <- BBiobase::validMsg(msg, paste0("'PartitionedMethylome' slot must ",
+  if (!is(object@partitionedMethylome, "PartitionedMethylome")) {
+    msg <- BBiobase::validMsg(msg, paste0("'partitionedMethylome' slot must ",
                                           "be a 'PartitionedMethylome'."))
   }
   msg
@@ -74,7 +74,7 @@ setClass("MethSimParam",
                                          "'data.table'"))
   }
   if (!identical(colnames(object@cometh), c("IPD", "type", "statistic",
-                                               "N"))) {
+                                            "N"))) {
     msg <- Biobase::validMsg(msg, paste0("Column names of the 'cometh' ",
                                          "slot must be 'IPD', 'type', ",
                                          "'statistic' and 'N'." ))
@@ -100,6 +100,7 @@ setClass("MethSimParam",
 
 .valid.MethSimParam.sampleName <- function(object) {
   msg <- NULL
+
   if (!is.character(object@sampleName) | length(object@sampleName) != 1L) {
     msg <- Biobase::validMsg(msg, paste0("'sampleName' slot must be a ",
                                          "'character' vector with length 1."))
@@ -108,7 +109,7 @@ setClass("MethSimParam",
 
 .valid.MethSimParam <- function(object) {
   # Include all .valid.MethSimParam.* functions in this vector
-  msg <- c(.valid.MethSimParam.PartitionedMethylome(object),
+  msg <- c(.valid.MethSimParam.partitionedMethylome(object),
            .valid.MethSimParam.methLevel(object),
            .valid.MethSimParam.cometh(object),
            .valid.MethSimParam.patternFreqs(object),
@@ -127,17 +128,34 @@ S4Vectors::setValidity2("MethSimParam", .valid.MethSimParam)
 ### Constructor
 ###
 
-# UP TO HERE: Fix TODOs then see if can construct a MethSimParam object for the
-# E13BUF sample.
-# TODO: MethSimParam() doesn't work but new("MethSimParam") does.
+# TODO (long term): This is a really clunky constructor. Might want to make
+# methLevel, cometh and patternFreqs formal S4 classes.
 #' @export
-MethSimParam <- function(meth_level, cometh, pattern_freqs, sample_name) {
+MethSimParam <- function(partitionedMethylome = PartitionedMethylome(),
+                         methLevel = data.table(type = character(0),
+                                                beta = numeric(0),
+                                                N = integer(0)),
+                         cometh = data.table(IPD = integer(0),
+                                             type = character(0),
+                                             statistic = numeric(0),
+                                             N = integer(0)),
+                         patternFreqs = data.table(type = character(0),
+                                                   h1 = numeric(0),
+                                                   h2 = numeric(0),
+                                                   h3 = numeric(0),
+                                                   h4 = numeric(0),
+                                                   h5 = numeric(0),
+                                                   h6 = numeric(0),
+                                                   h7 = numeric(0),
+                                                   h8 = numeric(0),
+                                                   N = integer(0)),
+                         sampleName = NA_character_) {
   # TODO: Probably a good idea to check length of h, i.e., how many haplotypes
   # in pattern_freqs
   new("MethSimParam",
-      partitioned_methylome = partitioned_methylome,
-      methLevel = meth_level,
+      partitionedMethylome = partitionedMethylome,
+      methLevel = methLevel,
       cometh = cometh,
-      patternFreqs = pattern_freqs,
-      sampleName = sample_name)
+      patternFreqs = patternFreqs,
+      sampleName = sampleName)
 }

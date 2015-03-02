@@ -10,30 +10,31 @@
 #' @export
 setClass("PartitionedMethylome",
          contains = "GRanges",
-         prototype = GenomicRanges::GRanges(
-           type = factor(levels = c("UMR", "LMR", "PMR", "other")))
+         representation = representation(
+           regionType = "factor"
+         ),
+         prototype = prototype(
+           regionType = factor(levels = c("UMR", "LMR", "PMR", "other"))
+         )
 )
 
-# TODO: Should 'type' be an extraColumnSlot? (NB: the below doesn't work)
-# If so, then I will need to change the PartitionedMethylome class and update
-# all instances of it :(
-# setMethod(GenomicRanges:::extraColumnSlotNames,
-#           "PartitionedMethylome",
-#           function(x) {
-#             c("type")
-#           }
-# )
+setMethod(GenomicRanges:::extraColumnSlotNames,
+          "PartitionedMethylome",
+          function(x) {
+            c("regionType")
+          }
+)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Validity
 ###
 
-.valid.PartitionedMethylome.mcols <- function(object) {
+.valid.PartitionedMethylome.regionType <- function(object) {
   msg <- NULL
-  if (!is.factor(mcols(object)$type) ||
-        !identical(levels(mcols(object)$type),
-                   c("UMR", "LMR", "PMR", "other"))) {
-    msg <- validMsg(msg, paste0("'type' must be a factor with levels ",
+  if (!is.factor(object@regionType) ||
+      !identical(levels(object@regionType),
+                 c("UMR", "LMR", "PMR", "other"))) {
+    msg <- validMsg(msg, paste0("'regionType' must be a factor with levels ",
                                 "'UMR', 'LMR', 'PMR' and 'other'."))
   }
   msg
@@ -54,7 +55,7 @@ setClass("PartitionedMethylome",
 
 .valid.PartitionedMethylome <- function(object) {
   # Include all .valid.PartitionedMethylome.* functions in this vector
-  msg <- c(.valid.PartitionedMethylome.mcols(object),
+  msg <- c(.valid.PartitionedMethylome.regionType(object),
            .valid.PartitionedMethylome.GRanges(object))
 
   if (is.null(msg)){
@@ -65,3 +66,43 @@ setClass("PartitionedMethylome",
 }
 
 S4Vectors::setValidity2("PartitionedMethylome", .valid.PartitionedMethylome)
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Constructor
+###
+
+# TODO: Document
+#' @export
+PartitionedMethylome <- function(seqnames = Rle(),
+                                 ranges = IRanges(),
+                                 strand = Rle("*", length(seqnames)),
+                                 regionType = factor(levels = c("UMR", "LMR",
+                                                                "PMR",
+                                                                "other")),
+                                 ...,
+                                 seqlengths = NULL,
+                                 seqinfo = NULL) {
+  if (!identical(levels(regionType), c("UMR", "LMR", "PMR", "other"))) {
+    stop(paste0("'regionType' must be a factor with levels 'UMR', 'LMR', ",
+                "'PMR' and 'other'."))
+  }
+
+  # Create GRanges
+  gr <- GRanges(seqnames = seqnames, ranges = ranges, strand = strand,
+                seqlengths = seqlengths, seqinfo = seqinfo, ...)
+
+  new("PartitionedMethylome", gr, regionType = regionType)
+}
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Getters
+###
+
+#' @include AllGenerics.R
+#' @export
+setMethod("regionType",
+          "PartitionedMethylome",
+          function(object) {
+            object@regionType
+          }
+)

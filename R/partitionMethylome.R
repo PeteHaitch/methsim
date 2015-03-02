@@ -23,23 +23,23 @@ partitionMethylome <- function(umrs_lmrs, pmrs) {
     stop("Expected 'pmrs' to be disjoint. Please report this error.")
   }
 
-  m <- c(granges(umrs_lmrs, use.mcols = FALSE),
+  gr <- c(granges(umrs_lmrs, use.mcols = FALSE),
          granges(pmrs, use.mcols = FALSE))
-  m$type <- c(umrs_lmrs$type, pmrs$type)
-  pm <- sort(m)
-  pm <- disjoin(m)
+  mcols(gr)$type <- c(mcols(umrs_lmrs)$type, mcols(pmrs)$type)
+  gr <- sort(gr)
+  gr <- disjoin(gr)
   # Get the typo of each range in the partitioned methylome
-  type <- rep(NA_character_, length(pm))
+  regionType <- rep(NA_character_, length(gr))
   # Get the type of those with ranges with exact matches in m
-  equal_match_ol <- findOverlaps(pm, m, type = "equal")
-  type[queryHits(equal_match_ol)] <- mcols(m)$type[subjectHits(equal_match_ol)]
+  equal_match_ol <- findOverlaps(gr, m, type = "equal")
+  regionType[queryHits(equal_match_ol)] <-
+    mcols(m)$type[subjectHits(equal_match_ol)]
   # Get the type of those ranges that overlap both UMR/LMR and PMR
-  mo_idx <- findMostOverlapping(pm[-queryHits(equal_match_ol)], m)
-  type[-queryHits(equal_match_ol)] <- mcols(m)$type[mo_idx]
-  type <- gsub("notPMD", "other", type)
-  type <- gsub("PMD", "PMR", type)
-  type <- factor(type, levels = c("UMR", "LMR", "PMR", "other"))
-  mcols(pm) <- DataFrame(type = type)
-  seqlevels(pm) <- seqlevelsInUse(pm)
-  new("PartitionedMethylome", pm)
+  mo_idx <- findMostOverlapping(gr[-queryHits(equal_match_ol)], m)
+  regionType[-queryHits(equal_match_ol)] <- mcols(m)$type[mo_idx]
+  regionType <- gsub("notPMD", "other", regionType)
+  regionType <- gsub("PMD", "PMR", regionType)
+  regionType <- factor(regionType, levels = c("UMR", "LMR", "PMR", "other"))
+  seqlevels(gr) <- seqlevelsInUse(gr)
+  new("PartitionedMethylome", gr, regionType = regionType)
 }
