@@ -128,15 +128,14 @@ umrs_lmrs <- segmentUMRsLMRs(m = msrgr, meth.cutoff = methylation_cutoff,
 pm <- partitionMethylome(umrs_lmrs = umrs_lmrs, pmrs = pmrs)
 ```
 
-# TODO
+## TODO
 
 - [x] Create a list of `methsim::MethylSeekRGR` objects for the EPISCOPE, Lister, Seisenberger and Ziller datasets.
 - [x] Process each with `MethylSeekR` to create a partitioned methylome for each sample.
 - [ ] Write `estModelParams(pm, 1-tuples or methLevel(), 2-tuples or cometh, higher-order tuples)`. For each type of region it should return the distribution of beta-values, co-methylation and haplotype frequencies.
   - See `process\_\[one | two | three\]\_tuples()` functions shown below (noting that these are designed for processing multiple samples from a single dataset).
-  - Should return `params`, an S4 class with the necessary simulation parameters.
+  - Should return `MethSimParams`, an S4 class with the necessary simulation parameters.
 - [ ] Write `simulate(params, nsim, seed, ...)` to simulate a methylome with the given parameters.
-- [ ] Write `addDMRs(params)` to return a modified version of `params` with DMRs.
 
 ```{r, eval = FALSE}
 process_one_tuples <- function(dataset, seqlevels, min_cov) {
@@ -239,3 +238,40 @@ process_three_tuples <- function(dataset, seqlevels, min_cov) {
   pattern_freqs_reduced
 }
 ```
+
+# Simulating a "truth" and reads from it
+
+Each sample needs an underlying "true" methylome ("truth") from which the reads are simulated. 
+
+## Biological variability
+
+In order of increasing biological variability in the truth:
+
+1. Same truth.
+2. Same partition and same region-specific parameters but an independent realisation of the process.
+3. Same partition but different region-specific parameters.
+4. Different partition with different parameters.
+
+Technical replicates correspond to 1. Biological replicates fall somewhere between 2-3. I suspect that 4 doesn't allow for sufficient control over the process to be generally useful.
+
+### DMRs
+
+To add DMRs requires introducing (known) biological differences between experimental conditions. I think this is best done by altering the region-specific parameters of one experimental condition (i.e. 3).
+
+## Priorities
+
+### Technical
+
+This functionality is required in order to simulate a single sample's worth of data (the bare minimum in order for this package to be useful):
+
+1. Being able to simulate a single truth.
+2. Being able to simulate reads from a single truth.
+3. Being able to generate `MethPat` object(s) from a single set of simulated reads.
+
+### Biological
+
+These are questions to explore once I am able to simulate a single sample's worth of dat (in order of simplicity):
+
+1. Simulate multiple samples' worth of reads from a single truth to see the effect of sequencing variability.
+2. Simulate multiple samples' worth of reads from a truths with the same partition but with different region-specific parameters.
+3. Being able to simulate multiple truths.
