@@ -48,7 +48,7 @@ funByPM <- function(FUN, pm, methpat, min_cov, ...) {
   ol <- findOverlaps(methpat, pm, type = "within")
   # Drop those m-tuples spanning a region boundary
   methpat <- methpat[queryHits(ol)]
-  type <- mcols(pm)$type[subjectHits(ol)]
+  type <- regionType(pm[subjectHits(ol)])
   val <- FUN(methpat, min_cov = min_cov, ...)
   if (!is(val, "data.table")) {
     val <- data.table::as.data.table(val)
