@@ -102,8 +102,10 @@ arma::mat ipf(const arma::mat& seed, arma::vec row_margins,
   }
 
   if (!converged) {
-    std::string warning = "IPFP did not converged after " +
-      std::to_string(iter) + " iterations(s)!\n" +
+    std::stringstream iter_string;
+    iter_string << iter;
+    std::string warning = "IPFP did not converge after " + iter_string.str() +
+      " iterations(s)!\n" +
       "This might be due to 0 cells in the seed, the maximum number of " +
       "iterations being too low, or the tolerance being too small.";
     Rcpp::warning(warning);
