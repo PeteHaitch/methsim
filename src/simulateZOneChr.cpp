@@ -15,7 +15,9 @@ using namespace Rcpp;
 IntegerVector simulateZOneChr(NumericVector beta_by_region,
                NumericVector lor_by_pair) {
 
-  // Don't need to get/put RNGState because Rcpp attributes takes care of this.
+  // I didn't think I needed to get/put RNGState, because I thought that Rcpp
+  // attributes takes care of this, however I am getting segfaults otherwise.
+  RNGScope scope;
 
   // Argument checks
   if (lor_by_pair.length() != (beta_by_region.length() - 1)) {
@@ -23,6 +25,8 @@ IntegerVector simulateZOneChr(NumericVector beta_by_region,
   }
 
   // Initialise variables
+  // TODO: n is a variable at runtime and this might be the cause of my
+  // segfaults (see http://stackoverflow.com/questions/17105555/rcpp-segfault-on-arrays-698152-if-integervector-is-declared)
   int n = beta_by_region.length();
   // A vector of Uniform(0, 1) random variables used in choosing the
   // next state of the process.
