@@ -9,35 +9,35 @@ using namespace Rcpp;
 //' @param lor_by_pair the within-fragment co-methylation between each pair of
 //' methylation loci on the chromosome. Should be log odds-ratios using base-2
 //' logarithms.
-//' @param u a vector of Uniform(0, 1) random variables used in choosing the
-//' next state of the process.
-//'
 //' @return an integer vector of simulated methylation states along the
 //' chromosome; 0 = unmethylated and 1 = methylated.
 // [[Rcpp::export(".simulateZOneChr")]]
 IntegerVector simulateZOneChr(NumericVector beta_by_region,
-               NumericVector lor_by_pair,
-               NumericVector u) {
+               NumericVector lor_by_pair) {
 
-  // TODO: It's possible to generate u within simulateZ(). However, is this
-  // worth it? And how does it play with seed and RNGs?
+  // Don't need to get/put RNGState because Rcpp attributes takes care of this.
 
   // Argument checks
-  if (beta_by_region.length() != u.length()) {
-    stop("length(beta_by_region) != length(u)");
-  }
-  if (lor_by_pair.length() != (u.length() - 1)) {
+  if (lor_by_pair.length() != (beta_by_region.length() - 1)) {
     stop("length(lor_by_pair) != (length(u) - 1)");
   }
 
   // Initialise variables
-  int n = u.length();
+  int n = beta_by_region.length();
+  // A vector of Uniform(0, 1) random variables used in choosing the
+  // next state of the process.
+  // TODO: See http://gallery.rcpp.org/articles/timing-rngs/ for a discussion
+  // of choice of RNG generator in Rcpp code.
+  NumericVector u = runif(n);
+  // Z stores the result.
   IntegerVector Z(n, NA_INTEGER);
+  // seed is used to initialise ipf algorithm to get joint_prob_matrix.
   arma::mat seed(2, 2, arma::fill::ones);
   // col_margins = (p_{0.}, p_{1.e})
   arma::rowvec col_margins(2);
   // row_margins = (p_{.0}, p_{.1})
   arma::vec row_margins(2);
+  // The 2x2 matrix of joint probabilities (*not* the transition matrix).
   arma::mat joint_prob_matrix(2, 2);
   // p = Pr(Z_{i + 1} = 1 | Z_{i} = z_{i})
   double p;
