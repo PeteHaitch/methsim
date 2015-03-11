@@ -164,6 +164,7 @@ SimulateMethylomeParam <- function(BSgenome,
 ### simulate()
 ###
 
+# TODO: Probably want to export the various comethylation_function options.
 #' Simulate a methylome.
 #'
 #' @note Currently only simulates CpG methylation.
@@ -193,15 +194,17 @@ setMethod("simulate",
           function(object,
                    nsim = 1,
                    seed = NULL,
-                   comethylation_function = .sampleComethDTLoess,
+                   comethylation_function = methsim:::.sampleComethDT,
                    BPPARAM = bpparam(), ...) {
 
             warning("Currently only supports CpG methylation.")
             warning("Currently only supports unstranded methylomes.")
 
             # Argument checks
-            match.fun(comethylation_function)
+            comethylation_function <- match.fun(comethylation_function)
 
+            # TODO: Will need to revisit how seed is set and (pseudo) random
+            # numbers are generated due to the use of BiocParallel and Rcpp*.
             # This chunk for handling RNG generation is based on
             # stats:::simulate.lm.
             if (!exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
@@ -264,7 +267,6 @@ setMethod("simulate",
             # matrix(unlist(Z, use.names = FALSE), ncol = length(H_by_region)),
             # sparseMatrix(matrix(unlist(Z, use.names = FALSE),
             # ncol = length(H_by_region))).
-            u <- runif(length(beta_by_region))
             # Simulate length(H) chains in parallel.
             Z <- bplapply(X = seq_len(ncol(H_by_region)),
                           FUN = function() {
@@ -277,7 +279,6 @@ setMethod("simulate",
                             # .simulateZOneChr().
                             .simulateZ(beta_by_region = beta_by_region,
                                        lor_by_pair = lor_by_pair,
-                                       u = u,
                                        one_tuples = one_tuples,
                                        two_tuples = two_tuples)
                           },
