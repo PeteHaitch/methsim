@@ -11,7 +11,9 @@
 #'
 #' @docType package
 #' @name methsim
-#' @useDynLib methsim
+#' @useDynLib methsim, .registration = TRUE
+#' @import methods
+#' @import GenomicRanges
 #' @import Rcpp
 #' @import MethylationTuples
 #' @import MethylSeekR

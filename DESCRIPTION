@@ -21,25 +21,31 @@ Depends:
 Suggests:
     testthat,
     knitr,
-    BSgenome.Hsapiens.UCSC.hg19
+    BSgenome.Hsapiens.UCSC.hg19,
+    mipfp
 Imports:
     methods,
-    Rcpp (>= 0.11.2),
+    Rcpp (>= 0.11.5),
     Biobase,
     nnet,
     mhsmm,
-    data.table
-LinkingTo: Rcpp
+    data.table,
+    GenomicRanges
+LinkingTo: Rcpp, RcppArmadillo
 VignetteBuilder: knitr
 Collate:
     'AllGenerics.R'
-    'AllUtilities.R'
-    'PartitionedMethylome-class.R'
-    'MethSimParam-class.R'
     'MethylSeekRGR-class.R'
+    'MethylSeekRGR-utilities.R'
+    'PartitionedMethylome-class.R'
     'RcppExports.R'
+    'SimulateBSParam-class.R'
+    'SimulateMethylomeParam-class.R'
+    'SimulatedBS-class.R'
+    'SimulatedMethylome-class.R'
+    'addDMRs.R'
     'findMostOverlapping.R'
     'funByPM.R'
     'methsim.R'
     'partitionMethylome.R'
-    'simulate.R'
+    'sampling-utilities.R'
