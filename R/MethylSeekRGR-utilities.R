@@ -1,5 +1,5 @@
 ### =========================================================================
-### Utility functions. These functions are not exported.
+### MethylSeekRGR utility functions. These functions are not exported.
 ### -------------------------------------------------------------------------
 ###
 
