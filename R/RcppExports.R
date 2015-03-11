@@ -5,3 +5,23 @@ ipf <- function(seed, row_margins, col_margins, iter = 1000L, tol = 1e-10) {
     .Call('methsim_ipf', PACKAGE = 'methsim', seed, row_margins, col_margins, iter, tol)
 }
 
+#' Simulate a one chromosome's worth of a "true" methylome.
+#'
+#' @param beta_by_region the beta-value (average methylation level) for each
+#' methylation locus on the chromosome.
+#' @param lor_by_pair the within-fragment co-methylation between each pair of
+#' methylation loci on the chromosome. Should be log odds-ratios using base-2
+#' logarithms.
+#' @param u a vector of Uniform(0, 1) random variables used in choosing the
+#' next state of the process.
+#'
+#' @return an integer vector of simulated methylation states along the
+#' chromosome; 0 = unmethylated and 1 = methylated.
+.simulateZOneChr <- function(beta_by_region, lor_by_pair, u) {
+    .Call('methsim_simulateZOneChr', PACKAGE = 'methsim', beta_by_region, lor_by_pair, u)
+}
+
+# Register entry points for exported C++ functions
+methods::setLoadAction(function(ns) {
+    .Call('methsim_RcppExport_registerCCallable', PACKAGE = 'methsim')
+})
