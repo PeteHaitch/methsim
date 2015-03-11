@@ -87,8 +87,8 @@ MethylSeekRGR <- function(seqnames = Rle(), ranges = IRanges(),
 #' \code{MethylationTuples::\link[MethylationTuples]{collapseStrand}}.
 #' @return A list of \code{\link{MethylSeekRGR}} objects, which are
 #' compatible with the \code{MethylSeekR} Bioconductor package.
+#' @rdname MethylSeekRGR-class
 #' @name as
-#' @aliases MethylSeekRGR
 #' @export
 setAs("MethPat",
       "MethylSeekRGR",
@@ -97,6 +97,7 @@ setAs("MethPat",
         if (size(from) != 1L) {
           stop("'MethPat' object must contain data for 1-tuples.")
         }
+        # MethylSeekR is only designed for analysing CpG methylation.
         if (!identical(methtype(from), "CG")) {
           stop("'MethPat' object must have CG 'methtype'.")
         }

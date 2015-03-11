@@ -4,10 +4,25 @@
 \name{MethylSeekRGR-class}
 \alias{MethylSeekRGR}
 \alias{MethylSeekRGR-class}
+\alias{as}
 \title{MethylSeekRGR class}
+\arguments{
+\item{methpat}{A \code{\link[MethylationTuples]{MethPat}} object containing CpG
+1-tuples. The \code{\link[MethylationTuples]{MethPat}} object should already
+been processed with
+\code{MethylationTuples::\link[MethylationTuples]{filterOutVariants}} and
+\code{MethylationTuples::\link[MethylationTuples]{collapseStrand}}.}
+}
+\value{
+A list of \code{\link{MethylSeekRGR}} objects, which are
+compatible with the \code{MethylSeekR} Bioconductor package.
+}
 \description{
 An S4 class to formalise the informal
 \code{GenomicRanges::\link[GenomicRanges]{GRanges}}-based class used by
 \code{\link[MethylSeekR]{MethylSeekR-package}}.
+
+Coerce a MethPat object of CG 1-tuples to a list of MethylSeekR-compatible
+GRanges object(s), one list element per sample.
 }
 
