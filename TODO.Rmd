@@ -270,7 +270,7 @@ This functionality is required in order to simulate a single sample's worth of d
 
 ### Biological
 
-These are questions to explore once I am able to simulate a single sample's worth of dat (in order of simplicity):
+These are questions to explore once I am able to simulate a single sample's worth of data (in order of simplicity):
 
 1. Simulate multiple samples' worth of reads from a single truth to see the effect of sequencing variability.
 2. Simulate multiple samples' worth of reads from a truths with the same partition but with different region-specific parameters.
