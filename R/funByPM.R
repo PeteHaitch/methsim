@@ -28,6 +28,7 @@
 funByPM <- function(FUN, pm, methpat, min_cov, ...) {
   # Argument checks
   stopifnot(is(pm, "PartitionedMethylome"))
+  stopifnot(methpat, "MethPat")
   if (ncol(methpat) > 1L) {
     stop("'methpat' must only contain data on a single sample.")
   }
