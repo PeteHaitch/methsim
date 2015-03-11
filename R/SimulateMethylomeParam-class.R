@@ -195,13 +195,15 @@ setMethod("simulate",
                    nsim = 1,
                    seed = NULL,
                    comethylation_function = methsim:::.sampleComethDT,
-                   BPPARAM = bpparam(), ...) {
+                   BPPARAM = bpparam(),
+                   epsilon = 0.01, ...) {
 
             warning("Currently only supports CpG methylation.")
             warning("Currently only supports unstranded methylomes.")
 
             # Argument checks
             comethylation_function <- match.fun(comethylation_function)
+            stopifnot(is.numeric(epsilon) & epsilon > 0 & epsilon < 1)
 
             # TODO: Will need to revisit how seed is set and (pseudo) random
             # numbers are generated due to the use of BiocParallel and Rcpp*.
@@ -230,10 +232,14 @@ setMethod("simulate",
             # Sample parameters
 
             # Sample average methylation levels in each region
-            # TODO: May need to do something about zero/one values.
             beta_by_region <- .sampleMethLevelDT(
               object@MethLevelDT,
               regionType(object@PartitionedMethylome))
+            # Add (subtract) epsilon to zero (one) elements of beta_by_region.
+            # Otherwise the entire region will be zero (one).
+            beta_by_region[beta_by_region == 1] <- 1 - epsilon
+            beta_by_region[beta_by_region == 0] <- epsilon
+
             # Sample within-fragment co-methylation for each IPD-region_type
             # combination.
             two_tuples <- findMTuples(object@BSgenome, MethInfo("CG"), size = 2)
