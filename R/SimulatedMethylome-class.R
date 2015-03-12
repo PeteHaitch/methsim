@@ -30,7 +30,7 @@ setClass("SimulatedMethylome",
     msg <- Biobase::validMsg(msg, paste0("'rowData' slot of a ",
                                          "'SimulatedMethylome' object must be ",
                                          "a 'MTuples' object."))
-  } else if (size(object@rowData != 1L)) {
+  } else if (size(object@rowData) != 1L) {
     # Only run this check if the rowData is indeed an MTuples object.
     msg <- Biobase::validMsg(msg, paste0("'size' of 'MTuples' in 'rowData' ",
                                          "slot must be 1."))
@@ -41,11 +41,11 @@ setClass("SimulatedMethylome",
 .valid.SimulatedMethylome.assays <- function(object) {
   msg <- NULL
 
-  if (!identical(GenomicRanges::assayNames(object), c("Z", "H"))) {
+  if (!identical(names(object@assays$data), c("Z", "H"))) {
     msg <- Biobase::validMsg(msg, paste0("'assayNames' of a ",
                                          "'SimulatedMethylome' object must be ",
                                          "'Z' and 'H'"))
-  } else if (ncol(Z) != ncol(H)) {
+  } else if (ncol(object@assays$data$Z) != ncol(object@assays$data$H)) {
     # Only run this check if the assay names are valid
     msg <- Biobase::validMsg(msg, paste0("'ncol(Z)' must equal 'ncol(H)'."))
   }
