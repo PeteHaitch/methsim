@@ -5,17 +5,20 @@ ipf <- function(seed, row_margins, col_margins, iter = 1000L, tol = 1e-10) {
     .Call('methsim_ipf', PACKAGE = 'methsim', seed, row_margins, col_margins, iter, tol)
 }
 
-#' Simulate a one chromosome's worth of a "true" methylome.
+#' Simulate a single "haplotype" of a methylome (Z).
 #'
 #' @param beta_by_region the beta-value (average methylation level) for each
-#' methylation locus on the chromosome.
+#' methylation locus in the genome.
 #' @param lor_by_pair the within-fragment co-methylation between each pair of
-#' methylation loci on the chromosome. Should be log odds-ratios using base-2
-#' logarithms.
-#' @return an integer vector of simulated methylation states along the
-#' chromosome; 0 = unmethylated and 1 = methylated.
-.simulateZOneChr <- function(beta_by_region, lor_by_pair) {
-    .Call('methsim_simulateZOneChr', PACKAGE = 'methsim', beta_by_region, lor_by_pair)
+#' methylation loci in the genome. Should be log odds-ratios using base-2
+#' logarithms. The length of this should be equal to the number of methylation
+#' loci in the genome minus the number of chromosomes (seqnames).
+#' @param seqnames_one_tuples the chromosome (seqname) of each methylation
+#' locus in the genome, i.e., \code{seqnames(one_tuples)}.
+#' @return an integer vector of simulated methylation states for each
+#' methylation locus in the genome; 0 = unmethylated and 1 = methylated.
+.simulateZ <- function(beta_by_region, lor_by_pair, seqnames_one_tuples) {
+    .Call('methsim_simulateZ', PACKAGE = 'methsim', beta_by_region, lor_by_pair, seqnames_one_tuples)
 }
 
 # Register entry points for exported C++ functions

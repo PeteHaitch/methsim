@@ -133,18 +133,3 @@
   }
   H
 }
-
-#' Simulate Z
-#'
-#' Simulate a single methylome (Z).
-#' @keywords internal
-.simulateZ <- function(beta_by_region, lor_by_pair, one_tuples, two_tuples) {
-  # TODO: Leave beta_by_region as an Rle (will require changes to
-  # .simulateZOneChr()).
-  # Map .simulateZOneChr() across all chromosomes
-  Z_list <- Map(.simulateZOneChr,
-                split(as.vector(beta_by_region), seqnames(one_tuples)),
-                split(lor_by_pair, seqnames(two_tuples)))
-  unlist(Z_list, use.names = FALSE)
-}
-

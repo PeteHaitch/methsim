@@ -43,15 +43,16 @@ RcppExport SEXP methsim_ipf(SEXP seedSEXP, SEXP row_marginsSEXP, SEXP col_margin
     UNPROTECT(1);
     return __result;
 }
-// simulateZOneChr
-IntegerVector simulateZOneChr(NumericVector beta_by_region, NumericVector lor_by_pair);
-RcppExport SEXP methsim_simulateZOneChr(SEXP beta_by_regionSEXP, SEXP lor_by_pairSEXP) {
+// simulateZ
+IntegerVector simulateZ(NumericVector beta_by_region, NumericVector lor_by_pair, CharacterVector seqnames_one_tuples);
+RcppExport SEXP methsim_simulateZ(SEXP beta_by_regionSEXP, SEXP lor_by_pairSEXP, SEXP seqnames_one_tuplesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< NumericVector >::type beta_by_region(beta_by_regionSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type lor_by_pair(lor_by_pairSEXP);
-    __result = Rcpp::wrap(simulateZOneChr(beta_by_region, lor_by_pair));
+    Rcpp::traits::input_parameter< CharacterVector >::type seqnames_one_tuples(seqnames_one_tuplesSEXP);
+    __result = Rcpp::wrap(simulateZ(beta_by_region, lor_by_pair, seqnames_one_tuples));
     return __result;
 END_RCPP
 }
