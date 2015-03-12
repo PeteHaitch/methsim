@@ -267,28 +267,56 @@ setMethod("simulate",
             H_by_region <- .samplePatternFreqsDT(
               object@PatternFreqsDT,
               regionType(object@PartitionedMethylome))
+            # TODO: "Undo" implicit Rles of H_by_region
+            H <- matrix(rep(H_by_region, times = rep(countSubjectHits(ol),
+                                                     ncol(H_by_region))),
+                        ncol = ncol(H_by_region),
+                        dimnames = list(NULL,
+                                        paste0('h',
+                                               seq_len(ncol(H_by_region)))))
 
-            # Simulate Z as a matrix with ncol = ncol(H_by_region).
-            # TODO: Check storage requirements for Z with as(Z, "DataFrame")
-            # and sparseMatrix(matrix(unlist(Z, use.names = FALSE),
-            # ncol = length(H_by_region))). However, also note that it may be
-            # more efficient to sample from an integer matrix rather than these
-            # more complicated objects.
-            u <- matrix(runif(ncol(H_by_region) * length(one_tuples)),
-                        ncol = ncol(H_by_region), nrow = length(one_tuples))
-            Z <- mclapply(seq_len(ncol(H_by_region)), function(i) {
-              .simulateZ(beta_by_region = beta_by_region,
-                         lor_by_pair = lor_by_pair,
-                         seqnames_one_tuples = seqnames(one_tuples),
-                         u = u[, i])
+            # Don't generate random numbers in parallel, e.g., via mclapply().
+            # It needlessly complicates things and any speed ups are swamped
+            # by the running times of other steps in this function.
+            u <- lapply(seq_len(ncol(H_by_region)), function (i) {
+              runif(length(one_tuples))
             })
-            Z <- matrix(unlist(Z, use.names = FALSE), ncol = ncol(H_by_region))
 
-            # TODO: Create SimulatedMethylome object
+            # Simulate Z as a matrix with ncol = ncol(H_by_region). The
+            # resulting object is approximately 900 MB in size for a human
+            # methylome with 8 "haplotypes".
+            # While storing Z as a Matrix::sparseMatrix might seem appealing,
+            # the vast majority of entries (~80%) are non-zero (1), therefore
+            # the object is not in fact sparse and is even larger in size
+            # (2.1 GB). While I could "bit-flip" to make 1 = unmethylated and
+            # 0 = methylated, this would only be a source of confusion.
+            # In contrast, a DataFrame solution with Rle columns is ~ 240 MB in
+            # size. However, row-column access is unacceptably slow for my
+            # subsequent application that involves sampling from Z.
+            # UP TO HERE: Switch to BiocParallel
+            # bpmapply(, SIMPLIFY = TRUE) takes a ridiculously longer time to
+            # run than a straightforward mcmapply(, SIMPLIFY = TRUE); why?
+            Z <- bplapply(seq_along(u), function(u, beta_by_region,
+                                                 lor_by_pair) {
+              .simulateZ(as.vector(beta_by_region),
+                         lor_by_region,
+                         as.vector(seqnames_one_tuples),
+                         u)
+            }, BPPARAM = BPPARAM)
+            Z <- simplify2array(Z)
+            # TODO: This is inefficient because it forces a copy of Z.
+            colnames(Z) <- colnames(H)
+
+            # UP TO HERE: Create SimulatedMethylome object
+            # This should work, I think, but doesn't
+            sm <- new("SimulatedMethylome",
+                      SummarizedExperiment(assays = SimpleList(Z = Z, H = H),
+                                           rowData = one_tuples))
+
 
             # Ensure "seed" is set as an attribute of the returned value.
-            attr(simulated_methylome, "seed") <- rng_state
-            simulated_methylome
+            attr(sm, "seed") <- rng_state
+            sm
           }
 )
 
