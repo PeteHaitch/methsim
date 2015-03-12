@@ -164,6 +164,7 @@ SimulateMethylomeParam <- function(BSgenome,
 ### simulate()
 ###
 
+# TODO: Add message() output with timing information if verbose = TRUE.
 # TODO: Probably want to export the various comethylation_function options.
 #' Simulate a methylome.
 #'
@@ -229,7 +230,7 @@ setMethod("simulate",
 
             message("Simulating ", nsim, " methylome...")
 
-            # Sample parameters
+            # Sample parameters from the SimulateMethylomeParams object.
 
             # Sample average methylation levels in each region
             beta_by_region <- .sampleMethLevelDT(
@@ -267,7 +268,7 @@ setMethod("simulate",
             H_by_region <- .samplePatternFreqsDT(
               object@PatternFreqsDT,
               regionType(object@PartitionedMethylome))
-            # TODO: "Undo" implicit Rles of H_by_region
+            # "Undo" implicit Rles of H_by_region
             H <- matrix(rep(H_by_region, times = rep(countSubjectHits(ol),
                                                      ncol(H_by_region))),
                         ncol = ncol(H_by_region),
@@ -275,6 +276,7 @@ setMethod("simulate",
                                         paste0('h',
                                                seq_len(ncol(H_by_region)))))
 
+            # Generate (pseudo) random numbers used in the simulation.
             # Don't generate random numbers in parallel, e.g., via mclapply().
             # It needlessly complicates things and any speed ups are swamped
             # by the running times of other steps in this function.
@@ -296,23 +298,24 @@ setMethod("simulate",
             # UP TO HERE: Switch to BiocParallel
             # bpmapply(, SIMPLIFY = TRUE) takes a ridiculously longer time to
             # run than a straightforward mcmapply(, SIMPLIFY = TRUE); why?
-            Z <- bplapply(seq_along(u), function(u, beta_by_region,
-                                                 lor_by_pair) {
+            Z <- bplapply(u, function(u,
+                                      beta_by_region,
+                                      lor_by_pair,
+                                      seqnames_one_tuples) {
               .simulateZ(as.vector(beta_by_region),
-                         lor_by_region,
+                         lor_by_pair,
                          as.vector(seqnames_one_tuples),
                          u)
-            }, BPPARAM = BPPARAM)
+            }, beta_by_region = beta_by_region, lor_by_pair = lor_by_pair,
+            seqnames_one_tuples = seqnames(one_tuples), BPPARAM = BPPARAM)
             Z <- simplify2array(Z)
             # TODO: This is inefficient because it forces a copy of Z.
             colnames(Z) <- colnames(H)
 
-            # UP TO HERE: Create SimulatedMethylome object
-            # This should work, I think, but doesn't
+            # Create SimulatedMethylome object
             sm <- new("SimulatedMethylome",
                       SummarizedExperiment(assays = SimpleList(Z = Z, H = H),
                                            rowData = one_tuples))
-
 
             # Ensure "seed" is set as an attribute of the returned value.
             attr(sm, "seed") <- rng_state
