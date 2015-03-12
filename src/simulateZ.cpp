@@ -2,6 +2,12 @@
 
 using namespace Rcpp;
 
+// TODO: I'm still getting occasional low-level errors, e.g., segfaults. These
+// seem to occur when .simulateZ() is run in parallel, particularly via
+// BiocParallel::bplapply(). It would be good to get to the bottom of these;
+// see http://master.bioconductor.org/developers/how-to/c-debugging/,
+// https://www.google.com.au/search?q=rcpp+gdb+site%3Alists.r-forge.r-project.org&oq=rcpp+gdb+site%3Alists.r-forge.r-project.org&aqs=chrome..69i57.388j0j9&sourceid=chrome&es_sm=91&ie=UTF-8,
+//
 // TODO (long term): Allow beta_by_region and seqnames_one_tuple to be
 // S4Vectors::Rleobjects to avoid the requirement to pre-expand these via
 // as.vector().
