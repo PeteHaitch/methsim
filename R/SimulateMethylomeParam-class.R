@@ -253,11 +253,11 @@ setMethod("simulate",
                                            object@PartitionedMethylome,
                                            ...)
 
-            # Simulate Z
+            # Methylation loci at which to simulate a methylation state.
             one_tuples <- findMTuples(object@BSgenome, MethInfo("CG"), size = 1)
-            # Only want unstranded methylomes
+            # Only want unstranded methylomes.
             one_tuples <- unstrand(one_tuples[strand(one_tuples) == "+"])
-            # Drop unusable seqlevels
+            # Drop unusable seqlevels.
             one_tuples <- keepSeqlevels(one_tuples,
                                         seqlevels(object@PartitionedMethylome))
             ol <- findOverlaps(one_tuples, object@PartitionedMethylome)
@@ -268,27 +268,23 @@ setMethod("simulate",
               object@PatternFreqsDT,
               regionType(object@PartitionedMethylome))
 
-            # Simulate Z as a list with length = length(H_by_region).
-            # Then check storage requirements for Z with as(Z, "DataFrame"),
-            # matrix(unlist(Z, use.names = FALSE), ncol = length(H_by_region)),
-            # sparseMatrix(matrix(unlist(Z, use.names = FALSE),
-            # ncol = length(H_by_region))).
-            # Simulate length(H) chains in parallel.
-            Z <- bplapply(X = seq_len(ncol(H_by_region)),
-                          FUN = function() {
-                            # TODO: Need to handle each chromosome separately,
-                            # e.g., by splitting beta_by_region, lor_by_pair,
-                            # u by seqlevels(one_tuples).
-                            # mv simulateZ.cpp simulateZOneChr.cpp
-                            # Write .simulateZ() as in internal R function that
-                            # handles splitting by chromosome and calls
-                            # .simulateZOneChr().
-                            .simulateZ(beta_by_region = beta_by_region,
-                                       lor_by_pair = lor_by_pair,
-                                       one_tuples = one_tuples,
-                                       two_tuples = two_tuples)
-                          },
-                          BPPARAM = BPPARAM)
+            # Simulate Z as a matrix with ncol = ncol(H_by_region).
+            # TODO: Check storage requirements for Z with as(Z, "DataFrame")
+            # and sparseMatrix(matrix(unlist(Z, use.names = FALSE),
+            # ncol = length(H_by_region))). However, also note that it may be
+            # more efficient to sample from an integer matrix rather than these
+            # more complicated objects.
+            u <- matrix(runif(ncol(H_by_region) * length(one_tuples)),
+                        ncol = ncol(H_by_region), nrow = length(one_tuples))
+            Z <- mclapply(seq_len(ncol(H_by_region)), function(i) {
+              .simulateZ(beta_by_region = beta_by_region,
+                         lor_by_pair = lor_by_pair,
+                         seqnames_one_tuples = seqnames(one_tuples),
+                         u = u[, i])
+            })
+            Z <- matrix(unlist(Z, use.names = FALSE), ncol = ncol(H_by_region))
+
+            # TODO: Create SimulatedMethylome object
 
             # Ensure "seed" is set as an attribute of the returned value.
             attr(simulated_methylome, "seed") <- rng_state

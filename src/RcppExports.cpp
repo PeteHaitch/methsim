@@ -44,15 +44,16 @@ RcppExport SEXP methsim_ipf(SEXP seedSEXP, SEXP row_marginsSEXP, SEXP col_margin
     return __result;
 }
 // simulateZ
-IntegerVector simulateZ(NumericVector beta_by_region, NumericVector lor_by_pair, CharacterVector seqnames_one_tuples);
-RcppExport SEXP methsim_simulateZ(SEXP beta_by_regionSEXP, SEXP lor_by_pairSEXP, SEXP seqnames_one_tuplesSEXP) {
+IntegerVector simulateZ(NumericVector beta_by_region, NumericVector lor_by_pair, CharacterVector seqnames_one_tuples, NumericVector u);
+RcppExport SEXP methsim_simulateZ(SEXP beta_by_regionSEXP, SEXP lor_by_pairSEXP, SEXP seqnames_one_tuplesSEXP, SEXP uSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< NumericVector >::type beta_by_region(beta_by_regionSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type lor_by_pair(lor_by_pairSEXP);
     Rcpp::traits::input_parameter< CharacterVector >::type seqnames_one_tuples(seqnames_one_tuplesSEXP);
-    __result = Rcpp::wrap(simulateZ(beta_by_region, lor_by_pair, seqnames_one_tuples));
+    Rcpp::traits::input_parameter< NumericVector >::type u(uSEXP);
+    __result = Rcpp::wrap(simulateZ(beta_by_region, lor_by_pair, seqnames_one_tuples, u));
     return __result;
 END_RCPP
 }

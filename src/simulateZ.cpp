@@ -2,6 +2,9 @@
 
 using namespace Rcpp;
 
+// TODO (long term): Allow beta_by_region and seqnames_one_tuple to be
+// S4Vectors::Rleobjects to avoid the requirement to pre-expand these via
+// as.vector().
 //' Simulate a single "haplotype" of a methylome (Z).
 //'
 //' @param beta_by_region the beta-value (average methylation level) for each
@@ -12,21 +15,29 @@ using namespace Rcpp;
 //' loci in the genome minus the number of chromosomes (seqnames).
 //' @param seqnames_one_tuples the chromosome (seqname) of each methylation
 //' locus in the genome, i.e., \code{seqnames(one_tuples)}.
+//' @param u a vector of Uniform(0, 1) random variables used in choosing the
+//' next state of the process. Must have same length as \code{beta_by_region}.
+//'
+//' @note Random number generation is performed outside of this function (at
+//' the R level in a single thread) in order to simplify this function. If
+//' the vector of Uniform(0, 1) random variables ('u') is to be simulated
+//' within this function at the C++ level then great care must be taken,
+//' especially if this function is subsequently called in parallel.
+//'
 //' @return an integer vector of simulated methylation states for each
 //' methylation locus in the genome; 0 = unmethylated and 1 = methylated.
 // [[Rcpp::export(".simulateZ")]]
 IntegerVector simulateZ(NumericVector beta_by_region,
                         NumericVector lor_by_pair,
-                        CharacterVector seqnames_one_tuples) {
-
-  // TODO: Check whether this is necessary.
-  // I didn't think I needed to get/put RNGState, because I thought that Rcpp
-  // attributes takes care of this, however I am getting segfaults without it.
-  RNGScope scope;
+                        CharacterVector seqnames_one_tuples,
+                        NumericVector u) {
 
   // Argument checks
   if (beta_by_region.length() != seqnames_one_tuples.length()) {
     stop("length(beta_by_region) != length(seqnames_one_tuples)");
+  }
+  if (beta_by_region.length() != u.length()) {
+    stop("length(beta_by_region) != length(u)");
   }
   // There is only a value in lor_by_pair for pairs of methylation loci on the
   // same chromosome.
@@ -39,18 +50,13 @@ IntegerVector simulateZ(NumericVector beta_by_region,
   }
 
   // Initialise variables
-  // TODO: n is a variable at runtime and this might be the cause of my
-  // segfaults (see http://stackoverflow.com/questions/17105555/rcpp-segfault-on-arrays-698152-if-integervector-is-declared)
+  // TODO: n is a variable at runtime and this might be the cause of sefaults
+  // (see http://stackoverflow.com/questions/17105555/rcpp-segfault-on-arrays-698152-if-integervector-is-declared)
   int n = beta_by_region.length();
-  // A vector of Uniform(0, 1) random variables used in choosing the
-  // next state of the process.
-  // TODO: See http://gallery.rcpp.org/articles/timing-rngs/ for a discussion
-  // of choice of RNG generator in Rcpp code.
-  NumericVector u = runif(n);
   // Z stores the result.
   IntegerVector Z(n, NA_INTEGER);
-  // seed is used to initialise ipf algorithm to get joint_prob_matrix.
-  arma::mat seed(2, 2, arma::fill::ones);
+  // ipf_seed is used to initialise ipf algorithm to get joint_prob_matrix.
+  arma::mat ipf_seed(2, 2, arma::fill::ones);
   // col_margins = (p_{0.}, p_{1.e})
   arma::rowvec col_margins(2);
   // row_margins = (p_{.0}, p_{.1})
@@ -98,12 +104,12 @@ IntegerVector simulateZ(NumericVector beta_by_region,
     // Pr(Z_i = z_i).
 
     // NOTE: This assumes lor_by_pair uses base-2 logarithms.
-    seed(0, 0) = pow(2, lor_by_pair[i - 1]);
+    ipf_seed(0, 0) = pow(2, lor_by_pair[i - 1]);
     col_margins[0] = 1 - beta_by_region[i - 1];
     col_margins[1] = beta_by_region[i - 1];
     row_margins[0] = 1 - beta_by_region[i];
     row_margins[1] = beta_by_region[i];
-    joint_prob_matrix = methsim::ipf(seed, row_margins, col_margins, 1000,
+    joint_prob_matrix = methsim::ipf(ipf_seed, row_margins, col_margins, 1000,
                                      1e-10);
     // Compute p = Pr(Z_{i + 1} = 1 | Z_{i} = z_{i})
     if (Z[i - 1] == 0) {
