@@ -104,11 +104,11 @@ arma::mat ipf(const arma::mat& seed, arma::vec row_margins,
   if (!converged) {
     std::stringstream iter_string;
     iter_string << iter;
-    std::string warning = "IPFP did not converge after " + iter_string.str() +
-      " iterations(s)!\n" +
+    std::string warning_msg = "IPFP did not converge after " +
+      iter_string.str() + " iterations(s)!\n" +
       "This might be due to 0 cells in the seed, the maximum number of " +
       "iterations being too low, or the tolerance being too small.";
-    Rcpp::warning(warning);
+    Rcpp::warning(warning_msg);
   }
 
   diff_margins[0] = max(abs(row_margins - sum(result, 1)));
