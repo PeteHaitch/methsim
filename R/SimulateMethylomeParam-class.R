@@ -164,24 +164,27 @@ SimulateMethylomeParam <- function(BSgenome,
 ### simulate()
 ###
 
+# TODO: Should comethylation_function and/or epsilon be part of the
+# SimulateMethylomeParam object?
 # TODO: Add message() output with timing information if verbose = TRUE.
 # TODO: Probably want to export the various comethylation_function options.
 #' Simulate a methylome.
 #'
 #' @note Currently only simulates CpG methylation.
 #'
-#' @param object A \code{\link{SimulateMethylomeParam}} object.
-#' @param nsim Number of samples to simulate using the parameters given in
+#' @param object a \code{\link{SimulateMethylomeParam}} object.
+#' @param nsim the number of samples to simulate using the parameters given in
 #' \code{object}.
-#' @param seed An object specifying if and how the random number generator
+#' @param seed an object specifying if and how the random number generator
 #' should be initialized ('seeded'). For the "MethSimParam" method, either
 #' \code{NULL} or an integer that will be used in a call to
 #' \code{base::\link[base]{set.seed}} before simulating the samples. If set,
 #' the value is saved as the "\code{seed}" attribute of the returned value. The
 #' default, \code{NULL}, will not change the random generator state, and return
 #' \code{\link{.Random.seed}} as the "\code{seed}" attribute, see 'Value'.
-#' @param comethylation_model the type
-#' @param BPPARAM An optional
+#' @param comethylation_function a function used to sample from the
+#' co-methylation distribution.
+#' @param BPPARAM an optional
 #' \code{BiocParallel::\link[BiocParallel]{BiocParallelParam}} instance
 #' determining the parallel back-end to be used during evaluation.
 #' @param ... additional arguments passed to the \code{comethylation_function}.
@@ -199,8 +202,10 @@ setMethod("simulate",
                    BPPARAM = bpparam(),
                    epsilon = 0.01, ...) {
 
-            warning("Currently only supports CpG methylation.")
-            warning("Currently only supports unstranded methylomes.")
+            # Non-CpG methylation is unlikely to be implemented.
+            warning("Currently only simulates CpG methylation.")
+            # TODO (long term): Support stranded methylomes.
+            warning("Currently only simulates unstranded methylomes.")
 
             # Argument checks
             comethylation_function <- match.fun(comethylation_function)

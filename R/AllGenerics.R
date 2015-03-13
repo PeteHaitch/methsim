@@ -78,7 +78,9 @@
 #' @keywords methods
 #'
 #' @export
-setGeneric("simulate")
+setGeneric("simulate", function(object, nsim = 1, seed = NULL, ...) {
+  standardGeneric("simulate")
+})
 
 ### -------------------------------------------------------------------------
 ### regionType
