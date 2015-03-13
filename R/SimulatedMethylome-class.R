@@ -78,3 +78,53 @@ setValidity2("SimulatedMethylome", .valid.SimulatedMethylome)
 
 # None because I don't want the user constructing these manually, rather they
 # should be constructed by simulate,SimulateMethylomeParam-method.
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### methLevel()
+###
+
+## TODO: Document.
+## TODO: Unit tests.
+#' Compute methylation levels.
+#' @param object A \code{\link{SimulatedMethylome}} object.
+#' @param statistic A \code{character} string indicating which methylation
+#' level statistic is to be computed. One of "\code{beta-values}" or
+#' "\code{M-values}" (see below).
+#' @param offset A \code{numeric} vector with length 1 used when computing
+#' M-values (default: 1).
+#'
+#' @details
+#' TODO: Define beta-values and M-values. Note any differences with how others
+#' define beta-values or M-values, e.g., minfi.
+#'
+#' @return A \code{\link[base]{matrix}}, with the same dimensions and dimension
+#' names as \code{x}, of methylation levels at each methylation loci in each
+#' sample.
+#'
+#' @aliases methLevel
+#'
+#' @export
+setMethod("methLevel",
+          "SimulatedMethylome",
+          function(object, statistic = c("beta-values", "M-values"),
+                   offset = 1L) {
+            statistic <- match.arg(statistic)
+            if (statistic == "beta-values") {
+              meth_level <- rowSums(assay(object, "Z", withDimnames = FALSE) *
+                                      assay(object, "H", withDimnames = FALSE))
+            } else if (statistic == "M-values") {
+              # TODO: Figure out how to compute M-values from beta-values
+              # using the appropriate 'offset'.
+              stop("Sorry, M-values not yet implemented.")
+            }
+
+            # TODO: Try to do this in a way that avoids a copy.
+            matrix(meth_level, ncol = 1L)
+          }
+)
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### cometh()
+###
+
+# TODO
