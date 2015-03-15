@@ -43,6 +43,17 @@ RcppExport SEXP methsim_ipf(SEXP seedSEXP, SEXP row_marginsSEXP, SEXP col_margin
     UNPROTECT(1);
     return __result;
 }
+// sampleH
+IntegerVector sampleH(NumericMatrix H);
+RcppExport SEXP methsim_sampleH(SEXP HSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericMatrix >::type H(HSEXP);
+    __result = Rcpp::wrap(sampleH(H));
+    return __result;
+END_RCPP
+}
 // simulateZ
 IntegerVector simulateZ(NumericVector beta_by_region, NumericVector lor_by_pair, CharacterVector seqnames_one_tuples, NumericVector u);
 RcppExport SEXP methsim_simulateZ(SEXP beta_by_regionSEXP, SEXP lor_by_pairSEXP, SEXP seqnames_one_tuplesSEXP, SEXP uSEXP) {

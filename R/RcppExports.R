@@ -5,6 +5,22 @@ ipf <- function(seed, row_margins, col_margins, iter = 1000L, tol = 1e-10) {
     .Call('methsim_ipf', PACKAGE = 'methsim', seed, row_margins, col_margins, iter, tol)
 }
 
+#' Sample H.
+#'
+#' Sample a column of H for each row of H with the probability of sampling
+#' column j for row i given by H[i, j].
+#'
+#' @param H a numeric matrix where H[i, j] is the probability of sampling
+#' column j for row i, i.e., rowMeans(H) == 1.
+#'
+#' @keywords internal
+#'
+#' @return an integer vector of length equal to nrow(H), where each element is
+#' the column sampled for that row.
+.sampleH <- function(H) {
+    .Call('methsim_sampleH', PACKAGE = 'methsim', H)
+}
+
 #' Simulate a single "haplotype" of a methylome (Z).
 #'
 #' @param beta_by_region the beta-value (average methylation level) for each
