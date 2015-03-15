@@ -77,10 +77,12 @@
     # Create a table with all the co-methylation data for that IPD-type
     # combination
     x <- cometh_dt[two_tuples_reduced_dt[i, ]]
+    # If there are a sufficient number of observations then sample from the
+    # empirical distribution, otherwise sample from the loess-smoothed
+    # Gaussian model.
     if (isTRUE(x[, sum(N)] > min_n)) {
       x[, sample(x = statistic, size = n, replace = TRUE, prob = N)]
     } else {
-      # UP TO HERE: Enable loess-Gaussian simulated data
       rnorm(n = two_tuples_reduced_dt[i, n],
             mean = mean_fun(two_tuples_reduced_dt[i, IPD],
                             two_tuples_reduced_dt[i, type]),
@@ -88,8 +90,8 @@
                         two_tuples_reduced_dt[i, type]))
     }
   }, two_tuples_reduced_dt, cometh_dt, min_n)
-  # UP TO HERE: Extract values from lor_list and insert them appropriately for
-  # the two_tuples based on IPD-type combination.
+  # Extract values from lor_list and insert them appropriately for the
+  # two_tuples based on IPD-type combination.
   two_tuples_dt[, idx := .I]
   setkey(two_tuples_dt, IPD, type)
   two_tuples_dt[, lor := unlist(x = lor_list, recursive = TRUE,

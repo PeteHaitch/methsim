@@ -282,9 +282,10 @@ setMethod("simulate",
                                                seq_len(ncol(H_by_region)))))
 
             # Generate (pseudo) random numbers used in the simulation.
-            # Don't generate random numbers in parallel, e.g., via mclapply().
-            # It needlessly complicates things and any speed ups are swamped
-            # by the running times of other steps in this function.
+            # Don't generate random numbers in parallel, e.g., via bplapply().
+            # It needlessly complicates things (reproducibility of random
+            # numbers when generated in parallel is hard) and any speed ups are
+            # swamped by the running times of other steps in this function.
             u <- lapply(seq_len(ncol(H_by_region)), function (i) {
               runif(length(one_tuples))
             })
@@ -300,9 +301,6 @@ setMethod("simulate",
             # In contrast, a DataFrame solution with Rle columns is ~ 240 MB in
             # size. However, row-column access is unacceptably slow for my
             # subsequent application that involves sampling from Z.
-            # UP TO HERE: Switch to BiocParallel
-            # bpmapply(, SIMPLIFY = TRUE) takes a ridiculously longer time to
-            # run than a straightforward mcmapply(, SIMPLIFY = TRUE); why?
             Z <- bplapply(u, function(u,
                                       beta_by_region,
                                       lor_by_pair,
