@@ -135,3 +135,21 @@
   }
   H
 }
+
+#' Sample read start positions.
+#'
+#' @param n the number of reads to simulate
+#' @param seqlength the length of the chromosome
+#'
+#' @return A sorted integer vector of read start positions.
+#'
+#' @note This function can return a read start positions that results in a read
+#' running off the end of the chromosome, e.g., if the read start position is
+#' 99, the read_length is 10 but the chromosome length is only 100.
+#'
+#' @keywords internal
+.sampleReadStart <- function(n, seqlength) {
+  # TODO: Should sampling be with or without replacement?
+  sort(sample(x = seqlength - read_length + 1, size = n,
+              replace = TRUE))
+}
