@@ -54,6 +54,21 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// sampleZ
+List sampleZ(IntegerMatrix Z, IntegerVector h, IntegerVector fh, IntegerVector cqh, IntegerVector start_sm);
+RcppExport SEXP methsim_sampleZ(SEXP ZSEXP, SEXP hSEXP, SEXP fhSEXP, SEXP cqhSEXP, SEXP start_smSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< IntegerMatrix >::type Z(ZSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type h(hSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type fh(fhSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type cqh(cqhSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type start_sm(start_smSEXP);
+    __result = Rcpp::wrap(sampleZ(Z, h, fh, cqh, start_sm));
+    return __result;
+END_RCPP
+}
 // simulateZ
 IntegerVector simulateZ(NumericVector beta_by_region, NumericVector lor_by_pair, CharacterVector seqnames_one_tuples, NumericVector u);
 RcppExport SEXP methsim_simulateZ(SEXP beta_by_regionSEXP, SEXP lor_by_pairSEXP, SEXP seqnames_one_tuplesSEXP, SEXP uSEXP) {

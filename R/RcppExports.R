@@ -21,6 +21,33 @@ ipf <- function(seed, row_margins, col_margins, iter = 1000L, tol = 1e-10) {
     .Call('methsim_sampleH', PACKAGE = 'methsim', H)
 }
 
+#' Sample Z.
+#'
+#' Simulate sequencing reads by sampling a subset of rows from a given column
+#' of H for each read.
+#'
+#' @param Z an integer matrix where H[i, j] is the methylation state of the
+#' i-th methylation locus on the j-th haplotype.
+#' @param h an integer vector of length equal to the number of reads. Each
+#' element is the haplotype from which each read is to be sampled, i.e.,
+#' Z[, j].
+#' @param fh an integer vector of length equal to the number of reads. Each
+#' element is the position of the first methylation loci ("first hit") from
+#' which read is to be sampled, i.e., Z[i, ].
+#' @param cqh an integer vector of length equal to the number of reads. Each
+#' element is the number of methylation loci that each read overlaps.
+#' @param pos an integer vector of length equal to \code{sum(cqh)}. Each
+#' element is the genomic position of a methylation locus in Z (ignoring the
+#' chromosome, e.g., chr1:77 is simply 77).
+#'
+#' @keywords internal
+#'
+#' @return a list of length equal to the number of simulated reads. Each list
+#' element is the sequenced/sampled methylation state for that read.
+.sampleZ <- function(Z, h, fh, cqh, start_sm) {
+    .Call('methsim_sampleZ', PACKAGE = 'methsim', Z, h, fh, cqh, start_sm)
+}
+
 #' Simulate a single "haplotype" of a methylome (Z).
 #'
 #' @param beta_by_region the beta-value (average methylation level) for each
