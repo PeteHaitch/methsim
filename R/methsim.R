@@ -18,6 +18,7 @@
 #' @import MethylationTuples
 #' @import MethylSeekR
 #' @import data.table
+#' @import BiocParallel
 #' @importFrom Biobase validMsg
 #' @importFrom mhsmm hmmspec hmmfit
 NULL

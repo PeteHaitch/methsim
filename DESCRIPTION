@@ -30,7 +30,8 @@ Imports:
     nnet,
     mhsmm,
     data.table,
-    GenomicRanges
+    GenomicRanges,
+    BiocParallel
 LinkingTo: Rcpp, RcppArmadillo
 VignetteBuilder: knitr
 Collate:
