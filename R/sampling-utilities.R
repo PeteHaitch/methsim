@@ -150,5 +150,5 @@
 #' @keywords internal
 .sampleReadStart <- function(n, seqlength) {
   # TODO: Should sampling be with or without replacement?
-  sample(x = seqlength - read_length + 1, size = n, replace = TRUE)
+  sample(x = seqlength, size = n, replace = TRUE)
 }
