@@ -3,7 +3,6 @@
 ### -------------------------------------------------------------------------
 ###
 
-
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Design
 ###
@@ -59,7 +58,7 @@ setClass("SimulatedMethylome",
   msg <- .valid.SimulatedMethylome.rowData(object)
   if (is.null(msg)){
 
-    # Include all other .valid.MethPat.* functions in this vector
+    # Include all other .valid.SimulatedMethylome.* functions in this vector
     msg <- c(.valid.SimulatedMethylome.assays(object))
   }
 
