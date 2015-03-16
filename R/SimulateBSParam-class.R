@@ -268,6 +268,6 @@ setMethod("simulate",
 
             # Set class of z_dt as SimulatedBS.
             # TODO: By changing the class this forces a copy, I think :(.
-            new("SimulatedBS", sbs)
+            new("SimulatedBS", dt = sbs)
           }
 )

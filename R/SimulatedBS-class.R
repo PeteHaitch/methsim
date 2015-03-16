@@ -4,11 +4,15 @@
 ### -------------------------------------------------------------------------
 ###
 
+# UP TO HERE: Ah crap, `[` breaks when the parent of an S4 class is
+# data.table (see http://r.789695.n4.nabble.com/Weird-behavior-with-S4-subclasses-of-data-table-after-loading-RCurl-td4644611.html).
+
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Design
 ###
-### data.table("chr", readID", "pos", "z")
-###   "seqname": The name of the seqlevel, i.e., chromosome.
+### list(dt)
+### dt: A data.table object with the following column names.
+###   "seqnames": The name of the seqlevel, i.e., the chromosome.
 ###   "queryID": A unique (within a chromosome) read ID.
 ###       "pos": The position along the chromosome of the methylation locus.
 ###         "z": The methylation state at that locus.
@@ -24,33 +28,35 @@
 #' experiment.
 #' @export
 setClass("SimulatedBS",
-         contains = "data.table")
+         slots = list(
+           dt = "data.table")
+)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Validity
 ###
 
-.valid.SimulatedBS.data.table <- function(object) {
+.valid.SimulatedBS.dt <- function(object) {
   msg <- NULL
 
-  if (!inherits(object, "data.table")) {
-    msg <- Biobase::validMsg(msg, "'SimulatedBS' must inherit from data.table")
+  if (!inherits(object@dt, "data.table")) {
+    msg <- Biobase::validMsg(msg, "'dt' slot must be a data.table")
   } else {
-    if (!identical(colnames(object), c("seqnames", "pos", "readID", "z"))) {
-      msg <- Biobase::validMsg(msg, paste0("'SimulatedBS' colnames must be ",
+    if (!identical(colnames(object@dt), c("seqnames", "pos", "readID", "z"))) {
+      msg <- Biobase::validMsg(msg, paste0("colnames of 'dt' slot must be ",
                                            "'seqnames', 'pos', 'readID' and ",
                                            "'z'."))
     } else {
-      if (class(object[["seqnames"]]) != "factor") {
-        msg <- Biobase::validMsg(msg, "'seqnames' must be a'factor'.")
+      if (class(object@dt[["seqnames"]]) != "factor") {
+        msg <- Biobase::validMsg(msg, "'seqnames' must be a 'factor'.")
       }
-      if (class(object[["pos"]]) != "integer") {
+      if (class(object@dt[["pos"]]) != "integer") {
         msg <- Biobase::validMsg(msg, "'pos' must be an 'integer'.")
       }
-      if (class(object[["readID"]]) != "integer") {
+      if (class(object@dt[["readID"]]) != "integer") {
         msg <- Biobase::validMsg(msg, "'readID' must be an 'integer'.")
       }
-      if (class(object[["z"]]) != "integer") {
+      if (class(object@dt[["z"]]) != "integer") {
         msg <- Biobase::validMsg(msg, "'z' must be an 'integer'.")
       }
     }
@@ -61,7 +67,7 @@ setClass("SimulatedBS",
 .valid.SimulatedBS <- function(object) {
 
   # Include all other .valid.SimulatedBS.* functions in this vector
-  msg <- c(.valid.SimulatedBS.data.table(object))
+  msg <- c(.valid.SimulatedBS.dt(object))
 
   if (is.null(msg)) {
     return(TRUE)
