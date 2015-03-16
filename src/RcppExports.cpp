@@ -68,6 +68,18 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// simErrorInPlace
+void simErrorInPlace(IntegerVector z, NumericVector u, double errorRate);
+RcppExport SEXP methsim_simErrorInPlace(SEXP zSEXP, SEXP uSEXP, SEXP errorRateSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< IntegerVector >::type z(zSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type u(uSEXP);
+    Rcpp::traits::input_parameter< double >::type errorRate(errorRateSEXP);
+    simErrorInPlace(z, u, errorRate);
+    return R_NilValue;
+END_RCPP
+}
 // simulateZ
 IntegerVector simulateZ(NumericVector beta_by_region, NumericVector lor_by_pair, CharacterVector seqnames_one_tuples, NumericVector u);
 RcppExport SEXP methsim_simulateZ(SEXP beta_by_regionSEXP, SEXP lor_by_pairSEXP, SEXP seqnames_one_tuplesSEXP, SEXP uSEXP) {

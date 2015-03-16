@@ -45,6 +45,25 @@ ipf <- function(seed, row_margins, col_margins, iter = 1000L, tol = 1e-10) {
     .Call('methsim_sampleZ', PACKAGE = 'methsim', Z, h, fh, cqh)
 }
 
+#' Simulate sequencing errors.
+#'
+#' Simulate sequencing errors by modifying \code{z} in place.
+#'
+#' @param z an integer vector of sampled methylation states.
+#' @param u an integer vector with the same length as \code{z} of random
+#' variables distributed as Uniform(0, 1).
+#' @param errorRate the (combined) probability of an "error", where an error
+#' may be sequencing error or error in the bisulfite-conversion process.
+#'
+#' @note \strong{WARNING}: \code{z} is modified \strong{in place}.
+#'
+#' @return \code{NULL}. \code{z} is modified \strong{in place}.
+#'
+#' @keywords internal
+.simErrorInPlace <- function(z, u, errorRate) {
+    invisible(.Call('methsim_simErrorInPlace', PACKAGE = 'methsim', z, u, errorRate))
+}
+
 #' Simulate a single "haplotype" of a methylome (Z).
 #'
 #' @param beta_by_region the beta-value (average methylation level) for each
