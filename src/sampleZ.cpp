@@ -57,6 +57,7 @@ List sampleZ(IntegerMatrix Z, IntegerVector h, IntegerVector fh,
     for (int j = 0; j < cqh[i]; j++) {
       row_idx = fh[i] + j - 1; // -1 for C++ indexing
       col_idx = h[i] - 1; // -1 for C++ indexing
+      zz.push_back(Z(row_idx, col_idx));
     }
 
     z[i] = zz;
