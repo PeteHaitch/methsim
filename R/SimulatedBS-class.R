@@ -4,18 +4,21 @@
 ### -------------------------------------------------------------------------
 ###
 
-# UP TO HERE: Ah crap, `[` breaks when the parent of an S4 class is
-# data.table (see http://r.789695.n4.nabble.com/Weird-behavior-with-S4-subclasses-of-data-table-after-loading-RCurl-td4644611.html).
-
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Design
 ###
-### list(dt)
-### dt: A data.table object with the following column names.
-###   "seqnames": The name of the seqlevel, i.e., the chromosome.
-###   "queryID": A unique (within a chromosome) read ID.
-###       "pos": The position along the chromosome of the methylation locus.
-###         "z": The methylation state at that locus.
+### list(z, seqinfo)
+###        z: A list of data.tables, each element of the list is data for a
+###           single seqlevel (and the names of the list are the seqlevels).
+###        Each data.table has the following column names
+###          "queryID": A unique (within a chromosome) read ID.
+###              "pos": The position along the chromosome of the methylation
+###                     locus.
+###                "z": The methylation state at that locus.
+###  seqinfo: A Seqinfo object for the SimulatedMethylome from which this
+###           SimulatedBS object was simulated.
+### methinfo: A MethInfo object for the SimulatedMethyome from which this
+###           SimulatedBS object was simulated.
 ###
 ### An object of this class is returned by the
 ### simulate,SimulateBSParam-method.
@@ -29,37 +32,67 @@
 #' @export
 setClass("SimulatedBS",
          slots = list(
-           dt = "data.table")
+           z = "list",
+           seqinfo = "Seqinfo",
+           methinfo = "MethInfo"
+         )
 )
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Validity
 ###
 
-.valid.SimulatedBS.dt <- function(object) {
+.valid.SimulatedBS.z <- function(object) {
   msg <- NULL
 
-  if (!inherits(object@dt, "data.table")) {
-    msg <- Biobase::validMsg(msg, "'dt' slot must be a data.table")
+  if (!is(object@z, "list")) {
+    msg <- Biobase::validMsg(msg, "'SimulatedBS' must be a list.")
   } else {
-    if (!identical(colnames(object@dt), c("seqnames", "pos", "readID", "z"))) {
-      msg <- Biobase::validMsg(msg, paste0("colnames of 'dt' slot must be ",
-                                           "'seqnames', 'pos', 'readID' and ",
-                                           "'z'."))
+    if (any(sapply(object@z, function(x) !is(x, "data.table")))) {
+      msg <- Biobase::validMsg(msg, paste0("All elements of 'z' slot ",
+                                           "must be 'data.table' objects."))
+    }
+    if (any(sapply(object@z, function(x) {
+      !identical(colnames(x), c("pos", "readID", "z"))
+    }))) {
+      msg <- Biobase::validMsg(msg, paste0("colnames of all elements of ",
+                                           "'SimulatedBS' must be 'pos', ", "
+                                           'readID' and 'z'."))
     } else {
-      if (class(object@dt[["seqnames"]]) != "factor") {
-        msg <- Biobase::validMsg(msg, "'seqnames' must be a 'factor'.")
+      if (any(sapply(object@z, function(x) class(x[["pos"]]) != "integer"))) {
+        msg <- Biobase::validMsg(msg, "'pos' columns must be 'integer' type.")
       }
-      if (class(object@dt[["pos"]]) != "integer") {
-        msg <- Biobase::validMsg(msg, "'pos' must be an 'integer'.")
+      if (any(sapply(object@z, function(x) class(x[["readID"]]) != "integer")))
+        {
+        msg <- Biobase::validMsg(msg,
+                                 "'readID' columns must be 'integer' type.")
       }
-      if (class(object@dt[["readID"]]) != "integer") {
-        msg <- Biobase::validMsg(msg, "'readID' must be an 'integer'.")
-      }
-      if (class(object@dt[["z"]]) != "integer") {
-        msg <- Biobase::validMsg(msg, "'z' must be an 'integer'.")
+      if (any(sapply(object@z, function(x) class(x[["z"]]) != "integer"))) {
+        msg <- Biobase::validMsg(msg, "'z' columns must be 'integer' type.")
       }
     }
+  }
+  msg
+}
+
+.valid.SimulatedBS.seqinfo <- function(object) {
+  msg <- NULL
+
+  if (!is(object@seqinfo, "Seqinfo")) {
+    msg <- Biobase::validMsg(msg, "'seqinfo' slot must be a Seqinfo object.")
+  }
+  if (!identical(seqlevels(object@seqinfo), names(object@z))) {
+    msg <- Biobase::validMsg(msg, paste0("'seqinfo' slot missing names ",
+                                         "(seqlevels) of 'z' slot"))
+  }
+  msg
+}
+
+.valid.SimulatedBS.methinfo <- function(object) {
+  msg <- NULL
+
+  if (!is(object@methinfo, "MethInfo")) {
+    msg <- Biobase::validMsg(msg, "'methinfo' slot must be a MethInfo object.")
   }
   msg
 }
@@ -67,7 +100,9 @@ setClass("SimulatedBS",
 .valid.SimulatedBS <- function(object) {
 
   # Include all other .valid.SimulatedBS.* functions in this vector
-  msg <- c(.valid.SimulatedBS.dt(object))
+  msg <- c(.valid.SimulatedBS.z(object),
+           .valid.SimulatedBS.seqinfo(object),
+           .valid.SimulatedBS.methinfo(object))
 
   if (is.null(msg)) {
     return(TRUE)
