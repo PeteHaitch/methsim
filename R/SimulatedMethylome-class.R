@@ -127,3 +127,20 @@ setMethod("methLevel",
 ###
 
 # TODO
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### methinfo()
+###
+
+# TODO: Document
+#' Extract MethInfo
+#'
+#' @aliases methinfo
+#'
+#' @export
+setMethod("methinfo",
+          "SimulatedMethylome",
+          function(object) {
+            methinfo(object@rowData)
+          }
+)
