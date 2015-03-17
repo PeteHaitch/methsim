@@ -10,7 +10,7 @@
 #' @export
 setClass("PartitionedMethylome",
          contains = "GRanges",
-         representation = representation(
+         slots = list(
            regionType = "factor"
          ),
          prototype = prototype(
