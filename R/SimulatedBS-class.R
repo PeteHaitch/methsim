@@ -121,6 +121,27 @@ setValidity2("SimulatedBS", .valid.SimulatedBS)
 # should be constructed by simulate,SimulateBSParam-method.
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### seqinfo()
+###
+
+setMethod("seqinfo",
+          "SimulatedBS",
+          function(object) {
+            object@seqinfo
+          }
+)
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### methinfo()
+###
+
+setMethod("methinfo",
+          "SimulatedBS",
+          function(object) {
+            object@methinfo
+          }
+)
+
 ### Coercion
 ###
 
