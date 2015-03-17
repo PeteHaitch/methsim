@@ -222,7 +222,7 @@ setMethod("simulate",
             # the subsetting destroys the common index).
             # TODO: Take care if simulate() itself is being run in parallel
             # (or at least document that it could spawn heaps of processes).
-            sbs <- bplapply(names(read_start), function(seqname, read_start,
+            z <- bplapply(names(read_start), function(seqname, read_start,
                                                          sm) {
 
               # TODO: Is it necessary/useful to add seqinfo? All it is likely
@@ -251,23 +251,32 @@ setMethod("simulate",
                             cqh = countQueryHits(ol))
 
               # Return as a data.table
-              data.table("seqnames" = factor(rep(seqname, length(ol)),
-                                             levels = seqlevels(sm)),
-                         "pos" = start(sm)[subjectHits(ol)],
+              data.table("pos" = start(sm)[subjectHits(ol)],
                          "readID" = queryHits(ol),
                          "z" = unlist(z, use.names = FALSE))
             }, read_start = read_start, sm = object@SimulatedMethylome,
             BPPARAM = BPPARAM)
 
-            sbs <- rbindlist(sbs)
-            # Introduce sequencing error + bisulfite-conversion error
-            # i.e., flip elements of sbs$z s.t. Prob(flip) = object@errorRate
-            .simErrorInPlace(sbs[["z"]], runif(nrow(sbs)), object@errorRate)
-            # TODO: Is this the most useful key?
-            setkey(sbs, seqnames, readID)
+            # Don't rbindlist(z). Instead, keeping as list will
+            # actually save memory (no need to retain seqnames for every row)
+            # and allow easier parallelisation by seqlevel.
+            # Ensure seqlevels are set as names(z).
+            names(z) <- names(read_start)
 
-            # Set class of z_dt as SimulatedBS.
-            # TODO: By changing the class this forces a copy, I think :(.
-            new("SimulatedBS", dt = sbs)
+            # Introduce sequencing error + bisulfite-conversion error i.e.,
+            # flip elements of z[[i]]$z s.t. Prob(flip) = object@errorRate.
+            # Don't simulate errors in parallel, e.g., via bplapply().
+            # It needlessly complicates things (reproducibility of random
+            # numbers when generated in parallel is hard) and any speed ups are
+            # swamped by the running times of other steps in this function.
+            lapply(z, function(z_, errorRate) {
+              .simErrorInPlace(z_[["z"]], runif(nrow(z_)), errorRate)
+            }, errorRate = object@errorRate)
+
+            # Construct SimulatedBS object.
+            new("SimulatedBS",
+                z = z,
+                seqinfo = seqinfo(object@SimulatedMethylome),
+                methinfo = methinfo(object@SimulatedMethylome))
           }
 )
