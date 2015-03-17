@@ -9,6 +9,20 @@
 
 using namespace Rcpp;
 
+// asMethPat
+std::map<std::string, std::vector<int> > asMethPat(IntegerVector readID, IntegerVector z, IntegerVector pos, int size);
+RcppExport SEXP methsim_asMethPat(SEXP readIDSEXP, SEXP zSEXP, SEXP posSEXP, SEXP sizeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< IntegerVector >::type readID(readIDSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type z(zSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type pos(posSEXP);
+    Rcpp::traits::input_parameter< int >::type size(sizeSEXP);
+    __result = Rcpp::wrap(asMethPat(readID, z, pos, size));
+    return __result;
+END_RCPP
+}
 // ipf
 arma::mat ipf(const arma::mat& seed, arma::vec row_margins, arma::rowvec col_margins, int iter, double tol);
 static SEXP methsim_ipf_try(SEXP seedSEXP, SEXP row_marginsSEXP, SEXP col_marginsSEXP, SEXP iterSEXP, SEXP tolSEXP) {

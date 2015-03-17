@@ -142,9 +142,73 @@ setMethod("methinfo",
           }
 )
 
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Coercion
 ###
 
-# TODO: Coerction from SimulatedBS object to MethPat, i.e.,
-# as(SimulateBS, "MethPat", size = 1L).
+# Coercion from SimulatedBS object to MethPat, i.e.,
+# TODO: Can't use setAs() because it doesn't allow extra arguments (i.e,
+# 'size'). Could perhaps make MethPat constructor a generic (ala
+# SummarizedExperiment) and allow MethPat(Simulated, size).
 
+#' Coerce a \code{\link{SimulatedBS}} object to a
+#' \code{\link[MethylationTuples]{MethPat}} object.
+#'
+#' @param from a \code{\link{SimulatedBS}} object.
+#' @param size an integer specifying the \code{\link[MethylationTuples]{size}}
+#' of the returned \code{\link[MethylationTuples]{MethPat}} object.
+#' @return A \code{\link[MethylationTuples]{MethPat}} object.
+#'
+#' @note When \code{size} > 1, only adjacent m-tuples are created.
+#'
+#' @rdname SimulatedBS-class
+#' @name asMethPat
+#' @export
+asMethPat <- function(SimulatedBS, sample_name, size = 1L,
+                      BPPARAM = bpparam()) {
+
+  # Argument checks
+  stopifnot(is(SimulatedBS, "SimulatedBS"))
+  size <- as.integer(size)
+  stopifnot(size > 0L)
+  stopifnot(is.character(sample_name))
+
+  # If 'size' > 1 then want to subset the data to only include those
+  # reads with at least 'size' methylation loci (all reads contain at
+  # least 1 methylation loci by definition, hence no need to run this
+  # filter if 'size' = 1).
+  if (size > 1L) {
+    # TODO: Figure out how to create a MethPat object with the appropriate size
+    # from methpat_dt.
+    stop("Sorry, not yet implemented.")
+    warning(paste0("Only adjacent ", size, "-tuples are created."))
+    l <- bplapply(SimulatedBS@z, function(x, size) {
+      # Remove reads with less than 'size' methylation loci.
+      setkey(x, readID)
+      y <- x[, n := .N, by = key(x)][n >= size, ][, n := NULL]
+      # Create m-tuples from each read (where m = size).
+      setkey(y, readID, pos)
+      # TODO: Call .asMethPat(), convert to matrix (see tmp.R), and extract
+      # positions.
+    }, size = size, BPPARAM = BPPARAM)
+  } else {
+    l <- bplapply(SimulatedBS@z, function(x) {
+      setkey(x, pos)
+      x[, list(M = sum(z), U = sum(!z)), by = key(x)]
+    })
+    seqnames <- Rle(names(l), sapply(l, nrow))
+    pos <- matrix(unlist(lapply(l, function(dt) dt[, pos]), use.names = FALSE),
+                  ncol = 1)
+    M <- matrix(unlist(lapply(l, function(dt) dt[, M]), use.names = FALSE),
+                ncol = 1, dimnames = list(NULL, sample_name))
+    U <- matrix(unlist(lapply(l, function(dt) dt[, U]), use.names = FALSE),
+                ncol = 1, dimnames = list(NULL, sample_name))
+    methpat <- MethPat(assays = SimpleList(M = M, U = U),
+                       rowData = MTuples(GTuples(seqnames, pos, "*",
+                                                 seqinfo =
+                                                   seqinfo(SimulatedBS)),
+                                         methinfo(SimulatedBS)))
+  }
+
+  methpat
+}

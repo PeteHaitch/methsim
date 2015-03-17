@@ -4,12 +4,31 @@
 \name{SimulatedBS-class}
 \alias{SimulatedBS}
 \alias{SimulatedBS-class}
+\alias{asMethPat}
 \title{SimulatedBS class.}
+\usage{
+asMethPat(SimulatedBS, sample_name, size = 1L, BPPARAM = bpparam())
+}
+\arguments{
+\item{size}{an integer specifying the \code{\link[MethylationTuples]{size}}
+of the returned \code{\link[MethylationTuples]{MethPat}} object.}
+
+\item{from}{a \code{\link{SimulatedBS}} object.}
+}
+\value{
+A \code{\link[MethylationTuples]{MethPat}} object.
+}
 \description{
 SimulatedBS class.
+
+Coerce a \code{\link{SimulatedBS}} object to a
+\code{\link[MethylationTuples]{MethPat}} object.
 }
 \details{
 An S4 class to store a single simulated bisulfite-sequencing
 experiment.
+}
+\note{
+When \code{size} > 1, only adjacent m-tuples are created.
 }
 
