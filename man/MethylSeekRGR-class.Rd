@@ -7,7 +7,7 @@
 \alias{as}
 \title{MethylSeekRGR class}
 \arguments{
-\item{methpat}{A \code{\link[MethylationTuples]{MethPat}} object containing CpG
+\item{from}{A \code{\link[MethylationTuples]{MethPat}} object containing CpG
 1-tuples. The \code{\link[MethylationTuples]{MethPat}} object should already
 been processed with
 \code{MethylationTuples::\link[MethylationTuples]{filterOutVariants}} and

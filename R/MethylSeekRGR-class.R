@@ -80,7 +80,7 @@ MethylSeekRGR <- function(seqnames = Rle(), ranges = IRanges(),
 #' Coerce a MethPat object of CG 1-tuples to a list of MethylSeekR-compatible
 #' GRanges object(s), one list element per sample.
 #'
-#' @param methpat A \code{\link[MethylationTuples]{MethPat}} object containing CpG
+#' @param from A \code{\link[MethylationTuples]{MethPat}} object containing CpG
 #' 1-tuples. The \code{\link[MethylationTuples]{MethPat}} object should already
 #' been processed with
 #' \code{MethylationTuples::\link[MethylationTuples]{filterOutVariants}} and
