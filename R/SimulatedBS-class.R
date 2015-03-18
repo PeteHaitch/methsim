@@ -146,7 +146,8 @@ setMethod("methinfo",
 ### Coercion
 ###
 
-# Coercion from SimulatedBS object to MethPat, i.e.,
+# Coercion from SimulatedBS object to MethPat
+# TODO: What if no read contains 'size' methylation loci?
 # TODO: Can't use setAs() because it doesn't allow extra arguments (i.e,
 # 'size'). Could perhaps make MethPat constructor a generic (ala
 # SummarizedExperiment) and allow MethPat(Simulated, size).
@@ -182,29 +183,83 @@ asMethPat <- function(SimulatedBS, sample_name, size = 1L,
     # from methpat_dt.
     stop("Sorry, not yet implemented.")
     warning(paste0("Only adjacent ", size, "-tuples are created."))
+
     l <- bplapply(SimulatedBS@z, function(x, size) {
+
+      # Special handling for the case where there are no reads mapped to this
+      # particular seqlevel.
+      if (nrow(x) == 0L) {
+        pos <- matrix(integer(0), ncol = size)
+        counts <- matrix(integer(0), ncol = 2 ^ size,
+                         dimnames =
+                           list(NULL,
+                                MethylationTuples:::.makeMethPatNames(size)))
+        return(list(pos = pos, counts = counts))
+      }
       # Remove reads with less than 'size' methylation loci.
       setkey(x, readID)
       y <- x[, n := .N, by = key(x)][n >= size, ][, n := NULL]
+
+      # Special handling of the case when there are no reads with sufficient
+      # methylation loci.
+      # NB: Slightly different to the case of there being no reads mapped to
+      # this particular seqlevel.
+      if (nrow(y) == 0L) {
+        pos <- matrix(integer(0), ncol = size)
+        counts <- matrix(integer(0), ncol = 2 ^ size,
+                         dimnames =
+                           list(NULL,
+                                MethylationTuples:::.makeMethPatNames(size)))
+        return(list(pos = pos, counts = counts))
+      }
+
       # Create m-tuples from each read (where m = size).
       setkey(y, readID, pos)
       # TODO: Call .asMethPat(), convert to matrix (see tmp.R), and extract
       # positions.
       counts <- .asMethPat(y[, readID], y[, z], y[, pos], size)
+      pos <- strsplit(names(counts), ",")
       counts <- matrix(unlist(counts, use.names = FALSE),
                        ncol = 2 ^ size,
                        byrow = TRUE,
                        dimnames =
                          list(NULL,
                               MethylationTuples:::.makeMethPatNames(size)))
-
-      counts[rowSums(counts) != 0, ]
+      # Drop zero rows
+      nonzero_rows <- (rowSums(counts) > 0)
+      counts <- counts[nonzero_rows, ]
+      pos <- pos[nonzero_rows]
+      pos <- matrix(as.integer(unlist(pos, use.names = FALSE)),
+             ncol = size,
+             byrow = TRUE)
+      order_idx <- do.call(order, lapply(1:NCOL(pos), function(i) pos[, i]))
+      list(pos = pos[order_idx, ], counts = counts[order_idx, ])
     }, size = size, BPPARAM = BPPARAM)
+
+    # Construct the MethPat object
+    seqnames <- Rle(names(l),
+                    sapply(lapply(l, "[[", "pos"), nrow))
+    pos <- do.call(rbind, lapply(l, "[[", "pos"))
+    counts <- do.call(rbind, lapply(l, "[[", "counts"))
+    assays <- lapply(seq_len(ncol(counts)), function(i, counts, sample_name) {
+      x <- counts[, i, drop = FALSE]
+      colnames(x) <- sample_name
+      x
+    }, counts = counts, sample_name = sample_name)
+    assays <- SimpleList(assays)
+    names(assays) <- colnames(counts)
+    methpat <- MethPat(assays = assays,
+                       rowData = MTuples(GTuples(seqnames, pos, "*",
+                                                 seqinfo =
+                                                   seqinfo(SimulatedBS)),
+                                         methinfo(SimulatedBS)))
   } else {
     l <- bplapply(SimulatedBS@z, function(x) {
       setkey(x, pos)
       x[, list(M = sum(z), U = sum(!z)), by = key(x)]
     })
+
+    # Construct the MethPat object
     seqnames <- Rle(names(l), sapply(l, nrow))
     pos <- matrix(unlist(lapply(l, function(dt) dt[, pos]), use.names = FALSE),
                   ncol = 1)
