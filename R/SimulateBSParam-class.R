@@ -153,6 +153,8 @@ SimulateBSParam <- function(SimulatedMethylome,
 #' @param read_length an integer specifying the read length.
 #'
 #' @note Currently only simulates whole-genome bisulfite-sequencing data.
+#' \strong{WARNING}: Currently reads are simulated for circular seqlevels
+#' such as 'chrM' (mitochondrial DNA).
 #'
 #' @return a SimulatedBS object.
 #'
@@ -225,9 +227,22 @@ setMethod("simulate",
             z <- bplapply(names(read_start), function(seqname, read_start,
                                                          sm) {
 
+              # UP TO HERE: Circular chromosomes are hard. While the read
+              # automatically gets wrapped around, it makes subsequent
+              # functions, e.g., asMethPat(), more complicated. So, for now,
+              # I do not allow simulation of reads for circular chromosomes.
               # TODO: Is it necessary/useful to add seqinfo? All it is likely
               # to do is give a warning if a read runs off the end of the
               # chromosome.
+              if (isCircular(seqinfo(sm))[seqname]) {
+                # TODO: This warning isn't displayed when run via bplapply()
+                # (but is displayed when using lapply()).
+                warning(paste0("No reads simulated for ", seqname,
+                               " (circular chromosomes not yet supported)."))
+                return(data.table("pos" = integer(0),
+                                  "readID" = integer(0),
+                                  "z" = integer(0)))
+              }
               gr <- GRanges(seqname,
                             IRanges(read_start[[seqname]], width = 100),
                             seqinfo = seqinfo(sm))

@@ -40,5 +40,7 @@ Simulate a bisulfite-sequencing experiment.
 }
 \note{
 Currently only simulates whole-genome bisulfite-sequencing data.
+\strong{WARNING}: Currently reads are simulated for circular seqlevels
+such as 'chrM' (mitochondrial DNA).
 }
 
