@@ -147,7 +147,6 @@ setMethod("methinfo",
 ###
 
 # Coercion from SimulatedBS object to MethPat
-# TODO: What if no read contains 'size' methylation loci?
 # TODO: Can't use setAs() because it doesn't allow extra arguments (i.e,
 # 'size'). Could perhaps make MethPat constructor a generic (ala
 # SummarizedExperiment) and allow MethPat(Simulated, size).
@@ -179,9 +178,7 @@ asMethPat <- function(SimulatedBS, sample_name, size = 1L,
   # least 1 methylation loci by definition, hence no need to run this
   # filter if 'size' = 1).
   if (size > 1L) {
-    # TODO: Figure out how to create a MethPat object with the appropriate size
-    # from methpat_dt.
-    stop("Sorry, not yet implemented.")
+
     warning(paste0("Only adjacent ", size, "-tuples are created."))
 
     l <- bplapply(SimulatedBS@z, function(x, size) {
@@ -215,9 +212,8 @@ asMethPat <- function(SimulatedBS, sample_name, size = 1L,
 
       # Create m-tuples from each read (where m = size).
       setkey(y, readID, pos)
-      # TODO: Call .asMethPat(), convert to matrix (see tmp.R), and extract
-      # positions.
-      counts <- .asMethPat(y[, readID], y[, z], y[, pos], size)
+      # Tabulate methylation patterns at each m-tuple.
+      counts <- .tabulatez(y[, readID], y[, z], y[, pos], size)
       pos <- strsplit(names(counts), ",")
       counts <- matrix(unlist(counts, use.names = FALSE),
                        ncol = 2 ^ size,
