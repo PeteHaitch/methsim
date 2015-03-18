@@ -227,13 +227,10 @@ setMethod("simulate",
             z <- bplapply(names(read_start), function(seqname, read_start,
                                                          sm) {
 
-              # UP TO HERE: Circular chromosomes are hard. While the read
-              # automatically gets wrapped around, it makes subsequent
-              # functions, e.g., asMethPat(), more complicated. So, for now,
-              # I do not allow simulation of reads for circular chromosomes.
-              # TODO: Is it necessary/useful to add seqinfo? All it is likely
-              # to do is give a warning if a read runs off the end of the
-              # chromosome.
+              # Circular chromosomes are hard. While the read automatically
+              # gets wrapped around, it makes subsequent functions, e.g.,
+              # asMethPat(), more complicated. So, for now, I do not allow
+              # simulation of reads for circular chromosomes.
               if (isCircular(seqinfo(sm))[seqname]) {
                 # TODO: This warning isn't displayed when run via bplapply()
                 # (but is displayed when using lapply()).
@@ -243,6 +240,11 @@ setMethod("simulate",
                                   "readID" = integer(0),
                                   "z" = integer(0)))
               }
+
+              # TODO: This may cause warnings (at least when this isn't run
+              # in parallel, which causes warning()s to be suppressed). These
+              # warnings will occur if a read runs "off the end" of the
+              # seqlevel.
               gr <- GRanges(seqname,
                             IRanges(read_start[[seqname]], width = 100),
                             seqinfo = seqinfo(sm))
