@@ -190,6 +190,15 @@ asMethPat <- function(SimulatedBS, sample_name, size = 1L,
       setkey(y, readID, pos)
       # TODO: Call .asMethPat(), convert to matrix (see tmp.R), and extract
       # positions.
+      counts <- .asMethPat(y[, readID], y[, z], y[, pos], size)
+      counts <- matrix(unlist(counts, use.names = FALSE),
+                       ncol = 2 ^ size,
+                       byrow = TRUE,
+                       dimnames =
+                         list(NULL,
+                              MethylationTuples:::.makeMethPatNames(size)))
+
+      counts[rowSums(counts) != 0, ]
     }, size = size, BPPARAM = BPPARAM)
   } else {
     l <- bplapply(SimulatedBS@z, function(x) {

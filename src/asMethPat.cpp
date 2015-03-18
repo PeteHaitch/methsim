@@ -1,7 +1,6 @@
 #include <Rcpp.h>
 using namespace Rcpp;
 
-// UP TO HERE: Test with size > 2. Segfaulted when size = 3 in only test.
 // WARNING: This will produce zero-rows, i.e., unobserved m-tuples.
 
 // [[Rcpp::export(".asMethPat")]]
@@ -43,10 +42,11 @@ std::map<std::string, std::vector<int> > asMethPat(IntegerVector readID,
   // Fill the map with the counts of each methylation pattern
   int k = 0;
   int N = readID.length() - size + 1;
+//   Rcpp::Rcout << "N = " << N << std::endl;
   int idx;
   int idx0 = (pow(2, size) - 1);
   while (k < N) {
-    Rcpp::Rcout << "k = " << k << std::endl;
+    // Rcpp::Rcout << "k = " << k << std::endl;
     // Check that these 'size' positions are from the same read.
     if (readID[k] == readID[k + size - 1]) {
       // idx converts the methylation pattern, e.g., (1, 1), to the index of
@@ -58,7 +58,7 @@ std::map<std::string, std::vector<int> > asMethPat(IntegerVector readID,
       // Rcpp::Rcout << "idx = " << idx << std::endl;
       mtuples_key << pos[k] << ",";
       for (int m = (k + 1); m < (k + size - 1); m++) {
-        mtuples_key << pos[k] << ",";
+        mtuples_key << pos[m] << ",";
       }
       mtuples_key << pos[(k + size - 1)];
       // Rcpp::Rcout << "mtuples_key = " << mtuples_key.str() << std::endl;
@@ -71,5 +71,6 @@ std::map<std::string, std::vector<int> > asMethPat(IntegerVector readID,
     }
   }
 
+  // Rcpp::Rcout << "Final k = " << k << std::endl;
   return mtuples;
 }
