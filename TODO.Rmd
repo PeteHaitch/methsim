@@ -264,9 +264,9 @@ To add DMRs requires introducing (known) biological differences between experime
 
 This functionality is required in order to simulate a single sample's worth of data (the bare minimum in order for this package to be useful):
 
-1. Being able to simulate a single truth.
-2. Being able to simulate reads from a single truth.
-3. Being able to generate `MethPat` object(s) from a single set of simulated reads.
+- [x] Being able to simulate a single truth (`simulate,SimulateMethylomeParam-method`).
+- [x] Being able to simulate reads from a single truth (`simulate,SimulateBSParam-method`).
+- [x] Being able to generate `MethPat` object(s) from a single set of simulated reads (`asMethPat()`).
 
 ### Biological
 
@@ -275,3 +275,7 @@ These are questions to explore once I am able to simulate a single sample's wort
 1. Simulate multiple samples' worth of reads from a single truth to see the effect of sequencing variability.
 2. Simulate multiple samples' worth of reads from a truths with the same partition but with different region-specific parameters.
 3. Being able to simulate multiple truths.
+
+Other questions:
+
+- Simulate a methylome with a single haplotype (i.e., $w_{1} := 1$). This should result in it having the "correct" co-methylation structure but "incorrect" beta-values, I think.
