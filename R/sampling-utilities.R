@@ -119,21 +119,21 @@
 #' such that each region is assigned a vector of haplotype frequencies.
 #' @keywords internal
 .samplePatternFreqsDT <- function(pattern_freqs_dt, region_type) {
-  h <- grep("^h", colnames(pattern_freqs_dt), value = TRUE)
+  W_names <- grep("^W", colnames(pattern_freqs_dt), value = TRUE)
   region_type_levels <- levels(region_type)
-  H <- matrix(NA_real_, ncol = length(h), nrow = length(region_type))
+  W <- matrix(NA_real_, ncol = length(W_names), nrow = length(region_type))
   for (level in region_type_levels) {
     pfi <- which(pattern_freqs_dt[, type] == level)
     pf <- pattern_freqs_dt[pfi, ]
     rti <- which(region_type == level)
     n <- length(rti)
-    H[rti, ] <- as.matrix(
+    W[rti, ] <- as.matrix(
       pf[sample(nrow(pf),
                 n,
                 replace = TRUE,
-                prob = pf[, N])][, h, with = FALSE])
+                prob = pf[, N])][, W_names, with = FALSE])
   }
-  H
+  W
 }
 
 #' Sample read start positions.

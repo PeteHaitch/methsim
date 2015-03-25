@@ -253,17 +253,18 @@ setMethod("simulate",
               gr <- subsetByOverlaps(gr, sm)
               ol <- findOverlaps(gr, sm)
 
-              # Sample from H to determine from which each haplotype each read
+              # Sample from W to determine from which each haplotype each read
               # should be sampled.
               # NOTE: Make sure this is only done once per read; to ensure this
               # I only sample a haplotype for the first methylation locus in
               # each read.
               first_hit <- selectHits(ol, "first")
-              h <- .sampleH(assay(sm, "H", withDimnames = FALSE)[first_hit, ])
+              sampled_W <- .sampleW(assay(sm, "W",
+                                          withDimnames = FALSE)[first_hit, ])
 
               # For each read, copy the corresponding haplotype.
               z <- .sampleZ(Z = assay(sm, "Z", withDimnames = FALSE),
-                            h = h,
+                            sampled_W = sampled_W,
                             fh = first_hit,
                             cqh = countQueryHits(ol))
 

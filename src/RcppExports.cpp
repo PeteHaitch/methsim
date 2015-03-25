@@ -43,28 +43,28 @@ RcppExport SEXP methsim_ipf(SEXP seedSEXP, SEXP row_marginsSEXP, SEXP col_margin
     UNPROTECT(1);
     return __result;
 }
-// sampleH
-IntegerVector sampleH(NumericMatrix H);
-RcppExport SEXP methsim_sampleH(SEXP HSEXP) {
+// sampleW
+IntegerVector sampleW(NumericMatrix W);
+RcppExport SEXP methsim_sampleW(SEXP WSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< NumericMatrix >::type H(HSEXP);
-    __result = Rcpp::wrap(sampleH(H));
+    Rcpp::traits::input_parameter< NumericMatrix >::type W(WSEXP);
+    __result = Rcpp::wrap(sampleW(W));
     return __result;
 END_RCPP
 }
 // sampleZ
-List sampleZ(IntegerMatrix Z, IntegerVector h, IntegerVector fh, IntegerVector cqh);
-RcppExport SEXP methsim_sampleZ(SEXP ZSEXP, SEXP hSEXP, SEXP fhSEXP, SEXP cqhSEXP) {
+List sampleZ(IntegerMatrix Z, IntegerVector sampled_W, IntegerVector fh, IntegerVector cqh);
+RcppExport SEXP methsim_sampleZ(SEXP ZSEXP, SEXP sampled_WSEXP, SEXP fhSEXP, SEXP cqhSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< IntegerMatrix >::type Z(ZSEXP);
-    Rcpp::traits::input_parameter< IntegerVector >::type h(hSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type sampled_W(sampled_WSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type fh(fhSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type cqh(cqhSEXP);
-    __result = Rcpp::wrap(sampleZ(Z, h, fh, cqh));
+    __result = Rcpp::wrap(sampleZ(Z, sampled_W, fh, cqh));
     return __result;
 END_RCPP
 }

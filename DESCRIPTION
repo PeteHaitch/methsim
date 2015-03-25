@@ -1,7 +1,7 @@
 Package: methsim
 Type: Package
 Title: An R package to simulate DNA methylation data
-Version: 0.3.1
+Version: 0.4.0.9000
 Date: 2015-03-16
 Author: Peter Hickey <peter.hickey@gmail.com>
 Maintainer: Peter Hickey <peter.hickey@gmail.com>
@@ -16,7 +16,7 @@ biocViews: DNAMethylation, Software, MethylSeq
 License: Artistic-2.0
 Depends:
     R (>= 3.0),
-    MethylationTuples (>= 0.2.21),
+    MethylationTuples (>= 0.3.0.9000),
     MethylSeekR
 Suggests:
     testthat,

@@ -150,7 +150,8 @@ SimulateMethylomeParam <- function(BSgenome,
                                    SampleName) {
 
   # TODO: Argument checking, e.g., probably a good idea to check length(h) > 2,
-  # i.e., that there are a sufficient number of haplotypes in PatternFreqsDT.
+  # i.e., that there are a sufficient number of possible patterns in
+  # PatternFreqsDT.
   new("SimulateMethylomeParam",
       BSgenome = BSgenome,
       PartitionedMethylome = PartitionedMethylome,
@@ -269,30 +270,30 @@ setMethod("simulate",
             ol <- findOverlaps(one_tuples, object@PartitionedMethylome)
             beta_by_region <- Rle(beta_by_region, countSubjectHits(ol))
 
-            # Sample haplotype frequencies
-            H_by_region <- .samplePatternFreqsDT(
+            # Sample pseudo-haplotype weights
+            W_by_region <- .samplePatternFreqsDT(
               object@PatternFreqsDT,
               regionType(object@PartitionedMethylome))
-            # "Undo" implicit Rles of H_by_region
-            H <- matrix(rep(H_by_region, times = rep(countSubjectHits(ol),
-                                                     ncol(H_by_region))),
-                        ncol = ncol(H_by_region),
+            # "Undo" implicit Rles of W_by_region
+            W <- matrix(rep(W_by_region, times = rep(countSubjectHits(ol),
+                                                     ncol(W_by_region))),
+                        ncol = ncol(W_by_region),
                         dimnames = list(NULL,
-                                        paste0('h',
-                                               seq_len(ncol(H_by_region)))))
+                                        paste0('W',
+                                               seq_len(ncol(W_by_region)))))
 
             # Generate (pseudo) random numbers used in the simulation.
             # Don't generate random numbers in parallel, e.g., via bplapply().
             # It needlessly complicates things (reproducibility of random
             # numbers when generated in parallel is hard) and any speed ups are
             # swamped by the running times of other steps in this function.
-            u <- lapply(seq_len(ncol(H_by_region)), function (i) {
+            u <- lapply(seq_len(ncol(W_by_region)), function (i) {
               runif(length(one_tuples))
             })
 
             # Simulate Z as a matrix with ncol = ncol(H_by_region). The
             # resulting object is approximately 900 MB in size for a human
-            # methylome with 8 "haplotypes".
+            # methylome with 8 pseudo-haplotypes.
             # While storing Z as a Matrix::sparseMatrix might seem appealing,
             # the vast majority of entries (~80%) are non-zero (1), therefore
             # the object is not in fact sparse and is even larger in size
@@ -317,7 +318,7 @@ setMethod("simulate",
 
             # Create SimulatedMethylome object
             sm <- new("SimulatedMethylome",
-                      SummarizedExperiment(assays = SimpleList(Z = Z, H = H),
+                      SummarizedExperiment(assays = SimpleList(Z = Z, W = W),
                                            rowData = one_tuples))
 
             # Ensure "seed" is set as an attribute of the returned value.

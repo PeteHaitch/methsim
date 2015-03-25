@@ -5,32 +5,32 @@ ipf <- function(seed, row_margins, col_margins, iter = 1000L, tol = 1e-10) {
     .Call('methsim_ipf', PACKAGE = 'methsim', seed, row_margins, col_margins, iter, tol)
 }
 
-#' Sample H.
+#' Sample W.
 #'
-#' Sample a column of H for each row of H with the probability of sampling
-#' column j for row i given by H[i, j].
+#' Sample a column of W for each row of W with the probability of sampling
+#' column j for row i given by W[i, j].
 #'
-#' @param H a numeric matrix where H[i, j] is the probability of sampling
-#' column j for row i, i.e., rowMeans(H) == 1.
+#' @param W a numeric matrix where W[i, j] is the probability of sampling
+#' column j for row i, i.e., rowMeans(W) == 1.
 #'
 #' @keywords internal
 #'
-#' @return an integer vector of length equal to nrow(H), where each element is
+#' @return an integer vector of length equal to nrow(W), where each element is
 #' the column sampled for that row.
-.sampleH <- function(H) {
-    .Call('methsim_sampleH', PACKAGE = 'methsim', H)
+.sampleW <- function(W) {
+    .Call('methsim_sampleW', PACKAGE = 'methsim', W)
 }
 
 #' Sample Z.
 #'
 #' Simulate sequencing reads by sampling a subset of rows from a given column
-#' of H for each read.
+#' of W for each read.
 #'
-#' @param Z an integer matrix where H[i, j] is the methylation state of the
-#' i-th methylation locus on the j-th haplotype.
-#' @param h an integer vector of length equal to the number of reads. Each
-#' element is the haplotype from which each read is to be sampled, i.e.,
-#' Z[, j].
+#' @param Z an integer matrix where Z[i, j] is the methylation state of the
+#' i-th methylation locus on the j-th pseud-haplotype.
+#' @param sampled_W an integer vector of length equal to the number of reads.
+#' Each element is the pseudo-haplotype from which each read is to be sampled,
+#' i.e., Z[, j].
 #' @param fh an integer vector of length equal to the number of reads. Each
 #' element is the position of the first methylation loci ("first hit") from
 #' which read is to be sampled, i.e., Z[i, ].
@@ -41,8 +41,8 @@ ipf <- function(seed, row_margins, col_margins, iter = 1000L, tol = 1e-10) {
 #'
 #' @return a list of length equal to the number of simulated reads. Each list
 #' element is the sequenced/sampled methylation state for that read.
-.sampleZ <- function(Z, h, fh, cqh) {
-    .Call('methsim_sampleZ', PACKAGE = 'methsim', Z, h, fh, cqh)
+.sampleZ <- function(Z, sampled_W, fh, cqh) {
+    .Call('methsim_sampleZ', PACKAGE = 'methsim', Z, sampled_W, fh, cqh)
 }
 
 #' Simulate sequencing errors.

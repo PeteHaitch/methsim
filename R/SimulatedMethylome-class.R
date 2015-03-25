@@ -6,10 +6,10 @@
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Design
 ###
-### (MTuples | Z, H)
+### (MTuples | Z, W)
 ###     MTuples: A MethylationTuples::MTuples object
-###     Z: A DataFrame/sparseMatrix/matrix (TBD) of the methylation haplotypes.
-###     H: A DataFrame of the frequency of each haplotype.
+###     Z: A matrix (TBD) of the methylation haplotypes.
+###     W: A DataFrame of the weights (relative frequency) of each haplotype.
 
 #' SimulatedMethylome class.
 #' @aliases SimulatedMethylome
@@ -40,13 +40,13 @@ setClass("SimulatedMethylome",
 .valid.SimulatedMethylome.assays <- function(object) {
   msg <- NULL
 
-  if (!identical(names(object@assays$data), c("Z", "H"))) {
+  if (!identical(names(object@assays$data), c("Z", "W"))) {
     msg <- Biobase::validMsg(msg, paste0("'assayNames' of a ",
                                          "'SimulatedMethylome' object must be ",
-                                         "'Z' and 'H'"))
-  } else if (ncol(object@assays$data$Z) != ncol(object@assays$data$H)) {
+                                         "'Z' and 'W'"))
+  } else if (ncol(object@assays$data$Z) != ncol(object@assays$data$W)) {
     # Only run this check if the assay names are valid
-    msg <- Biobase::validMsg(msg, paste0("'ncol(Z)' must equal 'ncol(H)'."))
+    msg <- Biobase::validMsg(msg, paste0("'ncol(Z)' must equal 'ncol(W)'."))
   }
   msg
 }
@@ -109,8 +109,8 @@ setMethod("methLevel",
                    offset = 1L) {
             statistic <- match.arg(statistic)
             if (statistic == "beta-values") {
-              meth_level <- rowSums(assay(object, "Z", withDimnames = FALSE) *
-                                      assay(object, "H", withDimnames = FALSE))
+              meth_level <- rowSums(assay(object, "W", withDimnames = FALSE) *
+                                      assay(object, "Z", withDimnames = FALSE))
             } else if (statistic == "M-values") {
               # TODO: Figure out how to compute M-values from beta-values
               # using the appropriate 'offset'.
