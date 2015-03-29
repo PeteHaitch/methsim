@@ -1,11 +1,33 @@
+# Copyright (C) 2015 Peter Hickey
+#
+# This file is part of methsim.
+#
+# methsim is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# methsim is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with methsim  If not, see <http://www.gnu.org/licenses/>.
+
 ### =========================================================================
 ### MethylSeekRGR utility functions. These functions are not exported.
 ### -------------------------------------------------------------------------
 ###
 
-# TODO: Clarify which version of MethylSeekR these functions are copied from.
+# The functions in this file are modified versions of functions available in
+# the MethylSeekR Bioconductor package version 1.6.0
+# (http://www.bioconductor.org/packages/3.0/bioc/html/MethylSeekR.html).
+# MethylSeekR is released under a GPL (>= 2) license.
+#
 # TODO: Long term, I'm going to need a way to keep these functions up to date
-# with what is available in MethylSeekR.
+# with what is available in MethylSeekR. It may be easier/better to try to get
+# these changes folder back into MethylSeekR.
 
 # A copy of MethylSeekR::plotAlphaDistributionOneChr that can be safely run in
 # parallel because it does not create the plot but returns it as an object.
