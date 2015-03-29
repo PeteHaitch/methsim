@@ -97,12 +97,12 @@ setClass("SimulateMethylomeParam",
     msg <- Biobase::validMsg(msg, paste0("'PatternFreqsDT' slot must be a ",
                                          "'data.table'."))
   }
-  h <- grep("^h[0-9]+", colnames(object@PatternFreqsDT), value = TRUE)
-  if (!identical(colnames(object@PatternFreqsDT), c("type", h, "N"))) {
+  w <- grep("^w[0-9]+", colnames(object@PatternFreqsDT), value = TRUE)
+  if (!identical(colnames(object@PatternFreqsDT), c("type", w, "N"))) {
     msg <- Biobase::validMsg(msg, paste0("Column names of the ",
                                          "'PatternFreqsDT' slot must be, ",
                                          "'type', '",
-                                         paste0(h, collapse = "', '"), "', ",
+                                         paste0(w, collapse = "', '"), "', ",
                                          "'statistic' and 'N'." ))
   }
   msg
