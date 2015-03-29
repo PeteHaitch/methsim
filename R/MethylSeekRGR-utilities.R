@@ -3,6 +3,10 @@
 ### -------------------------------------------------------------------------
 ###
 
+# TODO: Clarify which version of MethylSeekR these functions are copied from.
+# TODO: Long term, I'm going to need a way to keep these functions up to date
+# with what is available in MethylSeekR.
+
 # A copy of MethylSeekR::plotAlphaDistributionOneChr that can be safely run in
 # parallel because it does not create the plot but returns it as an object.
 # TODO: Document and robust-ify (long-term)

@@ -23,6 +23,7 @@
   meth_level
 }
 
+# TODO: Update default mean_fun and sd_fun to be loess fits.
 #' Sample from co-methylation distribution.
 #'
 #' Sample with replacement from cometh_dt, stratified by region_type, such that

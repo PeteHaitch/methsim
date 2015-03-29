@@ -279,3 +279,4 @@ These are questions to explore once I am able to simulate a single sample's wort
 Other questions:
 
 - Simulate a methylome with a single haplotype (i.e., $w_{1} := 1$). This should result in it having the "correct" co-methylation structure but "incorrect" beta-values, I think.
+- Simulate a methylome with many pseudo-haplotypes ($\approx 20$?) and use uniform `W`. See what sort of behaviour we get.
