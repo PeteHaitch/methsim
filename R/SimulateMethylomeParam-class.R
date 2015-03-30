@@ -197,22 +197,24 @@ SimulateMethylomeParam <- function(BSgenome,
 #'
 #' @note Currently only simulates CpG methylation.
 #'
-#' @param object a \code{\link{SimulateMethylomeParam}} object.
-#' @param nsim the number of samples to simulate using the parameters given in
+#' @param object A \code{\link{SimulateMethylomeParam}} object.
+#' @param nsim The number of samples to simulate using the parameters given in
 #' \code{object}.
-#' @param seed an object specifying if and how the random number generator
+#' @param seed An object specifying if and how the random number generator
 #' should be initialized ('seeded'). For the "MethSimParam" method, either
-#' \code{NULL} or an integer that will be used in a call to
+#' \code{NULL} Or an integer that will be used in a call to
 #' \code{base::\link[base]{set.seed}} before simulating the samples. If set,
 #' the value is saved as the "\code{seed}" attribute of the returned value. The
 #' default, \code{NULL}, will not change the random generator state, and return
 #' \code{\link{.Random.seed}} as the "\code{seed}" attribute, see 'Value'.
-#' @param comethylation_function a function used to sample from the
-#' co-methylation distribution.
-#' @param BPPARAM an optional
+#' @param BPPARAM An optional
 #' \code{BiocParallel::\link[BiocParallel]{BiocParallelParam}} instance
 #' determining the parallel back-end to be used during evaluation.
-#' @param ... additional arguments passed to the \code{comethylation_function}.
+#' @param epsilon An offset added/subtracted to a region's sampled methylation
+#' level should it be one/zero values.
+#' @param comethylation_function A function used to sample from the
+#' co-methylation distribution.
+#' @param ... Additional arguments passed to the \code{comethylation_function}.
 #'
 #' @note Currently only support simulation of CpG methylation and unstranded
 #' methylomes.
@@ -226,9 +228,10 @@ setMethod("simulate",
           function(object,
                    nsim = 1,
                    seed = NULL,
-                   comethylation_function = methsim:::.sampleComethDT,
                    BPPARAM = bpparam(),
-                   epsilon = 0.01, ...) {
+                   epsilon = 0.01,
+                   comethylation_function,
+                   ...) {
 
             # Non-CpG methylation is unlikely to be implemented.
             message("Currently only simulates CpG methylation.")
@@ -236,8 +239,14 @@ setMethod("simulate",
             message("Currently only simulates unstranded methylomes.")
 
             # Argument checks
-            comethylation_function <- match.fun(comethylation_function)
             stopifnot(is.numeric(epsilon) & epsilon > 0 & epsilon < 1)
+            # TODO: This is a rather clunky way to set a default value of
+            # 'comethylation_function'
+            if (missing(comethylation_function)) {
+              comethylation_function <- .sampleComethDT
+            } else {
+              comethylation_function <- match.fun(comethylation_function)
+            }
 
             # TODO: Will need to revisit how seed is set and (pseudo) random
             # numbers are generated due to the use of BiocParallel and Rcpp*.
@@ -284,11 +293,11 @@ setMethod("simulate",
             # Drop unusable seqlevels
             two_tuples <- keepSeqlevels(two_tuples,
                                         seqlevels(object@PartitionedMethylome))
-            lor_by_pair <- .sampleComethDT(two_tuples,
-                                           object@ComethDT,
-                                           object@PartitionedMethylome,
-                                           ...)
             message("Sampling LOR...")
+            lor_by_pair <- comethylation_function(two_tuples,
+                                                  object@ComethDT,
+                                                  object@PartitionedMethylome,
+                                                  ...)
 
             # Methylation loci at which to simulate a methylation state.
             # TODO: It might be more efficient to create these from two_tuples
@@ -321,6 +330,7 @@ setMethod("simulate",
             # It needlessly complicates things (reproducibility of random
             # numbers when generated in parallel is hard) and any speed ups are
             # swamped by the running times of other steps in this function.
+            message("Simulating U")
             u <- lapply(seq_len(ncol(W_by_region)), function (i) {
               runif(length(one_tuples))
             })
@@ -362,4 +372,3 @@ setMethod("simulate",
             sm
           }
 )
-

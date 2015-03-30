@@ -6,31 +6,33 @@
 \title{Simulate a methylome.}
 \usage{
 \S4method{simulate}{SimulateMethylomeParam}(object, nsim = 1, seed = NULL,
-  comethylation_function = methsim:::.sampleComethDT, BPPARAM = bpparam(),
-  epsilon = 0.01, ...)
+  BPPARAM = bpparam(), epsilon = 0.01, comethylation_function, ...)
 }
 \arguments{
-\item{object}{a \code{\link{SimulateMethylomeParam}} object.}
+\item{object}{A \code{\link{SimulateMethylomeParam}} object.}
 
-\item{nsim}{the number of samples to simulate using the parameters given in
+\item{nsim}{The number of samples to simulate using the parameters given in
 \code{object}.}
 
-\item{seed}{an object specifying if and how the random number generator
+\item{seed}{An object specifying if and how the random number generator
 should be initialized ('seeded'). For the "MethSimParam" method, either
-\code{NULL} or an integer that will be used in a call to
+\code{NULL} Or an integer that will be used in a call to
 \code{base::\link[base]{set.seed}} before simulating the samples. If set,
 the value is saved as the "\code{seed}" attribute of the returned value. The
 default, \code{NULL}, will not change the random generator state, and return
 \code{\link{.Random.seed}} as the "\code{seed}" attribute, see 'Value'.}
 
-\item{comethylation_function}{a function used to sample from the
-co-methylation distribution.}
-
-\item{BPPARAM}{an optional
+\item{BPPARAM}{An optional
 \code{BiocParallel::\link[BiocParallel]{BiocParallelParam}} instance
 determining the parallel back-end to be used during evaluation.}
 
-\item{...}{additional arguments passed to the \code{comethylation_function}.}
+\item{epsilon}{An offset added/subtracted to a region's sampled methylation
+level should it be one/zero values.}
+
+\item{comethylation_function}{A function used to sample from the
+co-methylation distribution.}
+
+\item{...}{Additional arguments passed to the \code{comethylation_function}.}
 }
 \value{
 A SimulatedMethylome, which is the underlying "true" methylome for
@@ -41,5 +43,8 @@ Simulate a methylome.
 }
 \note{
 Currently only simulates CpG methylation.
+
+Currently only support simulation of CpG methylation and unstranded
+methylomes.
 }
 
