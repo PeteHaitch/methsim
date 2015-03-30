@@ -42,7 +42,7 @@ setClassUnion("GRangesORNULL",
 #' An S4 class for the parameters used by
 #' \code{\link{simulate,SimulateBS-method}}.
 #'
-#' @include SimulateMethylomeParam-class.R
+#' @include SimulatedMethylome-class.R
 #'
 #' @aliases SimulateBSParam
 #'

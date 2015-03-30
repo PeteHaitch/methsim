@@ -143,8 +143,8 @@ setValidity2("SimulatedBS", .valid.SimulatedBS)
 
 setMethod("seqinfo",
           "SimulatedBS",
-          function(object) {
-            object@seqinfo
+          function(x) {
+            x@seqinfo
           }
 )
 
