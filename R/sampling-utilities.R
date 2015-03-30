@@ -136,7 +136,7 @@
 #' such that each region is assigned a vector of haplotype frequencies.
 #' @keywords internal
 .samplePatternFreqsDT <- function(pattern_freqs_dt, region_type) {
-  W_names <- grep("^W", colnames(pattern_freqs_dt), value = TRUE)
+  W_names <- grep("^w", colnames(pattern_freqs_dt), value = TRUE)
   region_type_levels <- levels(region_type)
   W <- matrix(NA_real_, ncol = length(W_names), nrow = length(region_type))
   for (level in region_type_levels) {
