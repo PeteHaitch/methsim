@@ -275,6 +275,7 @@ setMethod("simulate",
             # Sample parameters from the SimulateMethylomeParams object.
 
             # Sample average methylation levels in each region
+            # Takes ~0.1 seconds
             message("Sampling region methylation levels...")
             beta_by_region <- .sampleMethLevelDT(
               object@MethLevelDT,
@@ -286,6 +287,7 @@ setMethod("simulate",
 
             # Sample within-fragment co-methylation for each IPD-region_type
             # combination.
+            # ~280 seconds
             message("Finding all CpG two-tuples in genome...")
             two_tuples <- findMTuples(object@BSgenome, MethInfo("CG"), size = 2)
             # Only want unstranded methylomes
@@ -302,6 +304,7 @@ setMethod("simulate",
             # Methylation loci at which to simulate a methylation state.
             # TODO: It might be more efficient to create these from two_tuples
             # (taking care to add on the last CpG of each chromosome)
+            # ~170 seconds
             message("Finding all CpG one-tuples in genome")
             one_tuples <- findMTuples(object@BSgenome, MethInfo("CG"), size = 1)
             # Only want unstranded methylomes.
