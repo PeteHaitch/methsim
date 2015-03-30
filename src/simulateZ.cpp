@@ -23,7 +23,7 @@ using namespace Rcpp;
 // seem to occur when .simulateZ() is run in parallel, particularly via
 // BiocParallel::bplapply(). It would be good to get to the bottom of these;
 // see http://master.bioconductor.org/developers/how-to/c-debugging/,
-// https://www.google.com.au/search?q=rcpp+gdb+site%3Alists.r-forge.r-project.org&oq=rcpp+gdb+site%3Alists.r-forge.r-project.org&aqs=chrome..69i57.388j0j9&sourceid=chrome&es_sm=91&ie=UTF-8,
+// https://www.google.com.au/search?q=rcpp+gdb+site%3Alists.r-forge.r-project.org&oq=rcpp+gdb+site%3Alists.r-forge.r-project.org&aqs=chrome..69i57.388j0j9&sourceid=chrome&es_sm=91&ie=UTF-8
 //
 // TODO (long term): Allow beta_by_region and seqnames_one_tuple to be
 // S4Vectors::Rleobjects to avoid the requirement to pre-expand these via
@@ -114,40 +114,41 @@ IntegerVector simulateZ(NumericVector beta_by_region,
       // methylation loci on the same chromosome so when a pair is on different
       // chromosome we don't increment j.
       continue;
-    }
-
-    // Compute transition probability from beta_by_region and lor_by_pair.
-    // Can get joint probability matrix by running iterative proportional
-    // fitting on matrix(c(2 ^ (lor), 1, 1, 1), ncol = 2) with marginals
-    // given by the average methylation level of the region for the first and
-    // second methylation loci, respectively.
-    // Then, compute transition probabilities using
-    // Pr(Z_{i + 1} = z_{i + 1} | Z_i = z_i) =
-    // Pr(Z_i = z_i, Z_{i + 1} = z_{i + 1}) /
-    // Pr(Z_i = z_i).
-
-    // NOTE: This assumes lor_by_pair uses base-2 logarithms.
-    ipf_seed(0, 0) = pow(2, lor_by_pair[i - 1]);
-    col_margins[0] = 1 - beta_by_region[i - 1];
-    col_margins[1] = beta_by_region[i - 1];
-    row_margins[0] = 1 - beta_by_region[i];
-    row_margins[1] = beta_by_region[i];
-    joint_prob_matrix = methsim::ipf(ipf_seed, row_margins, col_margins, 1000,
-                                     1e-10);
-    // Compute p = Pr(Z_{i + 1} = 1 | Z_{i} = z_{i})
-    if (Z[i - 1] == 0) {
-      p = joint_prob_matrix(0, 1) / (1 - beta_by_region[i - 1]);
     } else {
-      p = joint_prob_matrix(1, 1) / beta_by_region[i];
-    }
-    if (u[i] > p) {
-      Z[i] = 0;
-    } else{
-      Z[i] = 1;
-    }
 
-    // Increment j.
-    j += 1;
+      // Compute transition probability from beta_by_region and lor_by_pair.
+      // Can get joint probability matrix by running iterative proportional
+      // fitting on matrix(c(2 ^ (lor), 1, 1, 1), ncol = 2) with marginals
+      // given by the average methylation level of the region for the first and
+      // second methylation loci, respectively.
+      // Then, compute transition probabilities using
+      // Pr(Z_{i + 1} = z_{i + 1} | Z_i = z_i) =
+      // Pr(Z_i = z_i, Z_{i + 1} = z_{i + 1}) /
+      // Pr(Z_i = z_i).
+
+      // NOTE: This assumes lor_by_pair uses base-2 logarithms.
+      ipf_seed(0, 0) = pow(2, lor_by_pair[i - 1]);
+      col_margins[0] = 1 - beta_by_region[i - 1];
+      col_margins[1] = beta_by_region[i - 1];
+      row_margins[0] = 1 - beta_by_region[i];
+      row_margins[1] = beta_by_region[i];
+      joint_prob_matrix = methsim::ipf(ipf_seed, row_margins, col_margins,
+                                       1000, 1e-10);
+      // Compute p = Pr(Z_{i + 1} = 1 | Z_{i} = z_{i})
+      if (Z[i - 1] == 0) {
+        p = joint_prob_matrix(0, 1) / (1 - beta_by_region[i - 1]);
+      } else {
+        p = joint_prob_matrix(1, 1) / beta_by_region[i - 1];
+      }
+      if (u[i] > p) {
+        Z[i] = 0;
+      } else {
+        Z[i] = 1;
+      }
+
+      // Increment j.
+      j += 1;
+    }
   }
   return Z;
 }
