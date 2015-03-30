@@ -37,6 +37,11 @@
 ###                         MethylationTuples::PatternFreqs data.
 ###             SampleName: The sample name.
 
+# TODO: SimulateMethylomeParam objects are not transferable between machines
+# because the BSgenome object in the BSgenome slot is not transferable. If a
+# hack is required, then would need to create SimulateMethylomeParam objects
+# at install-time by querying the user's library for the relevant BSgenome
+# package.
 #' SimulateMethylomeParam class
 #'
 #' An S4 class for the parameters used by
@@ -184,8 +189,10 @@ SimulateMethylomeParam <- function(BSgenome,
 
 # TODO: Should comethylation_function and/or epsilon be part of the
 # SimulateMethylomeParam object?
-# TODO: Add message() output with timing information if verbose = TRUE.
-# TODO: Probably want to export the various comethylation_function options.
+# TODO: Should user-messages be suppressible via suppressMessages() or a
+# 'verbose' option.
+# TODO: Need to document the methsim:::.sampleComethDT parameters (at least
+# mean_fun and sd_fun).
 #' Simulate a methylome.
 #'
 #' @note Currently only simulates CpG methylation.
@@ -207,6 +214,9 @@ SimulateMethylomeParam <- function(BSgenome,
 #' determining the parallel back-end to be used during evaluation.
 #' @param ... additional arguments passed to the \code{comethylation_function}.
 #'
+#' @note Currently only support simulation of CpG methylation and unstranded
+#' methylomes.
+#'
 #' @return A SimulatedMethylome, which is the underlying "true" methylome for
 #' a single sample.
 #'
@@ -221,9 +231,9 @@ setMethod("simulate",
                    epsilon = 0.01, ...) {
 
             # Non-CpG methylation is unlikely to be implemented.
-            warning("Currently only simulates CpG methylation.")
+            message("Currently only simulates CpG methylation.")
             # TODO (long term): Support stranded methylomes.
-            warning("Currently only simulates unstranded methylomes.")
+            message("Currently only simulates unstranded methylomes.")
 
             # Argument checks
             comethylation_function <- match.fun(comethylation_function)
@@ -256,6 +266,7 @@ setMethod("simulate",
             # Sample parameters from the SimulateMethylomeParams object.
 
             # Sample average methylation levels in each region
+            message("Sampling region methylation levels...")
             beta_by_region <- .sampleMethLevelDT(
               object@MethLevelDT,
               regionType(object@PartitionedMethylome))
@@ -266,6 +277,7 @@ setMethod("simulate",
 
             # Sample within-fragment co-methylation for each IPD-region_type
             # combination.
+            message("Finding all CpG two-tuples in genome...")
             two_tuples <- findMTuples(object@BSgenome, MethInfo("CG"), size = 2)
             # Only want unstranded methylomes
             two_tuples <- unstrand(two_tuples[strand(two_tuples) == "+"])
@@ -276,8 +288,12 @@ setMethod("simulate",
                                            object@ComethDT,
                                            object@PartitionedMethylome,
                                            ...)
+            message("Sampling LOR...")
 
             # Methylation loci at which to simulate a methylation state.
+            # TODO: It might be more efficient to create these from two_tuples
+            # (taking care to add on the last CpG of each chromosome)
+            message("Finding all CpG one-tuples in genome")
             one_tuples <- findMTuples(object@BSgenome, MethInfo("CG"), size = 1)
             # Only want unstranded methylomes.
             one_tuples <- unstrand(one_tuples[strand(one_tuples) == "+"])
@@ -288,6 +304,7 @@ setMethod("simulate",
             beta_by_region <- Rle(beta_by_region, countSubjectHits(ol))
 
             # Sample pseudo-haplotype weights
+            message("Sampling w...")
             W_by_region <- .samplePatternFreqsDT(
               object@PatternFreqsDT,
               regionType(object@PartitionedMethylome))
@@ -319,6 +336,7 @@ setMethod("simulate",
             # In contrast, a DataFrame solution with Rle columns is ~ 240 MB in
             # size. However, row-column access is unacceptably slow for my
             # subsequent application that involves sampling from Z.
+            message("Simulating Z")
             Z <- bplapply(u, function(u,
                                       beta_by_region,
                                       lor_by_pair,
@@ -334,6 +352,7 @@ setMethod("simulate",
             colnames(Z) <- colnames(H)
 
             # Create SimulatedMethylome object
+            message("Creating SimulatedMethylome object...")
             sm <- new("SimulatedMethylome",
                       SummarizedExperiment(assays = SimpleList(Z = Z, W = W),
                                            rowData = one_tuples))
