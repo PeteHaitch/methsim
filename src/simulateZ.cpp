@@ -80,7 +80,7 @@ IntegerVector simulateZ(NumericVector beta_by_region,
   IntegerVector Z(n, NA_INTEGER);
   // ipf_seed is used to initialise ipf algorithm to get joint_prob_matrix.
   arma::mat ipf_seed(2, 2, arma::fill::ones);
-  // col_margins = (p_{0.}, p_{1.e})
+  // col_margins = (p_{0.}, p_{1.})
   arma::rowvec col_margins(2);
   // row_margins = (p_{.0}, p_{.1})
   arma::vec row_margins(2);
@@ -127,7 +127,7 @@ IntegerVector simulateZ(NumericVector beta_by_region,
       // Pr(Z_i = z_i).
 
       // NOTE: This assumes lor_by_pair uses base-2 logarithms.
-      ipf_seed(0, 0) = pow(2, lor_by_pair[i - 1]);
+      ipf_seed(0, 0) = pow(2.0, lor_by_pair[j]);
       col_margins[0] = 1 - beta_by_region[i - 1];
       col_margins[1] = beta_by_region[i - 1];
       row_margins[0] = 1 - beta_by_region[i];
