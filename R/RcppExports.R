@@ -45,6 +45,31 @@ ipf <- function(seed, row_margins, col_margins, iter = 1000L, tol = 1e-10) {
     .Call('methsim_sampleZ', PACKAGE = 'methsim', Z, sampled_W, fh, cqh)
 }
 
+#' Simulate a single "haplotype" of a methylome (Z).
+#'
+#' @param beta_by_region the beta-value (average methylation level) for each
+#' methylation locus in the genome.
+#' @param lor_by_pair the within-fragment co-methylation between each pair of
+#' methylation loci in the genome. Should be log odds-ratios using base-2
+#' logarithms. The length of this should be equal to the number of methylation
+#' loci in the genome minus the number of chromosomes (seqnames).
+#' @param seqnames_one_tuples the chromosome (seqname) of each methylation
+#' locus in the genome, i.e., \code{seqnames(one_tuples)}.
+#' @param u a vector of Uniform(0, 1) random variables used in choosing the
+#' next state of the process. Must have same length as \code{beta_by_region}.
+#'
+#' @note Random number generation is performed outside of this function (at
+#' the R level in a single thread) in order to simplify this function. If
+#' the vector of Uniform(0, 1) random variables ('u') is to be simulated
+#' within this function at the C++ level then great care must be taken,
+#' especially if this function is subsequently called in parallel.
+#'
+#' @return an integer vector of simulated methylation states for each
+#' methylation locus in the genome; 0 = unmethylated and 1 = methylated.
+.simulateZ2 <- function(beta_by_region, lor_by_pair, seqnames_one_tuples, u) {
+    .Call('methsim_simulateZ2', PACKAGE = 'methsim', beta_by_region, lor_by_pair, seqnames_one_tuples, u)
+}
+
 #' Simulate sequencing errors.
 #'
 #' Simulate sequencing errors by modifying \code{z} in place.

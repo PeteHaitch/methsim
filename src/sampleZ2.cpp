@@ -1,18 +1,18 @@
 // Copyright (C) 2015 Peter Hickey
 //
-// This file is part of methsim.
+  // This file is part of methsim.
 //
-// methsim is free software: you can redistribute it and/or modify it
+  // methsim is free software: you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 2 of the License, or
 // (at your option) any later version.
 //
-// methsim is distributed in the hope that it will be useful, but
+  // methsim is distributed in the hope that it will be useful, but
 // WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
+  // You should have received a copy of the GNU General Public License
 // along with methsim  If not, see <http://www.gnu.org/licenses/>.
 
 #include <methsim.h>
@@ -49,8 +49,8 @@ using namespace Rcpp;
 //'
 //' @return an integer vector of simulated methylation states for each
 //' methylation locus in the genome; 0 = unmethylated and 1 = methylated.
-// [[Rcpp::export(".simulateZ")]]
-IntegerVector simulateZ(NumericVector beta_by_region,
+// [[Rcpp::export(".simulateZ2")]]
+std::vector<int> simulateZ2(NumericVector beta_by_region,
                         NumericVector lor_by_pair,
                         CharacterVector seqnames_one_tuples,
                         NumericVector u) {
@@ -77,9 +77,7 @@ IntegerVector simulateZ(NumericVector beta_by_region,
   // (see http://stackoverflow.com/questions/17105555/rcpp-segfault-on-arrays-698152-if-integervector-is-declared)
   int n = beta_by_region.length();
   // Z stores the result.
-  // TODO: Try using a std::vector<int> so that is grows dynamically. Do this
-  // in a separate function to to ensure output is identical.
-  IntegerVector Z(n, NA_INTEGER);
+  std::vector<int> Z(n);
   // ipf_seed is used to initialise ipf algorithm to get joint_prob_matrix.
   arma::mat ipf_seed(2, 2, arma::fill::ones);
   // col_margins = (p_{0.}, p_{1.})
@@ -95,12 +93,13 @@ IntegerVector simulateZ(NumericVector beta_by_region,
 
   // Initialise the process (i = 0) by sampling from the marginal distribution.
   if (u[0] > beta_by_region[0]) {
-    Z[0] = 0;
+    Z.push_back(0);
   } else {
-    Z[0] = 1;
+    Z.push_back(1);
   }
 
   // Simulate the rest of the process.
+  // TODO: Use iterators for i and j.
   for (int i = 1; i < n; i++) {
 
     // Check that the current methylation loci and the next are on the same
@@ -108,9 +107,9 @@ IntegerVector simulateZ(NumericVector beta_by_region,
     // there is no lor_by_pair value
     if (seqnames_one_tuples[i] != seqnames_one_tuples[i - 1]) {
       if (u[i] > beta_by_region[i]) {
-        Z[i] = 0;
+        Z.push_back(0);
       } else {
-        Z[i] = 1;
+        Z.push_back(1);
       }
       // Don't increment j. There is only a value in lor_by_pair for pairs of
       // methylation loci on the same chromosome so when a pair is on different
@@ -125,8 +124,8 @@ IntegerVector simulateZ(NumericVector beta_by_region,
       // second methylation loci, respectively.
       // Then, compute transition probabilities using
       // Pr(Z_{i + 1} = z_{i + 1} | Z_i = z_i) =
-      // Pr(Z_i = z_i, Z_{i + 1} = z_{i + 1}) /
-      // Pr(Z_i = z_i).
+        // Pr(Z_i = z_i, Z_{i + 1} = z_{i + 1}) /
+        // Pr(Z_i = z_i).
 
       // NOTE: This assumes lor_by_pair uses base-2 logarithms.
       ipf_seed(0, 0) = pow(2.0, lor_by_pair[j]);
@@ -137,15 +136,17 @@ IntegerVector simulateZ(NumericVector beta_by_region,
       joint_prob_matrix = methsim::ipf(ipf_seed, row_margins, col_margins,
                                        1000, 1e-10);
       // Compute p = Pr(Z_{i + 1} = 1 | Z_{i} = z_{i})
+      // TODO: Is this the correct way to access Z[i - 1] when it is a
+      // std::vector?
       if (Z[i - 1] == 0) {
         p = joint_prob_matrix(0, 1) / (1 - beta_by_region[i - 1]);
       } else {
         p = joint_prob_matrix(1, 1) / beta_by_region[i - 1];
       }
       if (u[i] > p) {
-        Z[i] = 0;
+        Z.push_back(0);
       } else {
-        Z[i] = 1;
+        Z.push_back(1);
       }
 
       // Increment j.
