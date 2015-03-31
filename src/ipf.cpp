@@ -54,8 +54,8 @@ using namespace Rcpp;
 // [[Rcpp::interfaces(r, cpp)]]
 // [[Rcpp::export]]
 arma::mat ipf(const arma::mat& seed, arma::vec row_margins,
-           arma::rowvec col_margins, int iter = 1000,
-           double tol = 1e-10) {
+              arma::rowvec col_margins, int iter = 1000,
+              double tol = 1e-10) {
 
   // Variable initialisations.
   // Note that row_margins are a column vector and col_margins are a row vector.

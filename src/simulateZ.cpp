@@ -24,6 +24,14 @@ using namespace Rcpp;
 // BiocParallel::bplapply(). It would be good to get to the bottom of these;
 // see http://master.bioconductor.org/developers/how-to/c-debugging/,
 // https://www.google.com.au/search?q=rcpp+gdb+site%3Alists.r-forge.r-project.org&oq=rcpp+gdb+site%3Alists.r-forge.r-project.org&aqs=chrome..69i57.388j0j9&sourceid=chrome&es_sm=91&ie=UTF-8
+// for debugging C++ functions.
+// My problem is very similar to that described in
+// http://lists.r-forge.r-project.org/pipermail/rcpp-devel/2013-May/005773.html;
+// a solution is offered in
+// http://lists.r-forge.r-project.org/pipermail/rcpp-devel/2013-May/005838.html,
+// however, I think this fix has already been applied to Rcpp itself and so my
+// error is somewhat different.
+//
 //
 // TODO (long term): Allow beta_by_region and seqnames_one_tuple to be
 // S4Vectors::Rleobjects to avoid the requirement to pre-expand these via
