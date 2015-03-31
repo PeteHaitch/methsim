@@ -21,6 +21,8 @@
 
 using namespace Rcpp;
 
+// TODO: The use of const arma::mat& seed may be incorrect. I need to better
+// understand references and const references.
 //' Two-dimensionsal Iterative Proportional Fitting.
 //'
 //' @description The function implements the iteratitive proportional fitting
