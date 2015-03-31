@@ -93,9 +93,9 @@ std::vector<int> simulateZ2(NumericVector beta_by_region,
 
   // Initialise the process (i = 0) by sampling from the marginal distribution.
   if (u[0] > beta_by_region[0]) {
-    Z.push_back(0);
+    Z[0] = 0;
   } else {
-    Z.push_back(1);
+    Z[0] = 1;
   }
 
   // Simulate the rest of the process.
@@ -107,9 +107,9 @@ std::vector<int> simulateZ2(NumericVector beta_by_region,
     // there is no lor_by_pair value
     if (seqnames_one_tuples[i] != seqnames_one_tuples[i - 1]) {
       if (u[i] > beta_by_region[i]) {
-        Z.push_back(0);
+        Z[i] = 0;
       } else {
-        Z.push_back(1);
+        Z[i] = 1;
       }
       // Don't increment j. There is only a value in lor_by_pair for pairs of
       // methylation loci on the same chromosome so when a pair is on different
@@ -135,18 +135,15 @@ std::vector<int> simulateZ2(NumericVector beta_by_region,
       row_margins[1] = beta_by_region[i];
       joint_prob_matrix = methsim::ipf(ipf_seed, row_margins, col_margins,
                                        1000, 1e-10);
-      // Compute p = Pr(Z_{i + 1} = 1 | Z_{i} = z_{i})
-      // TODO: Is this the correct way to access Z[i - 1] when it is a
-      // std::vector?
       if (Z[i - 1] == 0) {
         p = joint_prob_matrix(0, 1) / (1 - beta_by_region[i - 1]);
       } else {
         p = joint_prob_matrix(1, 1) / beta_by_region[i - 1];
       }
       if (u[i] > p) {
-        Z.push_back(0);
+        Z[i] = 0;
       } else {
-        Z.push_back(1);
+        Z[i] = 1;
       }
 
       // Increment j.
