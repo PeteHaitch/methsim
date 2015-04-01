@@ -10,13 +10,13 @@
 using namespace Rcpp;
 
 // ipf
-arma::mat ipf(const arma::mat& seed, arma::vec row_margins, arma::rowvec col_margins, int iter, double tol);
+arma::mat ipf(const arma::mat& seed, const arma::colvec& row_margins, const arma::rowvec& col_margins, int iter, double tol);
 static SEXP methsim_ipf_try(SEXP seedSEXP, SEXP row_marginsSEXP, SEXP col_marginsSEXP, SEXP iterSEXP, SEXP tolSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::traits::input_parameter< const arma::mat& >::type seed(seedSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type row_margins(row_marginsSEXP);
-    Rcpp::traits::input_parameter< arma::rowvec >::type col_margins(col_marginsSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec& >::type row_margins(row_marginsSEXP);
+    Rcpp::traits::input_parameter< const arma::rowvec& >::type col_margins(col_marginsSEXP);
     Rcpp::traits::input_parameter< int >::type iter(iterSEXP);
     Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
     __result = Rcpp::wrap(ipf(seed, row_margins, col_margins, iter, tol));
@@ -127,7 +127,7 @@ END_RCPP
 static int methsim_RcppExport_validate(const char* sig) { 
     static std::set<std::string> signatures;
     if (signatures.empty()) {
-        signatures.insert("arma::mat(*ipf)(const arma::mat&,arma::vec,arma::rowvec,int,double)");
+        signatures.insert("arma::mat(*ipf)(const arma::mat&,const arma::colvec&,const arma::rowvec&,int,double)");
     }
     return signatures.find(sig) != signatures.end();
 }

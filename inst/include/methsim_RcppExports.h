@@ -25,11 +25,11 @@ namespace methsim {
         }
     }
 
-    inline arma::mat ipf(const arma::mat& seed, arma::vec row_margins, arma::rowvec col_margins, int iter = 1000, double tol = 1e-10) {
+    inline arma::mat ipf(const arma::mat& seed, const arma::colvec& row_margins, const arma::rowvec& col_margins, int iter = 1000, double tol = 1e-10) {
         typedef SEXP(*Ptr_ipf)(SEXP,SEXP,SEXP,SEXP,SEXP);
         static Ptr_ipf p_ipf = NULL;
         if (p_ipf == NULL) {
-            validateSignature("arma::mat(*ipf)(const arma::mat&,arma::vec,arma::rowvec,int,double)");
+            validateSignature("arma::mat(*ipf)(const arma::mat&,const arma::colvec&,const arma::rowvec&,int,double)");
             p_ipf = (Ptr_ipf)R_GetCCallable("methsim", "methsim_ipf");
         }
         RObject __result;
