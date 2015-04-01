@@ -15,6 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with methsim  If not, see <http://www.gnu.org/licenses/>.
 
+// The functions in this file are adapted from functions available in
+// the mipfp CRAN package version 2.0.
+// (http://cran.r-project.org/web/packages/mipfp/index.html).
+// mipfp is released under a GPL (>= 2) license.
+
 // [[Rcpp::depends(RcppArmadillo)]]
 
 #include <RcppArmadillo.h>
@@ -24,9 +29,8 @@ using namespace Rcpp;
 //' Two-dimensionsal Iterative Proportional Fitting.
 //'
 //' @description The function implements the iteratitive proportional fitting
-//' (ipf) procedure for \strong{;two-dimensional tables only}. The code is
-//' adapted from \code{mipfp::\link[Ipfp]{Ipfp}} for the special case of
-//' two-dimensional tables without \code{NA} values.
+//' (ipf) procedure for \strong{two-dimensional square tables without
+//' \code{NA} values}. The code is adapted from \code{mipfp::\link[Ipfp]{Ipfp}}.
 //'
 //' @param seed the initial two-dimensional array to be updated. Each cell must
 //' be non-negative.
