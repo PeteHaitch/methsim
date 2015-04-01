@@ -19,20 +19,7 @@
 
 using namespace Rcpp;
 
-// TODO: I'm still getting occasional low-level errors, e.g., segfaults. These
-// seem to occur when .simulateZ() is run in parallel, particularly via
-// BiocParallel::bplapply(). It would be good to get to the bottom of these;
-// see http://master.bioconductor.org/developers/how-to/c-debugging/,
-// https://www.google.com.au/search?q=rcpp+gdb+site%3Alists.r-forge.r-project.org&oq=rcpp+gdb+site%3Alists.r-forge.r-project.org&aqs=chrome..69i57.388j0j9&sourceid=chrome&es_sm=91&ie=UTF-8
-// for debugging C++ functions.
-// My problem is very similar to that described in
-// http://lists.r-forge.r-project.org/pipermail/rcpp-devel/2013-May/005773.html;
-// a solution is offered in
-// http://lists.r-forge.r-project.org/pipermail/rcpp-devel/2013-May/005838.html,
-// however, I think this fix has already been applied to Rcpp itself and so my
-// error is somewhat different.
-//
-//
+// TODO: Is it better to use std::vector<int> or Rcpp::IntegerVector
 // TODO (long term): Allow beta_by_region and seqnames_one_tuple to be
 // S4Vectors::Rleobjects to avoid the requirement to pre-expand these via
 // as.vector().
@@ -58,22 +45,22 @@ using namespace Rcpp;
 //' @return an integer vector of simulated methylation states for each
 //' methylation locus in the genome; 0 = unmethylated and 1 = methylated.
 // [[Rcpp::export(".simulateZ")]]
-IntegerVector simulateZ(NumericVector beta_by_region,
-                        NumericVector lor_by_pair,
-                        CharacterVector seqnames_one_tuples,
-                        NumericVector u) {
+std::vector<int> simulateZ(NumericVector beta_by_region,
+                           NumericVector lor_by_pair,
+                           CharacterVector seqnames_one_tuples,
+                           NumericVector u) {
 
   // Argument checks
-  if (beta_by_region.length() != seqnames_one_tuples.length()) {
+  if (beta_by_region.size() != seqnames_one_tuples.size()) {
     stop("length(beta_by_region) != length(seqnames_one_tuples)");
   }
-  if (beta_by_region.length() != u.length()) {
+  if (beta_by_region.size() != u.size()) {
     stop("length(beta_by_region) != length(u)");
   }
   // There is only a value in lor_by_pair for pairs of methylation loci on the
   // same chromosome.
-  if (lor_by_pair.length() !=
-      (beta_by_region.length() - unique(seqnames_one_tuples).length())) {
+  if (lor_by_pair.size() !=
+      (beta_by_region.size() - unique(seqnames_one_tuples).size())) {
     std::string stop_msg = "length(lor_by_pair) != ";
     stop_msg = stop_msg +
       "(length(beta_by_region) - length(unique(seqnames_one_tuples)))";
@@ -81,20 +68,22 @@ IntegerVector simulateZ(NumericVector beta_by_region,
   }
 
   // Initialise variables
-  // TODO: n is a variable at runtime and this might be the cause of sefaults
-  // (see http://stackoverflow.com/questions/17105555/rcpp-segfault-on-arrays-698152-if-integervector-is-declared)
-  int n = beta_by_region.length();
+  int n = beta_by_region.size();
   // Z stores the result.
-  // TODO: Try using a std::vector<int> so that is grows dynamically. Do this
-  // in a separate function to to ensure output is identical.
-  IntegerVector Z(n, NA_INTEGER);
+  // TODO: This fills Z with 0; this might allow a speed-up where I can "skip"
+  // Z[i] that were simulated as 0. Alternatively, since most loci will be 1,
+  // might fill with ones and then flip to zeroes as appropriate.
+  std::vector<int> Z(n);
   // ipf_seed is used to initialise ipf algorithm to get joint_prob_matrix.
   arma::mat ipf_seed(2, 2, arma::fill::ones);
   // col_margins = (p_{0.}, p_{1.})
   arma::rowvec col_margins(2);
   // row_margins = (p_{.0}, p_{.1})
-  arma::vec row_margins(2);
+  arma::colvec row_margins(2);
   // The 2x2 matrix of joint probabilities (*not* the transition matrix).
+  // joint_prob_matrix = | p_{0, 0}, p_{1, 0} |
+  //                     | p_{1, 0}, p_{1, 1} |,
+  // where p_{a, b} = Pr(Z_{i - 1} = a, Z_{i} = b)
   arma::mat joint_prob_matrix(2, 2);
   // p = Pr(Z_{i + 1} = 1 | Z_{i} = z_{i})
   double p;
@@ -138,10 +127,14 @@ IntegerVector simulateZ(NumericVector beta_by_region,
 
       // NOTE: This assumes lor_by_pair uses base-2 logarithms.
       ipf_seed(0, 0) = pow(2.0, lor_by_pair[j]);
+      // col_margins refer to the (i - 1)-th methylation loci
       col_margins[0] = 1 - beta_by_region[i - 1];
       col_margins[1] = beta_by_region[i - 1];
+      // row_margins refer to the i-th methylation loci
       row_margins[0] = 1 - beta_by_region[i];
       row_margins[1] = beta_by_region[i];
+      // TODO: May need to move ipf source code to this file and make it a
+      // C++ only function.
       joint_prob_matrix = methsim::ipf(ipf_seed, row_margins, col_margins,
                                        1000, 1e-10);
       // Compute p = Pr(Z_{i + 1} = 1 | Z_{i} = z_{i})
@@ -162,3 +155,4 @@ IntegerVector simulateZ(NumericVector beta_by_region,
   }
   return Z;
 }
+
