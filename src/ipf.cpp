@@ -15,23 +15,25 @@
 // You should have received a copy of the GNU General Public License
 // along with methsim  If not, see <http://www.gnu.org/licenses/>.
 
+// The functions in this file are adapted from functions available in
+// the mipfp CRAN package version 2.0.
+// (http://cran.r-project.org/web/packages/mipfp/index.html).
+// mipfp is released under a GPL (>= 2) license.
+
 // [[Rcpp::depends(RcppArmadillo)]]
 
 #include <RcppArmadillo.h>
 
 using namespace Rcpp;
 
-// TODO: The use of const arma::mat& seed may be incorrect. I need to better
-// understand references and const references.
 //' Two-dimensionsal Iterative Proportional Fitting.
 //'
 //' @description The function implements the iteratitive proportional fitting
-//' (ipf) procedure for \strong{;two-dimensional tables only}. The code is
-//' adapted from \code{mipfp::\link[Ipfp]{Ipfp}} for the special case of
-//' two-dimensional tables without \code{NA} values.
+//' (ipf) procedure for \strong{two-dimensional square tables without 
+//' \code{NA} values}. The code is adapted from \code{mipfp::\link[Ipfp]{Ipfp}}.
 //'
-//' @param seed the initial two-dimensional array to be updated. Each cell must
-//' be non-negative.
+//' @param seed the initial two-dimensional square array to be updated. Each 
+//' cell must be non-negative.
 //' @param row_margins the contraints on the row margins.
 //' @param col_margins the constraints on the column margins.
 //' @param iter stopping criterion. The maximum number of iterations allowed;
@@ -40,8 +42,9 @@ using namespace Rcpp;
 //' two iterations is lower than the value specified by \code{tol}, then
 //' ipf has reached convergence; must be greater than 0. Default is 1e-10.
 //'
-//' @return \code{xi.hat} an \code{arma::mat} of the same dimension of
-//' \code{seed} whose margins match the ones specified in \code{target.list}.
+//' @return \code{xi.hat} a matrix (specifically, an \code{arma::mat}) of the 
+//' same dimension of \code{seed} whose margins match the ones specified in 
+//' \code{target.list}.
 //'
 //' @keywords internal
 //'
@@ -53,35 +56,42 @@ using namespace Rcpp;
 //' This function has only been tested with 2x2 matrices.
 // [[Rcpp::interfaces(r, cpp)]]
 // [[Rcpp::export]]
-arma::mat ipf(const arma::mat& seed, arma::vec row_margins,
-              arma::rowvec col_margins, int iter = 1000,
+arma::mat ipf(const arma::mat& seed, 
+              const arma::colvec& row_margins,
+              const arma::rowvec& col_margins, 
+              int iter = 1000,
               double tol = 1e-10) {
 
   // Variable initialisations.
-  // Note that row_margins are a column vector and col_margins are a row vector.
-  // Copy seed so that it is not modified.
-  arma::mat result(seed.n_rows, seed.n_cols);
+  // Copy seed since it can't be modified.
+  int nr = seed.n_rows;
+  int nc = seed.n_cols;
+  if (nr != nc) {
+    Rcpp::stop("Currently only works with square matrices.");
+  }
+  arma::mat result(nr, nc);
   result = seed;
   // result_temp stores the previous iteration of the algorithm.
-  arma::mat result_temp(seed.n_rows, seed.n_cols);
-  arma::vec row_sums(seed.n_rows);
-  arma::rowvec col_sums(seed.n_cols);
-  // update_factor needs to be arma::vec because is multiplied with rows/cols
-  // of an arma::mat.
-  arma::vec update_factor(2);
+  arma::mat result_temp(nr, nc);
+  arma::colvec row_sums(nr);
+  arma::rowvec col_sums(nc);
+  // update_factor needs to be arma::colvec, and not a std::vec, because is 
+  // multiplied with rows/cols of an arma::mat.
+  // NOTE: There would need to be two different `update_factor`s if nr != nc.
+  arma::colvec update_factor(nr);
   double stp_crit;
   bool converged = false;
-  // evol_stp_crit needs to be a std::vector and not arma::vec because
+  // evol_stp_crit needs to be a std::vector and not arma::colvec because
   // .push_back() is required.
   std::vector<double> evol_stp_crit;
-  // diff_margins needs to be std::vector and not arma::vec (resp.
-  // arma::rowvec) because the wrap method for arma::vec (resp. arma::rowvec)
-  // is a matrix with 1 column (resp. row).
-  std::vector<double> diff_margins(2);
-  int nr = result.n_rows;
-  int nc = result.n_cols;
+  // NOTE: diff_margins not used in this implementation. If wanting to use, 
+  // then it needs to be std::vector and not arma::colvec (resp. arma::rowvec) 
+  // because the wrap method for arma::colvec (resp. arma::rowvec) is a matrix 
+  // with 1 column (resp. row).
+//  std::vector<double> diff_margins(2);
 
-  for (int i = 0; i < iter; i++ ) {
+  for (int i = 0; i < iter; i++) {
+    // Store the result from the previous iteration of the algorithm
     result_temp = result;
 
     // Process rows
@@ -130,8 +140,9 @@ arma::mat ipf(const arma::mat& seed, arma::vec row_margins,
     Rcpp::warning(warning_msg);
   }
 
-  diff_margins[0] = max(abs(row_margins - sum(result, 1)));
-  diff_margins[1] = max(abs(col_margins - sum(result, 0)));
+  // NOTE: diff_margins isn't used in this implementation (see NOTE above)
+//  diff_margins[0] = max(abs(row_margins - sum(result, 1)));
+//  diff_margins[1] = max(abs(col_margins - sum(result, 0)));
 
   return result;
 }

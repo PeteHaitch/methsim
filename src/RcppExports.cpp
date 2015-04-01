@@ -9,14 +9,184 @@
 
 using namespace Rcpp;
 
+// f
+std::vector<int> f(NumericVector psi, NumericVector b1, NumericVector b2);
+RcppExport SEXP methsim_f(SEXP psiSEXP, SEXP b1SEXP, SEXP b2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type psi(psiSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type b1(b1SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type b2(b2SEXP);
+    __result = Rcpp::wrap(f(psi, b1, b2));
+    return __result;
+END_RCPP
+}
+// f2
+std::vector<int> f2(NumericVector psi, NumericVector b1, NumericVector b2);
+RcppExport SEXP methsim_f2(SEXP psiSEXP, SEXP b1SEXP, SEXP b2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type psi(psiSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type b1(b1SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type b2(b2SEXP);
+    __result = Rcpp::wrap(f2(psi, b1, b2));
+    return __result;
+END_RCPP
+}
+// f3
+int f3(NumericVector psi, NumericVector b1, NumericVector b2);
+RcppExport SEXP methsim_f3(SEXP psiSEXP, SEXP b1SEXP, SEXP b2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type psi(psiSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type b1(b1SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type b2(b2SEXP);
+    __result = Rcpp::wrap(f3(psi, b1, b2));
+    return __result;
+END_RCPP
+}
+// f4
+std::vector<int> f4(NumericVector psi, NumericVector b1, NumericVector b2);
+RcppExport SEXP methsim_f4(SEXP psiSEXP, SEXP b1SEXP, SEXP b2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type psi(psiSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type b1(b1SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type b2(b2SEXP);
+    __result = Rcpp::wrap(f4(psi, b1, b2));
+    return __result;
+END_RCPP
+}
+// f5
+std::vector<int> f5(NumericVector psi, NumericVector b1, NumericVector b2);
+RcppExport SEXP methsim_f5(SEXP psiSEXP, SEXP b1SEXP, SEXP b2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type psi(psiSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type b1(b1SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type b2(b2SEXP);
+    __result = Rcpp::wrap(f5(psi, b1, b2));
+    return __result;
+END_RCPP
+}
+// f6
+std::vector<int> f6(NumericVector psi, NumericVector b1, NumericVector b2);
+RcppExport SEXP methsim_f6(SEXP psiSEXP, SEXP b1SEXP, SEXP b2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type psi(psiSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type b1(b1SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type b2(b2SEXP);
+    __result = Rcpp::wrap(f6(psi, b1, b2));
+    return __result;
+END_RCPP
+}
+// g
+std::vector<int> g(NumericVector psi, NumericVector b1, NumericVector b2);
+RcppExport SEXP methsim_g(SEXP psiSEXP, SEXP b1SEXP, SEXP b2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type psi(psiSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type b1(b1SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type b2(b2SEXP);
+    __result = Rcpp::wrap(g(psi, b1, b2));
+    return __result;
+END_RCPP
+}
+// g2
+std::vector<int> g2(NumericVector psi, NumericVector b1, NumericVector b2);
+RcppExport SEXP methsim_g2(SEXP psiSEXP, SEXP b1SEXP, SEXP b2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type psi(psiSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type b1(b1SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type b2(b2SEXP);
+    __result = Rcpp::wrap(g2(psi, b1, b2));
+    return __result;
+END_RCPP
+}
+// g3
+int g3(NumericVector psi, NumericVector b1, NumericVector b2);
+RcppExport SEXP methsim_g3(SEXP psiSEXP, SEXP b1SEXP, SEXP b2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type psi(psiSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type b1(b1SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type b2(b2SEXP);
+    __result = Rcpp::wrap(g3(psi, b1, b2));
+    return __result;
+END_RCPP
+}
+// g4
+std::vector<int> g4(NumericVector psi, NumericVector b1, NumericVector b2);
+RcppExport SEXP methsim_g4(SEXP psiSEXP, SEXP b1SEXP, SEXP b2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type psi(psiSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type b1(b1SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type b2(b2SEXP);
+    __result = Rcpp::wrap(g4(psi, b1, b2));
+    return __result;
+END_RCPP
+}
+// g5
+std::vector<int> g5(NumericVector psi, NumericVector b1, NumericVector b2);
+RcppExport SEXP methsim_g5(SEXP psiSEXP, SEXP b1SEXP, SEXP b2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type psi(psiSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type b1(b1SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type b2(b2SEXP);
+    __result = Rcpp::wrap(g5(psi, b1, b2));
+    return __result;
+END_RCPP
+}
+// g6
+std::vector<int> g6(NumericVector psi, NumericVector b1, NumericVector b2);
+RcppExport SEXP methsim_g6(SEXP psiSEXP, SEXP b1SEXP, SEXP b2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type psi(psiSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type b1(b1SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type b2(b2SEXP);
+    __result = Rcpp::wrap(g6(psi, b1, b2));
+    return __result;
+END_RCPP
+}
+// simulateZ3
+std::vector<int> simulateZ3(NumericVector beta_by_region, NumericVector lor_by_pair, CharacterVector seqnames_one_tuples, NumericVector u);
+RcppExport SEXP methsim_simulateZ3(SEXP beta_by_regionSEXP, SEXP lor_by_pairSEXP, SEXP seqnames_one_tuplesSEXP, SEXP uSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type beta_by_region(beta_by_regionSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type lor_by_pair(lor_by_pairSEXP);
+    Rcpp::traits::input_parameter< CharacterVector >::type seqnames_one_tuples(seqnames_one_tuplesSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type u(uSEXP);
+    __result = Rcpp::wrap(simulateZ3(beta_by_region, lor_by_pair, seqnames_one_tuples, u));
+    return __result;
+END_RCPP
+}
 // ipf
-arma::mat ipf(const arma::mat& seed, arma::vec row_margins, arma::rowvec col_margins, int iter, double tol);
+arma::mat ipf(const arma::mat& seed, const arma::colvec& row_margins, const arma::rowvec& col_margins, int iter, double tol);
 static SEXP methsim_ipf_try(SEXP seedSEXP, SEXP row_marginsSEXP, SEXP col_marginsSEXP, SEXP iterSEXP, SEXP tolSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::traits::input_parameter< const arma::mat& >::type seed(seedSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type row_margins(row_marginsSEXP);
-    Rcpp::traits::input_parameter< arma::rowvec >::type col_margins(col_marginsSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec& >::type row_margins(row_marginsSEXP);
+    Rcpp::traits::input_parameter< const arma::rowvec& >::type col_margins(col_marginsSEXP);
     Rcpp::traits::input_parameter< int >::type iter(iterSEXP);
     Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
     __result = Rcpp::wrap(ipf(seed, row_margins, col_margins, iter, tol));
@@ -80,20 +250,6 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
-// simulateZ
-IntegerVector simulateZ(NumericVector beta_by_region, NumericVector lor_by_pair, CharacterVector seqnames_one_tuples, NumericVector u);
-RcppExport SEXP methsim_simulateZ(SEXP beta_by_regionSEXP, SEXP lor_by_pairSEXP, SEXP seqnames_one_tuplesSEXP, SEXP uSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< NumericVector >::type beta_by_region(beta_by_regionSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type lor_by_pair(lor_by_pairSEXP);
-    Rcpp::traits::input_parameter< CharacterVector >::type seqnames_one_tuples(seqnames_one_tuplesSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type u(uSEXP);
-    __result = Rcpp::wrap(simulateZ(beta_by_region, lor_by_pair, seqnames_one_tuples, u));
-    return __result;
-END_RCPP
-}
 // simulateZ2
 std::vector<int> simulateZ2(NumericVector beta_by_region, NumericVector lor_by_pair, CharacterVector seqnames_one_tuples, NumericVector u);
 RcppExport SEXP methsim_simulateZ2(SEXP beta_by_regionSEXP, SEXP lor_by_pairSEXP, SEXP seqnames_one_tuplesSEXP, SEXP uSEXP) {
@@ -105,6 +261,20 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< CharacterVector >::type seqnames_one_tuples(seqnames_one_tuplesSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type u(uSEXP);
     __result = Rcpp::wrap(simulateZ2(beta_by_region, lor_by_pair, seqnames_one_tuples, u));
+    return __result;
+END_RCPP
+}
+// simulateZ
+IntegerVector simulateZ(NumericVector beta_by_region, NumericVector lor_by_pair, CharacterVector seqnames_one_tuples, NumericVector u);
+RcppExport SEXP methsim_simulateZ(SEXP beta_by_regionSEXP, SEXP lor_by_pairSEXP, SEXP seqnames_one_tuplesSEXP, SEXP uSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type beta_by_region(beta_by_regionSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type lor_by_pair(lor_by_pairSEXP);
+    Rcpp::traits::input_parameter< CharacterVector >::type seqnames_one_tuples(seqnames_one_tuplesSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type u(uSEXP);
+    __result = Rcpp::wrap(simulateZ(beta_by_region, lor_by_pair, seqnames_one_tuples, u));
     return __result;
 END_RCPP
 }
@@ -127,7 +297,7 @@ END_RCPP
 static int methsim_RcppExport_validate(const char* sig) { 
     static std::set<std::string> signatures;
     if (signatures.empty()) {
-        signatures.insert("arma::mat(*ipf)(const arma::mat&,arma::vec,arma::rowvec,int,double)");
+        signatures.insert("arma::mat(*ipf)(const arma::mat&,const arma::colvec&,const arma::rowvec&,int,double)");
     }
     return signatures.find(sig) != signatures.end();
 }
