@@ -302,18 +302,17 @@ setMethod("simulate",
                                                   ...)
 
             # Methylation loci at which to simulate a methylation state.
-            # TODO: It might be more efficient to create these from two_tuples
-            # (taking care to add on the last CpG of each chromosome)
-            # ~170 seconds
-            message("Finding all CpG one-tuples in genome")
-            one_tuples <- findMTuples(object@BSgenome, MethInfo("CG"), size = 1)
-            # Only want unstranded methylomes.
-            one_tuples <- unstrand(one_tuples[strand(one_tuples) == "+"])
-            # Drop unusable seqlevels.
-            one_tuples <- keepSeqlevels(one_tuples,
-                                        seqlevels(object@PartitionedMethylome))
-            ol <- findOverlaps(one_tuples, object@PartitionedMethylome)
-            beta_by_region <- Rle(beta_by_region, countSubjectHits(ol))
+            # ~30 seconds
+            one_tuples <- endoapply(
+              split(two_tuples, seqnames(two_tuples)), function(x) {
+                n <- length(x)
+                MTuples(GTuples(rep(seqnames(x)[1], n + 1),
+                                matrix(c(start(x), end(x)[n]), ncol = 1),
+                                c(strand(x), strand(x)[n]),
+                                seqinfo = seqinfo(x)),
+                        methinfo(x))
+              })
+            one_tuples <- unlist(one_tuples, use.names = FALSE)
 
             # Sample pseudo-haplotype weights
             message("Sampling w...")
