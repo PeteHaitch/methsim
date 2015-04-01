@@ -23,7 +23,8 @@
 // TODO (long term): Figure out why ipf() only works when included int he same
 // source file as simulateZ(), i.e., why doesn't Rcpp::interfaces(r, cpp) +
 // Makevars work as expected? Create a simple example that illustrates this
-// problem.
+// problem. The bug seems to be similar to
+// http://lists.r-forge.r-project.org/pipermail/rcpp-devel/2013-May/005775.html
 
 // [[Rcpp::depends(RcppArmadillo)]]
 
