@@ -313,6 +313,8 @@ setMethod("simulate",
                         methinfo(x))
               })
             one_tuples <- unlist(one_tuples, use.names = FALSE)
+            ol <- findOverlaps(one_tuples, object@PartitionedMethylome)
+            beta_by_region <- Rle(beta_by_region, countSubjectHits(ol))
 
             # Sample pseudo-haplotype weights
             message("Sampling w...")
