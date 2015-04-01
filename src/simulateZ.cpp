@@ -20,6 +20,11 @@
 // (http://cran.r-project.org/web/packages/mipfp/index.html).
 // mipfp is released under a GPL (>= 2) license.
 
+// TODO (long term): Figure out why ipf() only works when included int he same
+// source file as simulateZ(), i.e., why doesn't Rcpp::interfaces(r, cpp) +
+// Makevars work as expected? Create a simple example that illustrates this
+// problem.
+
 // [[Rcpp::depends(RcppArmadillo)]]
 
 #include <RcppArmadillo.h>
