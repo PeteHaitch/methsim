@@ -363,7 +363,7 @@ setMethod("simulate",
             seqnames_one_tuples = seqnames(one_tuples), BPPARAM = BPPARAM)
             Z <- simplify2array(Z)
             # TODO: This is inefficient because it forces a copy of Z.
-            colnames(Z) <- colnames(H)
+            colnames(Z) <- colnames(W)
 
             # Create SimulatedMethylome object
             message("Creating SimulatedMethylome object...")
