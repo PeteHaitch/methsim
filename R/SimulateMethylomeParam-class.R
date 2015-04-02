@@ -24,10 +24,10 @@
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Design
 ###
-### list(BSgenome, PartitionedMethylome, MethLevelDT, ComethDT, PatternFreqsDT,
-###      SampleName)
-###               BSgenome: A BSgenome object for the genome from which to
-###                         simulate a methylome.
+### list(BSgenomeName, PartitionedMethylome, MethLevelDT, ComethDT,
+###      PatternFreqsDT, SampleName)
+###           BSgenomeName: A character vector with the name of the relevant
+###                         BSgenome object.
 ###   PartitionedMethylome: A PartitionedMethylome object.
 ###            MethLevelDT: A data.table containing the
 ###                         MethylationTuples::methLevel data.
@@ -37,11 +37,6 @@
 ###                         MethylationTuples::PatternFreqs data.
 ###             SampleName: The sample name.
 
-# TODO: SimulateMethylomeParam objects are not transferable between machines
-# because the BSgenome object in the BSgenome slot is not transferable. If a
-# hack is required, then would need to create SimulateMethylomeParam objects
-# at install-time by querying the user's library for the relevant BSgenome
-# package.
 #' SimulateMethylomeParam class
 #'
 #' An S4 class for the parameters used by
@@ -54,7 +49,7 @@
 #' @export
 setClass("SimulateMethylomeParam",
          slots = list(
-           BSgenome = "BSgenome",
+           BSgenomeName = "character",
            PartitionedMethylome = "PartitionedMethylome",
            MethLevelDT = "data.table",
            ComethDT = "data.table",
@@ -66,13 +61,18 @@ setClass("SimulateMethylomeParam",
 ### Validity
 ###
 
-.valid.SimulateMethylomeParam.BSgenome <- function(object) {
+.valid.SimulateMethylomeParam.BSgenomeName <- function(object) {
   msg <- NULL
-  if (!is(object@BSgenome, "BSgenome")) {
-    msg <- Biobase::validMsg(msg, paste0("'BSgenome' slot must be a ",
-                                         "'BSgenome' object."))
+  if (length(object@BSgenomeName) == 1L && is.character(object@BSgenomeName)) {
+    if (!(object@BSgenomeName %in% available.genomes())) {
+      msg <- Biobase::validMsg(msg, paste0("'BSgenomeName' must be an element ",
+                                           "of 'available.genomes()'.")
+    }
+  } else {
+    msg <- Biobase::validMsg(msg, paste0("'BSgenomeName' must be a length one ",
+                                         "character vector."))
   }
-  msg
+
 }
 
 .valid.SimulateMethylomeParam.PartitionedMethylome <- function(object) {
@@ -141,7 +141,7 @@ setClass("SimulateMethylomeParam",
 
 .valid.SimulateMethylomeParam <- function(object) {
   # Include all .valid.SimulateMethylomeParam.* functions in this vector
-  msg <- c(.valid.SimulateMethylomeParam.BSgenome(object),
+  msg <- c(.valid.SimulateMethylomeParam.BSgenomeName(object),
            .valid.SimulateMethylomeParam.PartitionedMethylome(object),
            .valid.SimulateMethylomeParam.MethLevelDT(object),
            .valid.SimulateMethylomeParam.ComethDT(object),
@@ -164,7 +164,7 @@ S4Vectors::setValidity2("SimulateMethylomeParam", .valid.SimulateMethylomeParam)
 # TODO (long term): This is a barebones constructor. Might want to make
 # MethLevelDT, ComethDT and PatternFreqDT formal S4 classes.
 #' @export
-SimulateMethylomeParam <- function(BSgenome,
+SimulateMethylomeParam <- function(BSgenomeName,
                                    PartitionedMethylome,
                                    MethLevelDT,
                                    ComethDT,
@@ -175,7 +175,7 @@ SimulateMethylomeParam <- function(BSgenome,
   # i.e., that there are a sufficient number of possible patterns in
   # PatternFreqsDT.
   new("SimulateMethylomeParam",
-      BSgenome = BSgenome,
+      BSgenomeName = BSgenomeName,
       PartitionedMethylome = PartitionedMethylome,
       MethLevelDT = MethLevelDT,
       ComethDT = ComethDT,
@@ -232,6 +232,20 @@ setMethod("simulate",
                    epsilon = 0.01,
                    comethylation_function,
                    ...) {
+            if (!BSgenomeName %in% available.genomes()) {
+              stop(paste0("'", BSgenomeName, "' package is not available from ",
+                          "Bioconductor."))
+            }
+            if (!requireNamespace(BSgenomeName, quietly = TRUE)) {
+              stop(paste0("'", BSgenomeName, "' package is required.\n",
+                          "To install this package, start R and enter:\n",
+                          "source('http://bioconductor.org/biocLite.R')\n",
+                          "biocLite('", BSgenomeName, "')"))
+
+            } else {
+              BSgenome <- eval(parse(text = paste0(BSgenomeName,
+                                                   "::", BSgenomeName)))
+            }
 
             # Non-CpG methylation is unlikely to be implemented.
             message("Currently only simulates CpG methylation.")
@@ -274,7 +288,7 @@ setMethod("simulate",
             message("Simulating ", nsim, " methylome...")
 
             # Methylation loci at which to simulate a methylation state.
-            one_tuples <- findMTuples(object@BSgenome, MethInfo("CG"), size = 1)
+            one_tuples <- findMTuples(bsgenome, MethInfo("CG"), size = 1)
             # Only want unstranded methylomes
             one_tuples <- unstrand(one_tuples[strand(one_tuples) == "+"])
             # Drop unusable seqlevels
