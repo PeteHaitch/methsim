@@ -270,51 +270,18 @@ setMethod("simulate",
               stop("'nsim' must be equal to 1.")
             }
 
-            message("Simulating ", nsim, " methylome...")
-
             # Sample parameters from the SimulateMethylomeParams object.
-
-            # Sample average methylation levels in each region
-            # Takes ~0.1 seconds
-            message("Sampling region methylation levels...")
-            beta_by_region <- .sampleMethLevelDT(
-              object@MethLevelDT,
-              regionType(object@PartitionedMethylome))
-            # Add (subtract) epsilon to zero (one) elements of beta_by_region.
-            # Otherwise the entire region will be zero (one).
-            beta_by_region[beta_by_region == 1] <- 1 - epsilon
-            beta_by_region[beta_by_region == 0] <- epsilon
-
-            # Sample within-fragment co-methylation for each IPD-region_type
-            # combination.
-            # ~280 seconds
-            message("Finding all CpG two-tuples in genome...")
-            two_tuples <- findMTuples(object@BSgenome, MethInfo("CG"), size = 2)
-            # Only want unstranded methylomes
-            two_tuples <- unstrand(two_tuples[strand(two_tuples) == "+"])
-            # Drop unusable seqlevels
-            two_tuples <- keepSeqlevels(two_tuples,
-                                        seqlevels(object@PartitionedMethylome))
-            message("Sampling LOR...")
-            lor_by_pair <- comethylation_function(two_tuples,
-                                                  object@ComethDT,
-                                                  object@PartitionedMethylome,
-                                                  ...)
+            message("Simulating ", nsim, " methylome...")
 
             # Methylation loci at which to simulate a methylation state.
             # ~30 seconds
-            one_tuples <- endoapply(
-              split(two_tuples, seqnames(two_tuples)), function(x) {
-                n <- length(x)
-                MTuples(GTuples(rep(seqnames(x)[1], n + 1),
-                                matrix(c(start(x), end(x)[n]), ncol = 1),
-                                c(strand(x), strand(x)[n]),
-                                seqinfo = seqinfo(x)),
-                        methinfo(x))
-              })
-            one_tuples <- unlist(one_tuples, use.names = FALSE)
+            one_tuples <- findMTuples(object@BSgenome, MethInfo("CG"), size = 1)
+            # Only want unstranded methylomes
+            one_tuples <- unstrand(one_tuples[strand(one_tuples) == "+"])
+            # Drop unusable seqlevels
+            one_tuples <- keepSeqlevels(one_tuples,
+                                        seqlevels(object@PartitionedMethylome))
             ol <- findOverlaps(one_tuples, object@PartitionedMethylome)
-            beta_by_region <- Rle(beta_by_region, countSubjectHits(ol))
 
             # Sample pseudo-haplotype weights
             message("Sampling w...")
@@ -329,15 +296,48 @@ setMethod("simulate",
                                         paste0('W',
                                                seq_len(ncol(W_by_region)))))
 
-            # Generate (pseudo) random numbers used in the simulation.
+            # Sample average methylation levels in each region
+            # Takes ~0.1 seconds
+            message("Sampling region methylation levels...")
+            beta_by_region <- .sampleMethLevelDT(
+              object@MethLevelDT,
+              regionType(object@PartitionedMethylome))
+            # Add (subtract) epsilon to zero (one) elements of beta_by_region.
+            # Otherwise the entire region will be zero (one).
+            beta_by_region[beta_by_region == 1] <- 1 - epsilon
+            beta_by_region[beta_by_region == 0] <- epsilon
+            beta_by_region <- Rle(beta_by_region, countSubjectHits(ol))
+
+            # Generate (pseudo) random numbers used by the .simulateZ().
             # Don't generate random numbers in parallel, e.g., via bplapply().
             # It needlessly complicates things (reproducibility of random
             # numbers when generated in parallel is hard) and any speed ups are
             # swamped by the running times of other steps in this function.
-            message("Simulating U")
             u <- lapply(seq_len(ncol(W_by_region)), function (i) {
               runif(length(one_tuples))
             })
+
+            # Sample within-fragment co-methylation for each IPD-region_type
+            # combination.
+            # ~280 seconds
+            message("Finding all CpG two-tuples in genome...")
+            two_tuples <- endoapply(
+              split(one_tuples, seqnames(one_tuples)), function(x) {
+                n <- length(x)
+                MTuples(GTuples(seqnames(x)[seq_len(n - 1)],
+                                matrix(c(start(x)[seq.int(1, n - 1)],
+                                         start(x)[seq.int(2, n)]), ncol = 2),
+                                strand(x)[seq_len(n - 1)],
+                                seqinfo = seqinfo(x)),
+                        methinfo(x))
+              }
+            )
+            two_tuples <- unlist(two_tuples, use.names = FALSE)
+            message("Sampling LOR...")
+            lor_by_pair <- comethylation_function(two_tuples,
+                                                  object@ComethDT,
+                                                  object@PartitionedMethylome,
+                                                  ...)
 
             # Simulate Z as a matrix with ncol = ncol(H_by_region). The
             # resulting object is approximately 900 MB in size for a human
