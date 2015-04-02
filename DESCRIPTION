@@ -1,8 +1,8 @@
 Package: methsim
 Type: Package
 Title: An R package to simulate DNA methylation data
-Version: 0.4.0.9016
-Date: 2015-04-02
+Version: 0.4.0.9017
+Date: 2015-04-03
 Author: Peter Hickey <peter.hickey@gmail.com>
 Maintainer: Peter Hickey <peter.hickey@gmail.com>
 Description: methsim is software to simulate DNA methylation sequencing data.
@@ -21,8 +21,7 @@ Depends:
 Suggests:
     testthat,
     knitr,
-    BSgenome.Hsapiens.UCSC.hg19,
-    mipfp
+    BSgenome.Hsapiens.UCSC.hg18
 Imports:
     methods,
     Rcpp (>= 0.11.5),
@@ -31,7 +30,8 @@ Imports:
     mhsmm,
     data.table,
     GenomicRanges,
-    BiocParallel
+    BiocParallel,
+    BSgenome
 LinkingTo: Rcpp, RcppArmadillo
 VignetteBuilder: knitr
 Collate:

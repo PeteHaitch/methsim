@@ -64,9 +64,10 @@ setClass("SimulateMethylomeParam",
 .valid.SimulateMethylomeParam.BSgenomeName <- function(object) {
   msg <- NULL
   if (length(object@BSgenomeName) == 1L && is.character(object@BSgenomeName)) {
-    if (!(object@BSgenomeName %in% available.genomes())) {
+    if (!(object@BSgenomeName %in% BSgenome::available.genomes())) {
       msg <- Biobase::validMsg(msg, paste0("'BSgenomeName' must be an element ",
-                                           "of 'available.genomes()'."))
+                                           "of ",
+                                           "'BSgenome::available.genomes()'."))
     }
   } else {
     msg <- Biobase::validMsg(msg, paste0("'BSgenomeName' must be a length one ",
@@ -232,7 +233,7 @@ setMethod("simulate",
                    epsilon = 0.01,
                    comethylation_function,
                    ...) {
-            if (!BSgenomeName %in% available.genomes()) {
+            if (!BSgenomeName %in% BSgenome::available.genomes()) {
               stop(paste0("'", BSgenomeName, "' package is not available from ",
                           "Bioconductor."))
             }
