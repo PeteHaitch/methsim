@@ -233,19 +233,19 @@ setMethod("simulate",
                    epsilon = 0.01,
                    comethylation_function,
                    ...) {
-            if (!BSgenomeName %in% BSgenome::available.genomes()) {
-              stop(paste0("'", BSgenomeName, "' package is not available from ",
-                          "Bioconductor."))
+            if (!object@BSgenomeName %in% BSgenome::available.genomes()) {
+              stop(paste0("'", object@BSgenomeName, "' package is not ",
+                          "available from Bioconductor."))
             }
-            if (!requireNamespace(BSgenomeName, quietly = TRUE)) {
-              stop(paste0("'", BSgenomeName, "' package is required.\n",
+            if (!requireNamespace(object@BSgenomeName, quietly = TRUE)) {
+              stop(paste0("'", object@BSgenomeName, "' package is required.\n",
                           "To install this package, start R and enter:\n",
                           "source('http://bioconductor.org/biocLite.R')\n",
-                          "biocLite('", BSgenomeName, "')"))
+                          "biocLite('", object@BSgenomeName, "')"))
 
             } else {
-              BSgenome <- eval(parse(text = paste0(BSgenomeName,
-                                                   "::", BSgenomeName)))
+              bsgenome <- eval(parse(text = paste0(object@BSgenomeName,
+                                                   "::", object@BSgenomeName)))
             }
 
             # Non-CpG methylation is unlikely to be implemented.
@@ -387,3 +387,8 @@ setMethod("simulate",
             sm
           }
 )
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### show()
+###
+# TODO (long term)
