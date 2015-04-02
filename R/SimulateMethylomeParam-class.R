@@ -274,7 +274,6 @@ setMethod("simulate",
             message("Simulating ", nsim, " methylome...")
 
             # Methylation loci at which to simulate a methylation state.
-            # ~30 seconds
             one_tuples <- findMTuples(object@BSgenome, MethInfo("CG"), size = 1)
             # Only want unstranded methylomes
             one_tuples <- unstrand(one_tuples[strand(one_tuples) == "+"])
@@ -297,7 +296,6 @@ setMethod("simulate",
                                                seq_len(ncol(W_by_region)))))
 
             # Sample average methylation levels in each region
-            # Takes ~0.1 seconds
             message("Sampling region methylation levels...")
             beta_by_region <- .sampleMethLevelDT(
               object@MethLevelDT,
@@ -319,8 +317,7 @@ setMethod("simulate",
 
             # Sample within-fragment co-methylation for each IPD-region_type
             # combination.
-            # ~280 seconds
-            message("Finding all CpG two-tuples in genome...")
+            message("Sampling LOR...")
             two_tuples <- endoapply(
               split(one_tuples, seqnames(one_tuples)), function(x) {
                 n <- length(x)
@@ -333,7 +330,6 @@ setMethod("simulate",
               }
             )
             two_tuples <- unlist(two_tuples, use.names = FALSE)
-            message("Sampling LOR...")
             lor_by_pair <- comethylation_function(two_tuples,
                                                   object@ComethDT,
                                                   object@PartitionedMethylome,
