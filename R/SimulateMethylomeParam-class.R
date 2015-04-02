@@ -66,7 +66,7 @@ setClass("SimulateMethylomeParam",
   if (length(object@BSgenomeName) == 1L && is.character(object@BSgenomeName)) {
     if (!(object@BSgenomeName %in% available.genomes())) {
       msg <- Biobase::validMsg(msg, paste0("'BSgenomeName' must be an element ",
-                                           "of 'available.genomes()'.")
+                                           "of 'available.genomes()'."))
     }
   } else {
     msg <- Biobase::validMsg(msg, paste0("'BSgenomeName' must be a length one ",
