@@ -225,6 +225,8 @@ setMethod("simulate",
             # modification if this assumption is changed.
             n_reads <- trunc(object@aveCov / read_length *
                                seqlengths(object@SimulatedMethylome))
+            # TODO: Perhaps the number of reads per-chromosome should be
+            # sampled from a multinomial(sum(n_reads), n_reads)?
             # Don't simulate read_start in parallel, e.g., via bpmapply().
             # It needlessly complicates things (reproducibility of random
             # numbers when generated in parallel is hard) and any speed ups are
