@@ -181,14 +181,14 @@ setMethod("methinfo",
 #' @rdname SimulatedBS-class
 #' @name asMethPat
 #' @export
-asMethPat <- function(SimulatedBS, sample_name, size = 1L,
+asMethPat <- function(SimulatedBS, sampleName, size = 1L,
                       BPPARAM = bpparam()) {
 
   # Argument checks
   stopifnot(is(SimulatedBS, "SimulatedBS"))
   size <- as.integer(size)
   stopifnot(size > 0L)
-  stopifnot(is.character(sample_name))
+  stopifnot(is.character(sampleName))
 
   # If 'size' > 1 then want to subset the data to only include those
   # reads with at least 'size' methylation loci (all reads contain at
@@ -254,11 +254,11 @@ asMethPat <- function(SimulatedBS, sample_name, size = 1L,
                     sapply(lapply(l, "[[", "pos"), nrow))
     pos <- do.call(rbind, lapply(l, "[[", "pos"))
     counts <- do.call(rbind, lapply(l, "[[", "counts"))
-    assays <- lapply(seq_len(ncol(counts)), function(i, counts, sample_name) {
+    assays <- lapply(seq_len(ncol(counts)), function(i, counts, sampleName) {
       x <- counts[, i, drop = FALSE]
-      colnames(x) <- sample_name
+      colnames(x) <- sampleName
       x
-    }, counts = counts, sample_name = sample_name)
+    }, counts = counts, sampleName = sampleName)
     assays <- SimpleList(assays)
     names(assays) <- colnames(counts)
     methpat <- MethPat(assays = assays,
@@ -277,9 +277,9 @@ asMethPat <- function(SimulatedBS, sample_name, size = 1L,
     pos <- matrix(unlist(lapply(l, function(dt) dt[, pos]), use.names = FALSE),
                   ncol = 1)
     M <- matrix(unlist(lapply(l, function(dt) dt[, M]), use.names = FALSE),
-                ncol = 1, dimnames = list(NULL, sample_name))
+                ncol = 1, dimnames = list(NULL, sampleName))
     U <- matrix(unlist(lapply(l, function(dt) dt[, U]), use.names = FALSE),
-                ncol = 1, dimnames = list(NULL, sample_name))
+                ncol = 1, dimnames = list(NULL, sampleName))
     methpat <- MethPat(assays = SimpleList(M = M, U = U),
                        rowData = MTuples(GTuples(seqnames, pos, "*",
                                                  seqinfo =

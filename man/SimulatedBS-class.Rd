@@ -7,7 +7,7 @@
 \alias{asMethPat}
 \title{SimulatedBS class.}
 \usage{
-asMethPat(SimulatedBS, sample_name, size = 1L, BPPARAM = bpparam())
+asMethPat(SimulatedBS, sampleName, size = 1L, BPPARAM = bpparam())
 }
 \arguments{
 \item{size}{an integer specifying the \code{\link[MethylationTuples]{size}}
