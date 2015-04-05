@@ -2,9 +2,9 @@
 % Please edit documentation in R/findMostOverlapping.R
 \name{findMostOverlapping}
 \alias{findMostOverlapping}
-\title{Find "most overlapping" range in subject for each element of query.}
+\title{Find most overlapping element in subject for each element of query.}
 \usage{
-findMostOverlapping(query, subject)
+findMostOverlapping(query, subject, ignore.strand = FALSE)
 }
 \arguments{
 \item{query}{Any object for which a `findOverlaps` method is defined, e.g.,
@@ -12,15 +12,27 @@ a \code{\link[GenomicRanges]{GRanges}}.}
 
 \item{subject}{Any object for which a `findOverlaps` method is defined, e.g.,
 a \code{\link[GenomicRanges]{GRanges}}.}
+
+\item{ignore.strand}{When set to \code{TRUE}, the strand information is
+ignored in the overlap calculations.}
 }
 \value{
 An \code{integer} vector containing for each \code{query} the index
-of the \code{subject} that it most overlaps.
+of the \code{subject} that it most overlaps (\code{NA} if there is no
+overlap).
 }
 \description{
-Find "most overlapping" range in subject for each element of query.
+Runs the appropriate \code{findOverlaps} method and then for elements of
+\code{query} that overlap multiple elements of \code{subject} chooses the
+element of \code{subject} that has the greater overlap. Ties are broken at
+random.
 }
-\details{
-Ties are broken at random.
+\note{
+This was written for working with \code{\link[GenomicRanges]{GRanges}}
+objects. While it may work with other objects for which a
+\code{findOverlaps} method exists, these are untested and correctness is not
+guaranteed. In particular, this will return an error if either the
+\code{query} or \code{subject} are \code{\link[GenomicTuples]{GTuples}} or
+\code{\link[GenomicTuples]{GTuplesList}} objects.
 }
 
