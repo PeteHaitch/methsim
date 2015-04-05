@@ -75,15 +75,15 @@ test_that("findMostOverlapping ignore.strand works", {
 test_that("findMostOverlapping returns error for GTuples/GTuplesList", {
   expect_error(findMostOverlapping(GTuples(), GRanges()),
                paste0("'findMostOverlapping' not yet implemented for ",
-                      "'GTuples'- and GTuplesList'-based objects."))
+                      "'GTuples'- and 'GTuplesList'-based objects."))
   expect_error(findMostOverlapping(GRanges(), GTuples()),
                paste0("'findMostOverlapping' not yet implemented for ",
-                      "'GTuples'- and GTuplesList'-based objects."))
+                      "'GTuples'- and 'GTuplesList'-based objects."))
   expect_error(findMostOverlapping(GTuplesList(), GRanges()),
                paste0("'findMostOverlapping' not yet implemented for ",
-                      "'GTuples'- and GTuplesList'-based objects."))
+                      "'GTuples'- and 'GTuplesList'-based objects."))
   expect_error(findMostOverlapping(GRanges(), GTuplesList()),
                paste0("'findMostOverlapping' not yet implemented for ",
-                      "'GTuples'- and GTuplesList'-based objects."))
+                      "'GTuples'- and 'GTuplesList'-based objects."))
 
 })
