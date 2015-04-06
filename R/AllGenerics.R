@@ -104,6 +104,7 @@ setGeneric("simulate", function(object, nsim = 1, seed = NULL, ...) {
 ###
 
 #' @export
+#' @keywords methods
 setGeneric("regionType", function(object) {
   standardGeneric("regionType")
 })
