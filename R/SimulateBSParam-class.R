@@ -244,7 +244,7 @@ setMethod("simulate",
             # TODO: Take care if simulate() itself is being run in parallel
             # (or at least document that it could spawn heaps of processes).
             z <- bplapply(names(read_start), function(seqname, read_start,
-                                                         sm) {
+                                                         readLength, sm) {
 
               # Circular chromosomes are hard. While the read automatically
               # gets wrapped around, it makes subsequent functions, e.g.,
@@ -265,7 +265,7 @@ setMethod("simulate",
               # warnings will occur if a read runs "off the end" of the
               # seqlevel.
               gr <- GRanges(seqname,
-                            IRanges(read_start[[seqname]], width = 100),
+                            IRanges(read_start[[seqname]], width = readLength),
                             seqinfo = seqinfo(sm))
 
               # Only retain reads that overlap at least one methylation locus.
@@ -291,8 +291,8 @@ setMethod("simulate",
               data.table("pos" = start(sm)[subjectHits(ol)],
                          "readID" = queryHits(ol),
                          "z" = unlist(z, use.names = FALSE))
-            }, read_start = read_start, sm = object@SimulatedMethylome,
-            BPPARAM = BPPARAM)
+            }, read_start = read_start, readLength = readLength,
+            sm = object@SimulatedMethylome, BPPARAM = BPPARAM)
 
             # Don't rbindlist(z). Instead, keeping as list will
             # actually save memory (no need to retain seqnames for every row)
