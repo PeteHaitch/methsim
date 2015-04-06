@@ -6,7 +6,7 @@
 \title{Simulate a bisulfite-sequencing experiment.}
 \usage{
 \S4method{simulate}{SimulateBSParam}(object, nsim = 1, seed = NULL,
-  BPPARAM = bpparam(), sequencing_type = "SE", read_length = 100L, ...)
+  BPPARAM = bpparam(), sequencingType = "SE", readLength = 100L, ...)
 }
 \arguments{
 \item{object}{a \code{\link{SimulateBSParam}} object.}
@@ -26,11 +26,11 @@ default, \code{NULL}, will not change the random generator state, and return
 \code{BiocParallel::\link[BiocParallel]{BiocParallelParam}} instance
 determining the parallel back-end to be used during evaluation.}
 
-\item{sequencing_type}{a character specifying either single-end ('SE') or
+\item{sequencingType}{a character specifying either single-end ('SE') or
 paired-end ('PE'). \strong{NOTE}: Only single-end data is currently
 supported.}
 
-\item{read_length}{an integer specifying the read length.}
+\item{readLength}{an integer specifying the read length.}
 }
 \value{
 a SimulatedBS object.

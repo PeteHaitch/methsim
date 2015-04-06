@@ -164,10 +164,10 @@ SimulateBSParam <- function(SimulatedMethylome,
 #' @param BPPARAM an optional
 #' \code{BiocParallel::\link[BiocParallel]{BiocParallelParam}} instance
 #' determining the parallel back-end to be used during evaluation.
-#' @param sequencing_type a character specifying either single-end ('SE') or
+#' @param sequencingType a character specifying either single-end ('SE') or
 #' paired-end ('PE'). \strong{NOTE}: Only single-end data is currently
 #' supported.
-#' @param read_length an integer specifying the read length.
+#' @param readLength an integer specifying the read length.
 #'
 #' @note Currently only simulates whole-genome bisulfite-sequencing data.
 #' \strong{WARNING}: Currently reads are simulated for circular seqlevels
@@ -182,8 +182,8 @@ setMethod("simulate",
                    nsim = 1,
                    seed = NULL,
                    BPPARAM = bpparam(),
-                   sequencing_type = "SE",
-                   read_length = 100L,
+                   sequencingType = "SE",
+                   readLength = 100L,
                    ...) {
 
             # TODO (long term): Support stranded data.
@@ -192,7 +192,7 @@ setMethod("simulate",
             warning("Currently only simulates single-end reads.")
 
             # Argument checks
-            stopifnot(sequencing_type == "SE")
+            stopifnot(sequencingType == "SE")
 
             # TODO: Will need to revisit how seed is set and (pseudo) random
             # numbers are generated due to the use of BiocParallel and Rcpp*.
@@ -217,13 +217,13 @@ setMethod("simulate",
               stop("'nsim' must be equal to 1.")
             }
 
-            message("Simulating ", nsim, " bisulfite-sequencing experiment...")
+            message("Simulating ", nsim, " bisulfite-sequencing sample...")
 
             # Sample read start sites based on uniform sampling with given
             # average sequencing coverage (aveCov).
-            # TODO: This assumes constant read_length; this code will need
+            # TODO: This assumes constant readLength; this code will need
             # modification if this assumption is changed.
-            n_reads <- trunc(object@aveCov / read_length *
+            n_reads <- trunc(object@aveCov / readLength *
                                seqlengths(object@SimulatedMethylome))
             # TODO: Perhaps the number of reads per-chromosome should be
             # sampled from a multinomial(sum(n_reads), n_reads)?
