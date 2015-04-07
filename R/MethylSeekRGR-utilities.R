@@ -25,9 +25,12 @@
 # (http://www.bioconductor.org/packages/3.0/bioc/html/MethylSeekR.html).
 # MethylSeekR is released under a GPL (>= 2) license.
 #
-# TODO: Long term, I'm going to need a way to keep these functions up to date
+# TODO (long term):I'm going to need a way to keep these functions up to date
 # with what is available in MethylSeekR. It may be easier/better to try to get
 # these changes folder back into MethylSeekR.
+#
+# TODO (long term): Ensure that all GRanges-like objects returned by these
+# functions preserve the seqinfo of the input.
 
 # A copy of MethylSeekR::plotAlphaDistributionOneChr that can be safely run in
 # parallel because it does not create the plot but returns it as an object.
