@@ -207,9 +207,11 @@ std::vector<int> simulateZ(NumericVector beta_by_region,
   // row_margins = (p_{.0}, p_{.1})
   arma::colvec row_margins(2);
   // The 2x2 matrix of joint probabilities (*not* the transition matrix).
-  // joint_prob_matrix = | p_{0, 0}, p_{1, 0} |
+  // joint_prob_matrix = | p_{0, 0}, p_{0, 1} |
   //                     | p_{1, 0}, p_{1, 1} |,
-  // where p_{a, b} = Pr(Z_{i - 1} = a, Z_{i} = b)
+  // where p_{a, b} = Pr(Z_{i - 1} = a, Z_{i} = b), i.e., rows refer to the
+  // (i - 1)-th methylation locus and columns refer to the i-th methylation
+  // locus.
   arma::mat joint_prob_matrix(2, 2);
   // p = Pr(Z_{i + 1} = 1 | Z_{i} = z_{i})
   double p;
@@ -247,27 +249,36 @@ std::vector<int> simulateZ(NumericVector beta_by_region,
       // given by the average methylation level of the region for the first and
       // second methylation loci, respectively.
       // Then, compute transition probabilities using
-      // Pr(Z_{i + 1} = z_{i + 1} | Z_i = z_i) =
-      // Pr(Z_i = z_i, Z_{i + 1} = z_{i + 1}) /
-      // Pr(Z_i = z_i).
+      //    Pr(Z_{i + 1} = z_{i + 1} | Z_i = z_i)
+      //  = Pr(Z_i = z_i, Z_{i + 1} = z_{i + 1}) /  Pr(Z_i = z_i).
 
       // NOTE: This assumes lor_by_pair uses base-2 logarithms.
       ipf_seed(0, 0) = pow(2.0, lor_by_pair[j]);
-      // col_margins refer to the (i - 1)-th methylation loci
-      col_margins[0] = 1 - beta_by_region[i - 1];
-      col_margins[1] = beta_by_region[i - 1];
-      // row_margins refer to the i-th methylation loci
-      row_margins[0] = 1 - beta_by_region[i];
-      row_margins[1] = beta_by_region[i];
-      // TODO: May need to move ipf source code to this file and make it a
-      // C++ only function.
-      joint_prob_matrix = ipf(ipf_seed, row_margins, col_margins,
-                              1000, 1e-10);
+      // row_margins refer to the (i - 1)-th methylation locus.
+      row_margins[0] = 1 - beta_by_region[i - 1];
+      row_margins[1] = beta_by_region[i - 1];
+      // col_margins refer to the i-th methylation locus.
+      col_margins[0] = 1 - beta_by_region[i];
+      col_margins[1] = beta_by_region[i];
+      joint_prob_matrix = ipf(ipf_seed,
+                              row_margins,
+                              col_margins,
+                              1000,
+                              1e-10);
       // Compute p = Pr(Z_{i + 1} = 1 | Z_{i} = z_{i})
       if (Z[i - 1] == 0) {
         p = joint_prob_matrix(0, 1) / (1 - beta_by_region[i - 1]);
       } else {
         p = joint_prob_matrix(1, 1) / beta_by_region[i - 1];
+      }
+      // Sanity check the resulting p; it should be a probability!
+      if (p <= 0 or p >= 1) {
+        Rcpp::Rcout << "i = " << i << std::endl;
+        Rcpp::Rcout << "beta_by_region[i - 1] = " << beta_by_region[i - 1] <<
+          std::endl;
+        Rcpp::Rcout << "joint_prob_matrix = " << joint_prob_matrix << std::endl;
+        Rcpp::Rcout << "p = " << p << std::endl;
+        Rcpp::stop("Unexpected p; it should be a probability!");
       }
       if (u[i] > p) {
         Z[i] = 0;
