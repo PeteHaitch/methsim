@@ -9,6 +9,12 @@
 #
 # Validate your .travis.yml file at http://lint.travis-ci.org/
 #----------------------------------------------------------------
+
+# Opt into fully virtualized infrastructure
+# Related to https://github.com/travis-ci/travis-ci/issues/3521,
+# http://blog.travis-ci.com/2015-03-31-docker-default-on-the-way/
+sudo: required
+
 language: c
 
 env:
