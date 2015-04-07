@@ -41,6 +41,8 @@
 #    |-----PartitionedMethylome
 #    |-----pattern_freqs_by_pm_region
 
+library(methsim)
+
 prepare <- function(sample_name) {
 
   # The dataset is currently hardcoded. If this is changed then this function
