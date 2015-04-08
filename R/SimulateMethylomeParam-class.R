@@ -213,6 +213,8 @@ SimulateMethylomeParam <- function(BSgenomeName,
 #' determining the parallel back-end to be used during evaluation.
 #' @param epsilon An offset added/subtracted to a region's sampled methylation
 #' level should it be one/zero values.
+#' @param seqlevels A vector of seqlevels for which to simulate a methylome.
+#' The default uses all available seqlevels.
 #' @param comethylation_function A function used to sample from the
 #' co-methylation distribution.
 #' @param ... Additional arguments passed to the \code{comethylation_function}.
@@ -231,6 +233,7 @@ setMethod("simulate",
                    seed = NULL,
                    BPPARAM = bpparam(),
                    epsilon = 0.01,
+                   seqlevels = seqlevels(object@PartitionedMethylome),
                    comethylation_function,
                    ...) {
             if (!object@BSgenomeName %in% BSgenome::available.genomes()) {
