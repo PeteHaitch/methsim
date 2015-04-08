@@ -213,8 +213,8 @@ SimulateMethylomeParam <- function(BSgenomeName,
 #' determining the parallel back-end to be used during evaluation.
 #' @param epsilon An offset added/subtracted to a region's sampled methylation
 #' level should it be one/zero values.
-#' @param seqlevels A vector of seqlevels for which to simulate a methylome.
-#' The default uses all available seqlevels.
+#' @param seqlevels A vector of seqlevels at which to simulate a methylome.
+#' Will use all available seqlevels if missing.
 #' @param comethylation_function A function used to sample from the
 #' co-methylation distribution.
 #' @param ... Additional arguments passed to the \code{comethylation_function}.
@@ -233,9 +233,11 @@ setMethod("simulate",
                    seed = NULL,
                    BPPARAM = bpparam(),
                    epsilon = 0.01,
-                   seqlevels = seqlevels(object@PartitionedMethylome),
+                   seqlevels,
                    comethylation_function,
                    ...) {
+
+            # Argument checks
             if (!object@BSgenomeName %in% BSgenome::available.genomes()) {
               stop(paste0("'", object@BSgenomeName, "' package is not ",
                           "available from Bioconductor."))
@@ -250,13 +252,18 @@ setMethod("simulate",
               bsgenome <- eval(parse(text = paste0(object@BSgenomeName,
                                                    "::", object@BSgenomeName)))
             }
-
-            # Non-CpG methylation is unlikely to be implemented.
-            message("Currently only simulates CpG methylation.")
-            # TODO (long term): Support stranded methylomes.
-            message("Currently only simulates unstranded methylomes.")
-
-            # Argument checks
+            # TODO: Is this the best way to set default seqlevels? Can't use
+            # seqlevels = seqlevels(object@PartitionedMethylome) in function
+            # signature because of 'recursive default argument reference' error.
+            if (missing(seqlevels)) {
+              seqlevels <- seqlevels(object@PartitionedMethylome)
+            }
+            if (!all(seqlevels %in% seqlevels(bsgenome))) {
+              stop(paste0("Unexpected seqlevels.\n",
+                          paste0(seqlevels[!seqlevels %in% seqlevels(bsgenome)],
+                                 collapse = ", "), " are not seqlevels of ",
+                          GenomeInfoDb::bsgenomeName(bsgenome)))
+            }
             stopifnot(is.numeric(epsilon) & epsilon > 0 & epsilon < 1)
             # TODO: This is a rather clunky way to set a default value of
             # 'comethylation_function'
@@ -265,6 +272,11 @@ setMethod("simulate",
             } else {
               comethylation_function <- match.fun(comethylation_function)
             }
+
+            # Non-CpG methylation is unlikely to be implemented.
+            message("Currently only simulates CpG methylation.")
+            # TODO (long term): Support stranded methylomes.
+            message("Currently only simulates unstranded methylomes.")
 
             # TODO: Will need to revisit how seed is set and (pseudo) random
             # numbers are generated due to the use of BiocParallel and Rcpp*.
@@ -292,12 +304,13 @@ setMethod("simulate",
             message("Simulating ", nsim, " methylome...")
 
             # Methylation loci at which to simulate a methylation state.
-            one_tuples <- findMTuples(bsgenome, MethInfo("CG"), size = 1)
+            one_tuples <- findMTuples(bsgenome,
+                                      MethInfo("CG"),
+                                      size = 1,
+                                      exclude = setdiff(seqlevels(bsgenome),
+                                                        seqlevels))
             # Only want unstranded methylomes
             one_tuples <- unstrand(one_tuples[strand(one_tuples) == "+"])
-            # Drop unusable seqlevels
-            one_tuples <- keepSeqlevels(one_tuples,
-                                        seqlevels(object@PartitionedMethylome))
             ol <- findOverlaps(one_tuples, object@PartitionedMethylome)
 
             # Sample pseudo-haplotype weights
@@ -421,8 +434,8 @@ setMethod("simulate",
 #' level should it be one/zero values.
 #' @param comethylation_function A function used to sample from the
 #' co-methylation distribution.
-#' @param seqlevels A vector of seqlevels for which to simulate a methylome. The
-#' default uses all available seqlevels.
+#' @param seqlevels A vector of seqlevels at which to simulate a methylome.
+#' Will use all available seqlevels if missing.
 #' @param mc_order The order of the Markov chain. Currently only a value of
 #' 1 is supported.
 #' @param ... Additional arguments passed to the \code{comethylation_function}.
@@ -448,6 +461,7 @@ setMethod("simulate2",
                    ...) {
 
 
+            # Argument checks
             if (!object@BSgenomeName %in% BSgenome::available.genomes()) {
               stop(paste0("'", object@BSgenomeName, "' package is not ",
                           "available from Bioconductor."))
@@ -462,20 +476,18 @@ setMethod("simulate2",
               bsgenome <- eval(parse(text = paste0(object@BSgenomeName,
                                                    "::", object@BSgenomeName)))
             }
-
-            # TODO: Add mc_order as a parameter, zero-order would be
-            # independence. Only valid options would be 0L or 1L for now,
-            # (mc_order > 1) might be possible in future. If the order of the
-            # Markov chain is altered, then changes will need to be made here
-            # (amongst others, e.g., object@ComethDT).
-            stopifnot(identical(mc_order, 1L))
-
-            # Non-CpG methylation is unlikely to be implemented.
-            message("Currently only simulates CpG methylation.")
-            # TODO (long term): Support stranded methylomes.
-            message("Currently only simulates unstranded methylomes.")
-
-            # Argument checks
+            # TODO: Is this the best way to set default seqlevels? Can't use
+            # seqlevels = seqlevels(object@PartitionedMethylome) in function
+            # signature because of 'recursive default argument reference' error.
+            if (missing(seqlevels)) {
+              seqlevels <- seqlevels(object@PartitionedMethylome)
+            }
+            if (!all(seqlevels %in% seqlevels(bsgenome))) {
+              stop(paste0("Unexpected seqlevels.\n",
+                          paste0(seqlevels[!seqlevels %in% seqlevels(bsgenome)],
+                                 collapse = ", "), " are not seqlevels of ",
+                          GenomeInfoDb::bsgenomeName(bsgenome)))
+            }
             stopifnot(is.numeric(epsilon) & epsilon > 0 & epsilon < 1)
             # TODO: This is a rather clunky way to set a default value of
             # 'comethylation_function'
@@ -484,6 +496,11 @@ setMethod("simulate2",
             } else {
               comethylation_function <- match.fun(comethylation_function)
             }
+
+            # Non-CpG methylation is unlikely to be implemented.
+            message("Currently only simulates CpG methylation.")
+            # TODO (long term): Support stranded methylomes.
+            message("Currently only simulates unstranded methylomes.")
 
             # TODO: Will need to revisit how seed is set and (pseudo) random
             # numbers are generated due to the use of BiocParallel and Rcpp*.
@@ -511,11 +528,13 @@ setMethod("simulate2",
             message("Simulating ", nsim, " methylome...")
 
             # Methylation loci at which to simulate a methylation state.
-            one_tuples <- findMTuples(bsgenome, MethInfo("CG"), size = 1)
+            one_tuples <- findMTuples(bsgenome,
+                                      MethInfo("CG"),
+                                      size = 1,
+                                      exclude = setdiff(seqlevels(bsgenome),
+                                                        seqlevels))
             # Only want unstranded methylomes
             one_tuples <- unstrand(one_tuples[strand(one_tuples) == "+"])
-            # Drop unwanted seqlevels
-            one_tuples <- keepSeqlevels(one_tuples, seqlevels)
             ol <- findOverlaps(one_tuples, object@PartitionedMethylome)
 
             # Sample average methylation levels in each region

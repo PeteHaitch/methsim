@@ -6,8 +6,7 @@
 \title{Simulate a methylome.}
 \usage{
 \S4method{simulate}{SimulateMethylomeParam}(object, nsim = 1, seed = NULL,
-  BPPARAM = bpparam(), epsilon = 0.01,
-  seqlevels = seqlevels(object@PartitionedMethylome), comethylation_function,
+  BPPARAM = bpparam(), epsilon = 0.01, seqlevels, comethylation_function,
   ...)
 }
 \arguments{
@@ -31,8 +30,8 @@ determining the parallel back-end to be used during evaluation.}
 \item{epsilon}{An offset added/subtracted to a region's sampled methylation
 level should it be one/zero values.}
 
-\item{seqlevels}{A vector of seqlevels for which to simulate a methylome.
-The default uses all available seqlevels.}
+\item{seqlevels}{A vector of seqlevels at which to simulate a methylome.
+Will use all available seqlevels if missing.}
 
 \item{comethylation_function}{A function used to sample from the
 co-methylation distribution.}

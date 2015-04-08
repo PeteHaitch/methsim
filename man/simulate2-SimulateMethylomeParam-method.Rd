@@ -28,8 +28,8 @@ level should it be one/zero values.}
 \item{comethylation_function}{A function used to sample from the
 co-methylation distribution.}
 
-\item{seqlevels}{A vector of seqlevels for which to simulate a methylome. The
-default uses all available seqlevels.}
+\item{seqlevels}{A vector of seqlevels at which to simulate a methylome.
+Will use all available seqlevels if missing.}
 
 \item{mc_order}{The order of the Markov chain. Currently only a value of
 1 is supported.}
