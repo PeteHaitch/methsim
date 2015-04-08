@@ -390,6 +390,184 @@ setMethod("simulate",
           }
 )
 
+# TODO: Should comethylation_function and/or epsilon be part of the
+# SimulateMethylomeParam object?
+# TODO: Should user-messages be suppressible via suppressMessages() or a
+# 'verbose' option.
+# TODO: Need to document the methsim:::.sampleComethDT parameters (at least
+# mean_fun and sd_fun).
+#' Simulate a methylome the second method.
+#'
+#' Rather than using weights (PatternFreqsDT) and simulating the
+#' 'true' methylome directly (as a SimulatedMethylome object), simulate2()
+#' samples the distribution of average methylation levels (MethLevelDT)
+#' and the distributions of within-fragment co-methylation (ComethDT)
+#' and computes the resulting transition probabilities under a first-order
+#' Markov process.
+#'
+#' @note Currently only simulates CpG methylation.
+#'
+#' @param object A \code{\link{SimulateMethylomeParam}} object.
+#' @param nsim The number of samples to simulate using the parameters given in
+#' \code{object}.
+#' @param seed An object specifying if and how the random number generator
+#' should be initialized ('seeded'). For the "MethSimParam" method, either
+#' \code{NULL} Or an integer that will be used in a call to
+#' \code{base::\link[base]{set.seed}} before simulating the samples. If set,
+#' the value is saved as the "\code{seed}" attribute of the returned value. The
+#' default, \code{NULL}, will not change the random generator state, and return
+#' \code{\link{.Random.seed}} as the "\code{seed}" attribute, see 'Value'.
+#' @param epsilon An offset added/subtracted to a region's sampled methylation
+#' level should it be one/zero values.
+#' @param comethylation_function A function used to sample from the
+#' co-methylation distribution.
+#' @param seqlevels A vector of seqlevels for which to simulate a methylome. The
+#' default uses all available seqlevels.
+#' @param mc_order The order of the Markov chain. Currently only a value of
+#' 1 is supported.
+#' @param ... Additional arguments passed to the \code{comethylation_function}.
+#'
+#' @note Currently only support simulation of CpG methylation and unstranded
+#' methylomes.
+#' @note TODO: Random number generation is not yet properly implemented and so
+#' results will likely not be reproducible even if the same seed is used.
+#'
+#' @return A SimulatedMethylome, which is the underlying "true" methylome for
+#' a single sample.
+#'
+#' @export
+setMethod("simulate2",
+          "SimulateMethylomeParam",
+          function(object,
+                   nsim = 1,
+                   seed = NULL,
+                   epsilon = 0.01,
+                   comethylation_function,
+                   seqlevels,
+                   mc_order = 1L,
+                   ...) {
+
+
+            if (!object@BSgenomeName %in% BSgenome::available.genomes()) {
+              stop(paste0("'", object@BSgenomeName, "' package is not ",
+                          "available from Bioconductor."))
+            }
+            if (!requireNamespace(object@BSgenomeName, quietly = TRUE)) {
+              stop(paste0("'", object@BSgenomeName, "' package is required.\n",
+                          "To install this package, start R and enter:\n",
+                          "source('http://bioconductor.org/biocLite.R')\n",
+                          "biocLite('", object@BSgenomeName, "')"))
+
+            } else {
+              bsgenome <- eval(parse(text = paste0(object@BSgenomeName,
+                                                   "::", object@BSgenomeName)))
+            }
+
+            # TODO: Add mc_order as a parameter, zero-order would be
+            # independence. Only valid options would be 0L or 1L for now,
+            # (mc_order > 1) might be possible in future. If the order of the
+            # Markov chain is altered, then changes will need to be made here
+            # (amongst others, e.g., object@ComethDT).
+            stopifnot(identical(mc_order, 1L))
+
+            # Non-CpG methylation is unlikely to be implemented.
+            message("Currently only simulates CpG methylation.")
+            # TODO (long term): Support stranded methylomes.
+            message("Currently only simulates unstranded methylomes.")
+
+            # Argument checks
+            stopifnot(is.numeric(epsilon) & epsilon > 0 & epsilon < 1)
+            # TODO: This is a rather clunky way to set a default value of
+            # 'comethylation_function'
+            if (missing(comethylation_function)) {
+              comethylation_function <- .sampleComethDT
+            } else {
+              comethylation_function <- match.fun(comethylation_function)
+            }
+
+            # TODO: Will need to revisit how seed is set and (pseudo) random
+            # numbers are generated due to the use of BiocParallel and Rcpp*.
+            # This chunk for handling RNG generation is based on
+            # stats:::simulate.lm.
+            if (!exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
+              runif(1)
+            }
+            if (is.null(seed)) {
+              rng_state <- get(".Random.seed", envir = .GlobalEnv)
+            } else {
+              r_seed <- get(".Random.seed", envir = .GlobalEnv)
+              set.seed(seed)
+              rng_state <- structure(seed, kind = as.list(RNGkind()))
+              on.exit(assign(".Random.seed", r_seed, envir = .GlobalEnv))
+            }
+
+            if (nsim != 1) {
+              # Currently only simulate one methylome for a given
+              # SimulateMethylomeParam.
+              stop("'nsim' must be equal to 1.")
+            }
+
+            # Sample parameters from the SimulateMethylomeParams object.
+            message("Simulating ", nsim, " methylome...")
+
+            # Methylation loci at which to simulate a methylation state.
+            one_tuples <- findMTuples(bsgenome, MethInfo("CG"), size = 1)
+            # Only want unstranded methylomes
+            one_tuples <- unstrand(one_tuples[strand(one_tuples) == "+"])
+            # Drop unwanted seqlevels
+            one_tuples <- keepSeqlevels(one_tuples, seqlevels)
+            ol <- findOverlaps(one_tuples, object@PartitionedMethylome)
+
+            # Sample average methylation levels in each region
+            message("Sampling region methylation levels...")
+            beta_by_region <- .sampleMethLevelDT(
+              object@MethLevelDT,
+              regionType(object@PartitionedMethylome))
+            # Add (subtract) epsilon to zero (one) elements of beta_by_region.
+            # Otherwise the entire region will be zero (one).
+            beta_by_region[beta_by_region == 1] <- 1 - epsilon
+            beta_by_region[beta_by_region == 0] <- epsilon
+            beta_by_region <- Rle(beta_by_region, countSubjectHits(ol))
+
+            # Sample within-fragment co-methylation for each IPD-region_type
+            # combination.
+            message("Sampling LOR...")
+            two_tuples <- endoapply(
+              split(one_tuples, seqnames(one_tuples)), function(x) {
+                n <- length(x)
+                MTuples(GTuples(seqnames(x)[seq_len(n - 1)],
+                                matrix(c(start(x)[seq.int(1, n - 1)],
+                                         start(x)[seq.int(2, n)]), ncol = 2),
+                                strand(x)[seq_len(n - 1)],
+                                seqinfo = seqinfo(x)),
+                        methinfo(x))
+              }
+            )
+            two_tuples <- unlist(two_tuples, use.names = FALSE)
+            lor_by_pair <- comethylation_function(two_tuples,
+                                                  object@ComethDT,
+                                                  object@PartitionedMethylome,
+                                                  ...)
+
+            # Simulate P.
+            message("Simulating P")
+            P <- .computeP(as.vector(beta_by_region),
+                           lor_by_pair,
+                           as.vector(seqnames_one_tuples),
+                           mc_order)
+
+            # Create SimulatedMethylome2 object
+            message("Creating SimulatedMethylome2 object...")
+            sm2 <- new("SimulatedMethylome2",
+                       SummarizedExperiment(assays = SimpleList(P = P),
+                                            rowData = one_tuples))
+
+            # Ensure "seed" is set as an attribute of the returned value.
+            attr(sm2, "seed") <- rng_state
+            sm2
+          }
+)
+
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### show()
 ###

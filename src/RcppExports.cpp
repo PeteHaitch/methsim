@@ -57,6 +57,20 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// computeP
+arma::Mat<double> computeP(NumericVector beta_by_region, NumericVector lor_by_pair, CharacterVector seqnames_one_tuples, int mc_order);
+RcppExport SEXP methsim_computeP(SEXP beta_by_regionSEXP, SEXP lor_by_pairSEXP, SEXP seqnames_one_tuplesSEXP, SEXP mc_orderSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type beta_by_region(beta_by_regionSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type lor_by_pair(lor_by_pairSEXP);
+    Rcpp::traits::input_parameter< CharacterVector >::type seqnames_one_tuples(seqnames_one_tuplesSEXP);
+    Rcpp::traits::input_parameter< int >::type mc_order(mc_orderSEXP);
+    __result = Rcpp::wrap(computeP(beta_by_region, lor_by_pair, seqnames_one_tuples, mc_order));
+    return __result;
+END_RCPP
+}
 // tabulatez
 std::map<std::string, std::vector<int> > tabulatez(IntegerVector readID, IntegerVector z, IntegerVector pos, int size);
 RcppExport SEXP methsim_tabulatez(SEXP readIDSEXP, SEXP zSEXP, SEXP posSEXP, SEXP sizeSEXP) {

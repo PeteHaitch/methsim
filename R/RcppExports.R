@@ -85,6 +85,30 @@
     .Call('methsim_simulateZ', PACKAGE = 'methsim', beta_by_region, lor_by_pair, seqnames_one_tuples, u)
 }
 
+#' Compute the transition probabilities, P, of a first-order binary Markov
+#' chain given a set of marginal probabilities and log odds ratios.
+#'
+#' @param beta_by_region the beta-value (average methylation level) for each
+#' methylation locus in the genome.
+#' @param lor_by_pair the within-fragment co-methylation between each pair of
+#' methylation loci in the genome. Should be log odds-ratios using base-2
+#' logarithms. The length of this should be equal to the number of methylation
+#' loci in the genome minus the number of chromosomes (seqnames).
+#' @param seqnames_one_tuples the chromosome (seqname) of each methylation
+#' locus in the genome, i.e., \code{seqnames(one_tuples)}.
+#'
+#' @return A $2 \times n$ matrix of the transition probabilities. Let
+#' $P_{, i}$ be the $i$-th column of P ($i = 0, \ldots, n - 1$), then
+#' $P_{., i} = [Pr(Z_{i + 1} = 1 | Z_{i} = 0), Pr(Z_{i + 1} = 1 | Z_{i} = 1)]$;
+#' NB: $P_{., 0} = [Pr(Z_{0} = 1), Pr(Z_{0} = 1)], i.e., sampled from the
+#' marginal distribution and similarly for all other $i$ that start a new
+#' chromosome.
+#' NB: i is used to index columns and not rows because columns refer to
+#' methylation loci (which I index by i in my thesis).
+.computeP <- function(beta_by_region, lor_by_pair, seqnames_one_tuples, mc_order = 1L) {
+    .Call('methsim_computeP', PACKAGE = 'methsim', beta_by_region, lor_by_pair, seqnames_one_tuples, mc_order)
+}
+
 #' Tabulate methylation patterns.
 #'
 #' Tabulate methylation patterns of a given \code{size} from the elements of

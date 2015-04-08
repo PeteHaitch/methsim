@@ -293,3 +293,116 @@ std::vector<int> simulateZ(NumericVector beta_by_region,
   return Z;
 }
 
+// TODO (long term): Allow beta_by_region and seqnames_one_tuple to be
+// S4Vectors::Rleobjects to avoid the requirement to pre-expand these via
+// as.vector().
+//' Compute the transition probabilities, P, of a first-order binary Markov
+//' chain given a set of marginal probabilities and log odds ratios.
+//'
+//' @param beta_by_region the beta-value (average methylation level) for each
+//' methylation locus in the genome.
+//' @param lor_by_pair the within-fragment co-methylation between each pair of
+//' methylation loci in the genome. Should be log odds-ratios using base-2
+//' logarithms. The length of this should be equal to the number of methylation
+//' loci in the genome minus the number of chromosomes (seqnames).
+//' @param seqnames_one_tuples the chromosome (seqname) of each methylation
+//' locus in the genome, i.e., \code{seqnames(one_tuples)}.
+//'
+//' @return A $2 \times n$ matrix of the transition probabilities. Let
+//' $P_{, i}$ be the $i$-th column of P ($i = 0, \ldots, n - 1$), then
+//' $P_{., i} = [Pr(Z_{i + 1} = 1 | Z_{i} = 0), Pr(Z_{i + 1} = 1 | Z_{i} = 1)]$;
+//' NB: $P_{., 0} = [Pr(Z_{0} = 1), Pr(Z_{0} = 1)], i.e., sampled from the
+//' marginal distribution and similarly for all other $i$ that start a new
+//' chromosome.
+//' NB: i is used to index columns and not rows because columns refer to
+//' methylation loci (which I index by i in my thesis).
+// [[Rcpp::export(".computeP")]]
+arma::Mat<double> computeP(NumericVector beta_by_region,
+                           NumericVector lor_by_pair,
+                           CharacterVector seqnames_one_tuples,
+                           int mc_order = 1) {
+  // Argument checks
+  if (beta_by_region.size() != seqnames_one_tuples.size()) {
+    stop("length(beta_by_region) != length(seqnames_one_tuples)");
+  }
+  // There is only a value in lor_by_pair for pairs of methylation loci on the
+  // same chromosome.
+  if (lor_by_pair.size() !=
+      (beta_by_region.size() - unique(seqnames_one_tuples).size())) {
+    std::string stop_msg = "length(lor_by_pair) != ";
+    stop_msg = stop_msg +
+      "(length(beta_by_region) - length(unique(seqnames_one_tuples)))";
+    stop(stop_msg);
+  }
+
+  // Initialise variables
+  int n = beta_by_region.size();
+  // P stores the result.
+  arma::Mat<double> P(pow(2.0, mc_order), n);
+  // ipf_seed is used to initialise ipf algorithm to get joint_prob_matrix.
+  arma::mat ipf_seed(2, 2, arma::fill::ones);
+  // col_margins = (p_{0.}, p_{1.})
+  arma::rowvec col_margins(2);
+  // row_margins = (p_{.0}, p_{.1})
+  arma::colvec row_margins(2);
+  // The 2x2 matrix of joint probabilities (*not* the transition matrix).
+  // joint_prob_matrix = | p_{0, 0}, p_{0, 1} |
+  //                     | p_{1, 0}, p_{1, 1} |,
+  // where p_{a, b} = Pr(Z_{i - 1} = a, Z_{i} = b), i.e., rows refer to the
+  // (i - 1)-th methylation locus and columns refer to the i-th methylation
+  // locus.
+  arma::mat joint_prob_matrix(2, 2);
+  // j indexes the lor_by_pair vector.
+  int j = 0;
+
+  // Store the initial probability (i = 0) by sampling from the marginal
+  // distribution.
+  P(0, 0) = beta_by_region[0];
+  P(1, 0) = beta_by_region[0];
+
+  // Compute the rest of the transition probabilities
+  for (int i = 1; i < n; i++) {
+
+    // Check that the current methylation loci and the next are on the same
+    // chromosome. If not, then simulate from the marginal distribution since
+    // there is no lor_by_pair value
+    if (seqnames_one_tuples[i] != seqnames_one_tuples[i - 1]) {
+      P(0, i) = beta_by_region[0];
+      P(1, i) = beta_by_region[0];
+      // Don't increment j. There is only a value in lor_by_pair for pairs of
+      // methylation loci on the same chromosome so when a pair is on different
+      // chromosome we don't increment j.
+      continue;
+    } else {
+
+      // Compute transition probability from beta_by_region and lor_by_pair.
+      // Can get joint probability matrix by running iterative proportional
+      // fitting on matrix(c(2 ^ (lor), 1, 1, 1), ncol = 2) with marginals
+      // given by the average methylation level of the region for the first and
+      // second methylation loci, respectively.
+      // Then, compute transition probabilities using
+      //    Pr(Z_{i + 1} = z_{i + 1} | Z_i = z_i)
+      //  = Pr(Z_i = z_i, Z_{i + 1} = z_{i + 1}) /  Pr(Z_i = z_i).
+
+      // NOTE: This assumes lor_by_pair uses base-2 logarithms.
+      ipf_seed(0, 0) = pow(2.0, lor_by_pair[j]);
+      // row_margins refer to the (i - 1)-th methylation locus.
+      row_margins[0] = 1 - beta_by_region[i - 1];
+      row_margins[1] = beta_by_region[i - 1];
+      // col_margins refer to the i-th methylation locus.
+      col_margins[0] = 1 - beta_by_region[i];
+      col_margins[1] = beta_by_region[i];
+      joint_prob_matrix = ipf(ipf_seed,
+                              row_margins,
+                              col_margins,
+                              1000,
+                              1e-10);
+      P(0, i) = joint_prob_matrix(0, 1) / (1 - beta_by_region[i - 1]);
+      P(1, i) = joint_prob_matrix(1, 1) / beta_by_region[i - 1];
+
+      // Increment j.
+      j += 1;
+    }
+  }
+  return P;
+}
