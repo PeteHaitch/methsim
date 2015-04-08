@@ -401,6 +401,14 @@ Rcpp::NumericMatrix computeP(NumericVector beta_by_region,
       // Increment j.
       j += 1;
     }
+
+    // These column names are really only set so that P can be an assay in a
+    // SummarizedExperiment-based object.
+    // TODO (long-term): If mc_order > 1 then I want a strategy so that I can
+    // quickly get a column based on the previous states of the chain,
+    // e.g., column 5 = 1 * 2^2 + 0 * 2^1 + 1 * 2^0 for the pattern
+    // (M, U, M) = (1, 0, 1).Any such scheme needs to have an order for the
+    // history, i.e., left-to-right or right-to-left.
     P.attr("dimnames") = List::create(R_NilValue, seq_len(pow(2.0, mc_order)));
   }
   return P;
