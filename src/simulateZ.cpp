@@ -401,7 +401,7 @@ Rcpp::NumericMatrix computeP(NumericVector beta_by_region,
       // Increment j.
       j += 1;
     }
-    P.attr("colnames") = seq_len(mc_order);
+    P.attr("dimnames") = List::create(R_NilValue, seq_len(pow(2.0, mc_order)));
   }
   return P;
 }
