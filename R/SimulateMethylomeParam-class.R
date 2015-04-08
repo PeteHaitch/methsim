@@ -256,11 +256,12 @@ setMethod("simulate",
             # seqlevels = seqlevels(object@PartitionedMethylome) in function
             # signature because of 'recursive default argument reference' error.
             if (missing(seqlevels)) {
-              seqlevels <- seqlevels(object@PartitionedMethylome)
+              seqlevels <- GenomeInfoDb::seqlevels(object@PartitionedMethylome)
             }
-            if (!all(seqlevels %in% seqlevels(bsgenome))) {
+            if (!all(seqlevels %in% GenomeInfoDb::seqlevels(bsgenome))) {
               stop(paste0("Unexpected seqlevels.\n",
-                          paste0(seqlevels[!seqlevels %in% seqlevels(bsgenome)],
+                          paste0(seqlevels[!seqlevels %in%
+                                             GenomeInfoDb::seqlevels(bsgenome)],
                                  collapse = ", "), " are not seqlevels of ",
                           GenomeInfoDb::bsgenomeName(bsgenome)))
             }
@@ -304,11 +305,11 @@ setMethod("simulate",
             message("Simulating ", nsim, " methylome...")
 
             # Methylation loci at which to simulate a methylation state.
+            exclude <- setdiff(GenomeInfoDb::seqlevels(bsgenome), seqlevels)
             one_tuples <- findMTuples(bsgenome,
                                       MethInfo("CG"),
                                       size = 1,
-                                      exclude = setdiff(seqlevels(bsgenome),
-                                                        seqlevels))
+                                      exclude = exclude)
             # Only want unstranded methylomes
             one_tuples <- unstrand(one_tuples[strand(one_tuples) == "+"])
             ol <- findOverlaps(one_tuples, object@PartitionedMethylome)
@@ -480,11 +481,12 @@ setMethod("simulate2",
             # seqlevels = seqlevels(object@PartitionedMethylome) in function
             # signature because of 'recursive default argument reference' error.
             if (missing(seqlevels)) {
-              seqlevels <- seqlevels(object@PartitionedMethylome)
+              seqlevels <- GenomeInfoDb::seqlevels(object@PartitionedMethylome)
             }
-            if (!all(seqlevels %in% seqlevels(bsgenome))) {
+            if (!all(seqlevels %in% GenomeInfoDb::seqlevels(bsgenome))) {
               stop(paste0("Unexpected seqlevels.\n",
-                          paste0(seqlevels[!seqlevels %in% seqlevels(bsgenome)],
+                          paste0(seqlevels[!seqlevels %in%
+                                             GenomeInfoDb::seqlevels(bsgenome)],
                                  collapse = ", "), " are not seqlevels of ",
                           GenomeInfoDb::bsgenomeName(bsgenome)))
             }
@@ -528,11 +530,11 @@ setMethod("simulate2",
             message("Simulating ", nsim, " methylome...")
 
             # Methylation loci at which to simulate a methylation state.
+            exclude <- setdiff(GenomeInfoDb::seqlevels(bsgenome), seqlevels)
             one_tuples <- findMTuples(bsgenome,
                                       MethInfo("CG"),
                                       size = 1,
-                                      exclude = setdiff(seqlevels(bsgenome),
-                                                        seqlevels))
+                                      exclude = exclude)
             # Only want unstranded methylomes
             one_tuples <- unstrand(one_tuples[strand(one_tuples) == "+"])
             ol <- findOverlaps(one_tuples, object@PartitionedMethylome)
