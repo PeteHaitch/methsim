@@ -466,7 +466,6 @@ setMethod("simulate2",
                    mc_order = 1L,
                    ...) {
 
-
             # Argument checks
             if (!object@BSgenomeName %in% BSgenome::available.genomes()) {
               stop(paste0("'", object@BSgenomeName, "' package is not ",

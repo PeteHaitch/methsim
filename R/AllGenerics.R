@@ -105,7 +105,7 @@ setGeneric("simulate", function(object, nsim = 1, seed = NULL, ...) {
 ### Basically the same as simulate() but for returning SimualteMethylome2
 ### objects.
 ###
-setGeneric("simulate2", function(object, nsim, seed = NULL, ...) {
+setGeneric("simulate2", function(object, nsim = 1, seed = NULL, ...) {
   standardGeneric("simulate2")
 })
 
