@@ -237,7 +237,7 @@ setMethod("simulate",
                    comethylation_function,
                    ...) {
 
-            # Argument checks
+            # Argument checks and initialisations
             if (!object@BSgenomeName %in% BSgenome::available.genomes()) {
               stop(paste0("'", object@BSgenomeName, "' package is not ",
                           "available from Bioconductor."))
@@ -349,8 +349,13 @@ setMethod("simulate",
             # Sample within-fragment co-methylation for each IPD-region_type
             # combination.
             message("Sampling LOR...")
+            # sufficient_one_tuples are those seqlevels with at least two
+            # 1-tuples.
+            sufficient_one_tuples <- elementLengths(
+              split(one_tuples, seqnames(one_tuples))) > 1L
             two_tuples <- endoapply(
-              split(one_tuples, seqnames(one_tuples)), function(x) {
+              split(one_tuples, seqnames(one_tuples))[sufficient_one_tuples],
+              function(x) {
                 n <- length(x)
                 MTuples(GTuples(seqnames(x)[seq_len(n - 1)],
                                 matrix(c(start(x)[seq.int(1, n - 1)],
@@ -553,8 +558,13 @@ setMethod("simulate2",
             # Sample within-fragment co-methylation for each IPD-region_type
             # combination.
             message("Sampling LOR...")
+            # sufficient_one_tuples are those seqlevels with at least two
+            # 1-tuples.
+            sufficient_one_tuples <- elementLengths(
+              split(one_tuples, seqnames(one_tuples))) > 1L
             two_tuples <- endoapply(
-              split(one_tuples, seqnames(one_tuples)), function(x) {
+              split(one_tuples, seqnames(one_tuples))[sufficient_one_tuples],
+              function(x) {
                 n <- length(x)
                 MTuples(GTuples(seqnames(x)[seq_len(n - 1)],
                                 matrix(c(start(x)[seq.int(1, n - 1)],
