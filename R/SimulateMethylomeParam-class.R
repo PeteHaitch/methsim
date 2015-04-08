@@ -149,7 +149,7 @@ setClass("SimulateMethylomeParam",
            .valid.SimulateMethylomeParam.PatternFreqsDT(object),
            .valid.SimulateMethylomeParam.SampleName(object))
 
-  if (is.null(msg)){
+  if (is.null(msg)) {
     return(TRUE)
   } else{
     msg
@@ -574,7 +574,7 @@ setMethod("simulate2",
             message("Simulating P")
             P <- .computeP(as.vector(beta_by_region),
                            lor_by_pair,
-                           as.vector(seqnames_one_tuples),
+                           as.vector(seqnames(one_tuples)),
                            mc_order)
 
             # Create SimulatedMethylome2 object
