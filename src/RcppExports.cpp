@@ -31,6 +31,20 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// sampleZvec
+Rcpp::IntegerVector sampleZvec(IntegerMatrix Z, IntegerVector sampled_W, IntegerVector fh, IntegerVector cqh);
+RcppExport SEXP methsim_sampleZvec(SEXP ZSEXP, SEXP sampled_WSEXP, SEXP fhSEXP, SEXP cqhSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< IntegerMatrix >::type Z(ZSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type sampled_W(sampled_WSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type fh(fhSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type cqh(cqhSEXP);
+    __result = Rcpp::wrap(sampleZvec(Z, sampled_W, fh, cqh));
+    return __result;
+END_RCPP
+}
 // simErrorInPlace
 void simErrorInPlace(IntegerVector z, NumericVector u, double errorRate);
 RcppExport SEXP methsim_simErrorInPlace(SEXP zSEXP, SEXP uSEXP, SEXP errorRateSEXP) {

@@ -41,6 +41,35 @@
     .Call('methsim_sampleZ', PACKAGE = 'methsim', Z, sampled_W, fh, cqh)
 }
 
+#' Sample Z but return as a vector.
+#'
+#'
+#' Identical to sampleZ() but returning a std::vector<int> rather than a List.
+#' Simulate sequencing reads by sampling a subset of rows from a given column
+#' of W for each read.
+#'
+#' @param Z an integer matrix where Z[i, j] is the methylation state of the
+#' i-th methylation locus on the j-th pseud-haplotype.
+#' @param sampled_W an integer vector of length equal to the number of reads.
+#' Each element is the pseudo-haplotype from which each read is to be sampled,
+#' i.e., Z[, j].
+#' @param fh an integer vector of length equal to the number of reads. Each
+#' element is the position of the first methylation loci ("first hit") from
+#' which read is to be sampled, i.e., Z[i, ].
+#' @param cqh an integer vector of length equal to the number of reads. Each
+#' element is the number of methylation loci that each read overlaps.
+#'
+#' @note Unlike with sampleZ(), sampleZvec() has no information about which
+#' read each methylation call belongs to.
+#'
+#' @keywords internal
+#'
+#' @return a vector of length equal to sum(cqh). Each element is the
+#' sequenced/sample methylation state of a particular read.
+.sampleZVec <- function(Z, sampled_W, fh, cqh) {
+    .Call('methsim_sampleZvec', PACKAGE = 'methsim', Z, sampled_W, fh, cqh)
+}
+
 #' Simulate sequencing errors.
 #'
 #' Simulate sequencing errors by modifying \code{z} in place.
