@@ -27,14 +27,12 @@
 ###
 ### (MTuples | P)
 ###     MTuples: A MethylationTuples::MTuples object
-###     P: A 2 \times n matrix of the transition probabilities.
+###     P: A n \times 2 matrix of the transition probabilities.
 ###        Let P_{i, .} be the i-th row of (i = 1, ..., n),
 ###        then P_{i, .} =
 ###         [Pr(Z_{i} = 1 | Z_{i - 1} = 0), Pr(Z_{i} = 1 | Z_{i - 1} = 1)].
-###       In fact, we store P^{T} (the transpose of P) in slot 'P' because
-###       matrices in R (and Armadillo) are stored in column-major order.
 ###       More generally, we might use a scheme where the j-th column of P
-###       (j = 1, ..., 2^{m - 1}, with m = 2 in the default) stores
+###       (j = 1, ..., 2^{m - 1}, with m = 2 under the default) stores
 ###       Pr(Z_{i} = 1 | Z_{i - 1}, Z_{i - 2}, ...).
 
 #' SimulatedMethylome class.

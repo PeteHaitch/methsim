@@ -58,7 +58,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // computeP
-arma::Mat<double> computeP(NumericVector beta_by_region, NumericVector lor_by_pair, CharacterVector seqnames_one_tuples, int mc_order);
+Rcpp::NumericMatrix computeP(NumericVector beta_by_region, NumericVector lor_by_pair, CharacterVector seqnames_one_tuples, int mc_order);
 RcppExport SEXP methsim_computeP(SEXP beta_by_regionSEXP, SEXP lor_by_pairSEXP, SEXP seqnames_one_tuplesSEXP, SEXP mc_orderSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
