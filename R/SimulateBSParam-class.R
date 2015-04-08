@@ -114,7 +114,7 @@ setClass("SimulateBSParam",
            .valid.SimulateBSParam.errorRate(object),
            .valid.SimulateBSParam.target(object))
 
-  if (is.null(msg)){
+  if (is.null(msg)) {
     return(TRUE)
   } else{
     msg
@@ -207,7 +207,7 @@ setMethod("simulate",
               r_seed <- get(".Random.seed", envir = .GlobalEnv)
               set.seed(seed)
               rng_state <- structure(seed, kind = as.list(RNGkind()))
-              on.exit(assign(".Random.seed", R.seed, envir = .GlobalEnv))
+              on.exit(assign(".Random.seed", r_seed, envir = .GlobalEnv))
             }
 
             # TODO: Remove this restriction.
@@ -223,8 +223,8 @@ setMethod("simulate",
             # average sequencing coverage (aveCov).
             # TODO: This assumes constant readLength; this code will need
             # modification if this assumption is changed.
-            n_reads <- trunc(object@aveCov / readLength *
-                               seqlengths(object@SimulatedMethylome))
+            n_reads <- as.list(trunc(object@aveCov / readLength *
+                                       seqlengths(object@SimulatedMethylome)))
             # TODO: Perhaps the number of reads per-chromosome should be
             # sampled from a multinomial(sum(n_reads), n_reads)?
             # Don't simulate read_start in parallel, e.g., via bpmapply().
@@ -233,7 +233,8 @@ setMethod("simulate",
             # swamped by the running times of other steps in this function.
             read_start <- mapply(function(n, seqlength) {
               .sampleReadStart(n, seqlength)
-            }, n = n_reads, seqlength = seqlengths(object@SimulatedMethylome))
+            }, n = n_reads, seqlength = seqlengths(object@SimulatedMethylome),
+            SIMPLIFY = FALSE)
             read_start <- bplapply(read_start, sort, BPPARAM = BPPARAM)
 
             # Find reads that overlap methylation loci (and then sample a

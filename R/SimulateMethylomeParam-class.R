@@ -276,7 +276,7 @@ setMethod("simulate",
               r_seed <- get(".Random.seed", envir = .GlobalEnv)
               set.seed(seed)
               rng_state <- structure(seed, kind = as.list(RNGkind()))
-              on.exit(assign(".Random.seed", R.seed, envir = .GlobalEnv))
+              on.exit(assign(".Random.seed", r_seed, envir = .GlobalEnv))
             }
 
             if (nsim != 1) {
@@ -326,9 +326,8 @@ setMethod("simulate",
             # It needlessly complicates things (reproducibility of random
             # numbers when generated in parallel is hard) and any speed ups are
             # swamped by the running times of other steps in this function.
-            u <- lapply(seq_len(ncol(W_by_region)), function (i) {
-              runif(length(one_tuples))
-            })
+            u <- replicate(ncol(W_by_region), runif(length(one_tuples)),
+                           simplify = FALSE)
 
             # Sample within-fragment co-methylation for each IPD-region_type
             # combination.
