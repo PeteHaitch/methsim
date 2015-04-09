@@ -88,12 +88,11 @@
 #' Compute the transition probabilities, P, of a first-order binary Markov
 #' chain given a set of marginal probabilities and log odds ratios.
 #'
-#' @param beta_by_region the beta-value (average methylation level) for each
-#' methylation locus in the genome.
-#' @param lor_by_pair the within-fragment co-methylation between each pair of
+#' @param marginalProb the marginal probability (i.e., average methylation
+#' level) for each methylation locus in the genome.
+#' @param LOR the within-fragment co-methylation between each pair of
 #' methylation loci in the genome. Should be log odds-ratios using base-2
-#' logarithms. The length of this should be equal to the number of methylation
-#' loci in the genome minus the number of chromosomes (seqnames).
+#' logarithms. The LOR is 0 for the first methylation locus on each seqlevel.
 #' @param seqnames_one_tuples the chromosome (seqname) of each methylation
 #' locus in the genome, i.e., \code{seqnames(one_tuples)}.
 #'
@@ -106,8 +105,8 @@
 #' More generally, we might use a scheme where the $j$-th column of P
 #' ($j = 1, \ldots, 2^{m - 1}$, with $m = 2$ under the default) stores
 #' $Pr(Z_{i} = 1 | Z_{i - 1}, Z_{i - 2}, ...)$.
-.computeP <- function(beta_by_region, lor_by_pair, mc_order = 1L) {
-    .Call('methsim_computeP', PACKAGE = 'methsim', beta_by_region, lor_by_pair, mc_order)
+.computeP <- function(marginalProb, LOR, mc_order = 1L) {
+    .Call('methsim_computeP', PACKAGE = 'methsim', marginalProb, LOR, mc_order)
 }
 
 #' Tabulate methylation patterns.

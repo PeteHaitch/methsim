@@ -300,12 +300,11 @@ std::vector<int> simulateZ(NumericVector beta_by_region,
 //' Compute the transition probabilities, P, of a first-order binary Markov
 //' chain given a set of marginal probabilities and log odds ratios.
 //'
-//' @param beta_by_region the beta-value (average methylation level) for each
-//' methylation locus in the genome.
-//' @param lor_by_pair the within-fragment co-methylation between each pair of
+//' @param marginalProb the marginal probability (i.e., average methylation
+//' level) for each methylation locus in the genome.
+//' @param LOR the within-fragment co-methylation between each pair of
 //' methylation loci in the genome. Should be log odds-ratios using base-2
-//' logarithms. The length of this should be equal to the number of methylation
-//' loci in the genome minus the number of chromosomes (seqnames).
+//' logarithms. The LOR is 0 for the first methylation locus on each seqlevel.
 //' @param seqnames_one_tuples the chromosome (seqname) of each methylation
 //' locus in the genome, i.e., \code{seqnames(one_tuples)}.
 //'
@@ -319,12 +318,12 @@ std::vector<int> simulateZ(NumericVector beta_by_region,
 //' ($j = 1, \ldots, 2^{m - 1}$, with $m = 2$ under the default) stores
 //' $Pr(Z_{i} = 1 | Z_{i - 1}, Z_{i - 2}, ...)$.
 // [[Rcpp::export(".computeP")]]
-Rcpp::NumericMatrix computeP(NumericVector beta_by_region,
-                             NumericVector lor_by_pair,
+Rcpp::NumericMatrix computeP(NumericVector marginalProb,
+                             NumericVector LOR,
                              int mc_order = 1) {
   // Argument checks
-  if (beta_by_region.size() != lor_by_pair.size()) {
-    stop("length(beta_by_region) != length(lor_by_pair)");
+  if (marginalProb.size() != LOR.size()) {
+    stop("length(marginalProb) != length(LOR)");
   }
 
   if (mc_order != 1) {
@@ -332,7 +331,7 @@ Rcpp::NumericMatrix computeP(NumericVector beta_by_region,
   }
 
   // Initialise variables
-  int n = beta_by_region.size();
+  int n = marginalProb.size();
   // P stores the result.
   Rcpp::NumericMatrix P(n, pow(2.0, mc_order));
   // ipf_seed is used to initialise ipf algorithm to get joint_prob_matrix.
@@ -348,30 +347,11 @@ Rcpp::NumericMatrix computeP(NumericVector beta_by_region,
   // (i - 1)-th methylation locus and columns refer to the i-th methylation
   // locus.
   arma::mat joint_prob_matrix(2, 2);
-  //   // j indexes the lor_by_pair vector.
-  //   int j = 0;
-
-  //   // Store the initial probability (i = 0) by sampling from the marginal
-  //   // distribution.
-  //   P(0, 0) = beta_by_region[0];
-  //   P(0, 1) = beta_by_region[0];
 
   // Compute the rest of the transition probabilities
   for (int i = 0; i < n; i++) {
 
-    //     // Check that the current methylation loci and the next are on the same
-    //     // chromosome. If not, then simulate from the marginal distribution since
-    //     // there is no lor_by_pair value
-    //     if (seqnames_one_tuples[i] != seqnames_one_tuples[i - 1]) {
-    //       P(i, 0) = beta_by_region[0];
-    //       P(i, 1) = beta_by_region[0];
-    //       // Don't increment j. There is only a value in lor_by_pair for pairs of
-    //       // methylation loci on the same chromosome so when a pair is on different
-    //       // chromosome we don't increment j.
-    //       continue;
-    //     } else {
-
-    // Compute transition probability from beta_by_region and lor_by_pair.
+    // Compute transition probability from marginalProb and LOR.
     // Can get joint probability matrix by running iterative proportional
     // fitting on matrix(c(2 ^ (lor), 1, 1, 1), ncol = 2) with marginals
     // given by the average methylation level of the region for the first and
@@ -380,27 +360,24 @@ Rcpp::NumericMatrix computeP(NumericVector beta_by_region,
     //    Pr(Z_{i + 1} = z_{i + 1} | Z_i = z_i)
     //  = Pr(Z_i = z_i, Z_{i + 1} = z_{i + 1}) /  Pr(Z_i = z_i).
 
-    // NOTE: This assumes lor_by_pair uses base-2 logarithms.
-    // ipf_seed(0, 0) = pow(2.0, lor_by_pair[j]);
-    ipf_seed(0, 0) = pow(2.0, lor_by_pair[i]);
+    // NOTE: This assumes LOR uses base-2 logarithms.
+    // ipf_seed(0, 0) = pow(2.0, LOR[j]);
+    ipf_seed(0, 0) = pow(2.0, LOR[i]);
     // row_margins refer to the (i - 1)-th methylation locus.
-    row_margins[0] = 1 - beta_by_region[i - 1];
-    row_margins[1] = beta_by_region[i - 1];
+    row_margins[0] = 1 - marginalProb[i - 1];
+    row_margins[1] = marginalProb[i - 1];
     // col_margins refer to the i-th methylation locus.
-    col_margins[0] = 1 - beta_by_region[i];
-    col_margins[1] = beta_by_region[i];
+    col_margins[0] = 1 - marginalProb[i];
+    col_margins[1] = marginalProb[i];
     joint_prob_matrix = ipf(ipf_seed,
                             row_margins,
                             col_margins,
                             1000,
                             1e-10);
-    P(i, 0) = joint_prob_matrix(0, 1) / (1 - beta_by_region[i - 1]);
-    P(i, 1) = joint_prob_matrix(1, 1) / beta_by_region[i - 1];
-
-    //       // Increment j.
-    //       j += 1;
-    // }
+    P(i, 0) = joint_prob_matrix(0, 1) / (1 - marginalProb[i - 1]);
+    P(i, 1) = joint_prob_matrix(1, 1) / marginalProb[i - 1];
   }
+
   // These column names are really only set so that P can be an assay in a
   // SummarizedExperiment-based object.
   // TODO (long-term): If mc_order > 1 then I want a strategy so that I can

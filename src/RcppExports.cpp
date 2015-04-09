@@ -58,15 +58,15 @@ BEGIN_RCPP
 END_RCPP
 }
 // computeP
-Rcpp::NumericMatrix computeP(NumericVector beta_by_region, NumericVector lor_by_pair, int mc_order);
-RcppExport SEXP methsim_computeP(SEXP beta_by_regionSEXP, SEXP lor_by_pairSEXP, SEXP mc_orderSEXP) {
+Rcpp::NumericMatrix computeP(NumericVector marginalProb, NumericVector LOR, int mc_order);
+RcppExport SEXP methsim_computeP(SEXP marginalProbSEXP, SEXP LORSEXP, SEXP mc_orderSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< NumericVector >::type beta_by_region(beta_by_regionSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type lor_by_pair(lor_by_pairSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type marginalProb(marginalProbSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type LOR(LORSEXP);
     Rcpp::traits::input_parameter< int >::type mc_order(mc_orderSEXP);
-    __result = Rcpp::wrap(computeP(beta_by_region, lor_by_pair, mc_order));
+    __result = Rcpp::wrap(computeP(marginalProb, LOR, mc_order));
     return __result;
 END_RCPP
 }
