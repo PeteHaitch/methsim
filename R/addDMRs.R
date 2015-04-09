@@ -33,3 +33,8 @@
 ###
 ### This is a longer term goal that I haven't yet figured out how best to
 ### implement. The key question is how to control the effect size.
+
+# addDMRs() will work on SimulatedMethylome2 objects by modifying the
+# marginalProb assay. It should return a SimulatedMethylome2 object with either
+# the original data as the first sample and the modified data as the second
+# sample, or just the modified data.
