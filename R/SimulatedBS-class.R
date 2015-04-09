@@ -98,7 +98,7 @@ setClass("SimulatedBS",
   if (!is(object@seqinfo, "Seqinfo")) {
     msg <- Biobase::validMsg(msg, "'seqinfo' slot must be a Seqinfo object.")
   }
-  if (!identical(seqlevels(object@seqinfo), names(object@z))) {
+  if (!all(names(object@z) %in% seqlevels(object@seqinfo))) {
     msg <- Biobase::validMsg(msg, paste0("'seqinfo' slot missing names ",
                                          "(seqlevels) of 'z' slot"))
   }
