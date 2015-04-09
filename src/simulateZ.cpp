@@ -293,6 +293,7 @@ std::vector<int> simulateZ(NumericVector beta_by_region,
   return Z;
 }
 
+// TODO: Switch beta_by_region = marginalProb and lor_by_pair = LOR.
 // TODO (long term): Allow beta_by_region and seqnames_one_tuple to be
 // S4Vectors::Rleobjects to avoid the requirement to pre-expand these via
 // as.vector().
@@ -314,23 +315,20 @@ std::vector<int> simulateZ(NumericVector beta_by_region,
 //' NB: $P_{0, } = [Pr(Z_{0} = 1), Pr(Z_{0} = 1)], i.e., sampled from the
 //' marginal distribution and similarly for all other $i$ that start a new
 //' chromosome.
+//' More generally, we might use a scheme where the $j$-th column of P
+//' ($j = 1, \ldots, 2^{m - 1}$, with $m = 2$ under the default) stores
+//' $Pr(Z_{i} = 1 | Z_{i - 1}, Z_{i - 2}, ...)$.
 // [[Rcpp::export(".computeP")]]
 Rcpp::NumericMatrix computeP(NumericVector beta_by_region,
-                           NumericVector lor_by_pair,
-                           CharacterVector seqnames_one_tuples,
-                           int mc_order = 1) {
+                             NumericVector lor_by_pair,
+                             int mc_order = 1) {
   // Argument checks
-  if (beta_by_region.size() != seqnames_one_tuples.size()) {
-    stop("length(beta_by_region) != length(seqnames_one_tuples)");
+  if (beta_by_region.size() != lor_by_pair.size()) {
+    stop("length(beta_by_region) != length(lor_by_pair)");
   }
-  // There is only a value in lor_by_pair for pairs of methylation loci on the
-  // same chromosome.
-  if (lor_by_pair.size() !=
-      (beta_by_region.size() - unique(seqnames_one_tuples).size())) {
-    std::string stop_msg = "length(lor_by_pair) != ";
-    stop_msg = stop_msg +
-      "(length(beta_by_region) - length(unique(seqnames_one_tuples)))";
-    stop(stop_msg);
+
+  if (mc_order != 1) {
+    stop("Only mc_order = 1 is currently supported.");
   }
 
   // Initialise variables
@@ -350,66 +348,66 @@ Rcpp::NumericMatrix computeP(NumericVector beta_by_region,
   // (i - 1)-th methylation locus and columns refer to the i-th methylation
   // locus.
   arma::mat joint_prob_matrix(2, 2);
-  // j indexes the lor_by_pair vector.
-  int j = 0;
+  //   // j indexes the lor_by_pair vector.
+  //   int j = 0;
 
-  // Store the initial probability (i = 0) by sampling from the marginal
-  // distribution.
-  P(0, 0) = beta_by_region[0];
-  P(0, 1) = beta_by_region[0];
+  //   // Store the initial probability (i = 0) by sampling from the marginal
+  //   // distribution.
+  //   P(0, 0) = beta_by_region[0];
+  //   P(0, 1) = beta_by_region[0];
 
   // Compute the rest of the transition probabilities
-  for (int i = 1; i < n; i++) {
+  for (int i = 0; i < n; i++) {
 
-    // Check that the current methylation loci and the next are on the same
-    // chromosome. If not, then simulate from the marginal distribution since
-    // there is no lor_by_pair value
-    if (seqnames_one_tuples[i] != seqnames_one_tuples[i - 1]) {
-      P(i, 0) = beta_by_region[0];
-      P(i, 1) = beta_by_region[0];
-      // Don't increment j. There is only a value in lor_by_pair for pairs of
-      // methylation loci on the same chromosome so when a pair is on different
-      // chromosome we don't increment j.
-      continue;
-    } else {
+    //     // Check that the current methylation loci and the next are on the same
+    //     // chromosome. If not, then simulate from the marginal distribution since
+    //     // there is no lor_by_pair value
+    //     if (seqnames_one_tuples[i] != seqnames_one_tuples[i - 1]) {
+    //       P(i, 0) = beta_by_region[0];
+    //       P(i, 1) = beta_by_region[0];
+    //       // Don't increment j. There is only a value in lor_by_pair for pairs of
+    //       // methylation loci on the same chromosome so when a pair is on different
+    //       // chromosome we don't increment j.
+    //       continue;
+    //     } else {
 
-      // Compute transition probability from beta_by_region and lor_by_pair.
-      // Can get joint probability matrix by running iterative proportional
-      // fitting on matrix(c(2 ^ (lor), 1, 1, 1), ncol = 2) with marginals
-      // given by the average methylation level of the region for the first and
-      // second methylation loci, respectively.
-      // Then, compute transition probabilities using
-      //    Pr(Z_{i + 1} = z_{i + 1} | Z_i = z_i)
-      //  = Pr(Z_i = z_i, Z_{i + 1} = z_{i + 1}) /  Pr(Z_i = z_i).
+    // Compute transition probability from beta_by_region and lor_by_pair.
+    // Can get joint probability matrix by running iterative proportional
+    // fitting on matrix(c(2 ^ (lor), 1, 1, 1), ncol = 2) with marginals
+    // given by the average methylation level of the region for the first and
+    // second methylation loci, respectively.
+    // Then, compute transition probabilities using
+    //    Pr(Z_{i + 1} = z_{i + 1} | Z_i = z_i)
+    //  = Pr(Z_i = z_i, Z_{i + 1} = z_{i + 1}) /  Pr(Z_i = z_i).
 
-      // NOTE: This assumes lor_by_pair uses base-2 logarithms.
-      ipf_seed(0, 0) = pow(2.0, lor_by_pair[j]);
-      // row_margins refer to the (i - 1)-th methylation locus.
-      row_margins[0] = 1 - beta_by_region[i - 1];
-      row_margins[1] = beta_by_region[i - 1];
-      // col_margins refer to the i-th methylation locus.
-      col_margins[0] = 1 - beta_by_region[i];
-      col_margins[1] = beta_by_region[i];
-      joint_prob_matrix = ipf(ipf_seed,
-                              row_margins,
-                              col_margins,
-                              1000,
-                              1e-10);
-      P(i, 0) = joint_prob_matrix(0, 1) / (1 - beta_by_region[i - 1]);
-      P(i, 1) = joint_prob_matrix(1, 1) / beta_by_region[i - 1];
+    // NOTE: This assumes lor_by_pair uses base-2 logarithms.
+    // ipf_seed(0, 0) = pow(2.0, lor_by_pair[j]);
+    ipf_seed(0, 0) = pow(2.0, lor_by_pair[i]);
+    // row_margins refer to the (i - 1)-th methylation locus.
+    row_margins[0] = 1 - beta_by_region[i - 1];
+    row_margins[1] = beta_by_region[i - 1];
+    // col_margins refer to the i-th methylation locus.
+    col_margins[0] = 1 - beta_by_region[i];
+    col_margins[1] = beta_by_region[i];
+    joint_prob_matrix = ipf(ipf_seed,
+                            row_margins,
+                            col_margins,
+                            1000,
+                            1e-10);
+    P(i, 0) = joint_prob_matrix(0, 1) / (1 - beta_by_region[i - 1]);
+    P(i, 1) = joint_prob_matrix(1, 1) / beta_by_region[i - 1];
 
-      // Increment j.
-      j += 1;
-    }
-
-    // These column names are really only set so that P can be an assay in a
-    // SummarizedExperiment-based object.
-    // TODO (long-term): If mc_order > 1 then I want a strategy so that I can
-    // quickly get a column based on the previous states of the chain,
-    // e.g., column 5 = 1 * 2^2 + 0 * 2^1 + 1 * 2^0 for the pattern
-    // (M, U, M) = (1, 0, 1).Any such scheme needs to have an order for the
-    // history, i.e., left-to-right or right-to-left.
-    P.attr("dimnames") = List::create(R_NilValue, seq_len(pow(2.0, mc_order)));
+    //       // Increment j.
+    //       j += 1;
+    // }
   }
+  // These column names are really only set so that P can be an assay in a
+  // SummarizedExperiment-based object.
+  // TODO (long-term): If mc_order > 1 then I want a strategy so that I can
+  // quickly get a column based on the previous states of the chain,
+  // e.g., column 5 = 1 * 2^2 + 0 * 2^1 + 1 * 2^0 for the pattern
+  // (M, U, M) = (1, 0, 1).Any such scheme needs to have an order for the
+  // history, i.e., left-to-right or right-to-left.
+  P.attr("dimnames") = List::create(R_NilValue, seq_len(pow(2.0, mc_order)));
   return P;
 }

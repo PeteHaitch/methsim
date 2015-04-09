@@ -106,8 +106,8 @@
 #' More generally, we might use a scheme where the $j$-th column of P
 #' ($j = 1, \ldots, 2^{m - 1}$, with $m = 2$ under the default) stores
 #' $Pr(Z_{i} = 1 | Z_{i - 1}, Z_{i - 2}, ...)$.
-.computeP <- function(beta_by_region, lor_by_pair, seqnames_one_tuples, mc_order = 1L) {
-    .Call('methsim_computeP', PACKAGE = 'methsim', beta_by_region, lor_by_pair, seqnames_one_tuples, mc_order)
+.computeP <- function(beta_by_region, lor_by_pair, mc_order = 1L) {
+    .Call('methsim_computeP', PACKAGE = 'methsim', beta_by_region, lor_by_pair, mc_order)
 }
 
 #' Tabulate methylation patterns.
