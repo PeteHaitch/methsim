@@ -415,7 +415,7 @@ setMethod("simulate",
 # 'verbose' option.
 # TODO: Need to document the methsim:::.sampleComethDT parameters (at least
 # mean_fun and sd_fun).
-#' Simulate a methylome the second method.
+#' Simulate a methylome using the second method.
 #'
 #' Rather than using weights (PatternFreqsDT) and simulating the
 #' 'true' methylome directly (as a SimulatedMethylome object), simulate2()
@@ -578,18 +578,24 @@ setMethod("simulate2",
                                                   object@ComethDT,
                                                   object@PartitionedMethylome,
                                                   ...)
-
-            # Simulate P.
-            message("Simulating P")
-            P <- .computeP(as.vector(beta_by_region),
-                           lor_by_pair,
-                           as.vector(seqnames(one_tuples)),
-                           mc_order)
+            # Add a value of LOR = 0 for the first methylation locus of each
+            # seqlevel.
+            lor <- matrix(rep(0, length(beta_by_region)), ncol = 1,
+                          dimnames = list(NULL, object@SampleName))
+            first_loci <- start(seqnames(one_tuples))
+            lor[-c(first_loci), 1] <- lor_by_pair
 
             # Create SimulatedMethylome2 object
+            # NOTE: The column names are taken from the object@SampleName
             message("Creating SimulatedMethylome2 object...")
+            # Use standard vectors rather than Rle objects for faster
+            # subsetting.
+            assays <- SimpleList(marginalProb = matrix(
+              as.vector(beta_by_region),
+              dimnames = list(NULL, object@SampleName)),
+              LOR = lor)
             sm2 <- new("SimulatedMethylome2",
-                       SummarizedExperiment(assays = SimpleList(P = P),
+                       SummarizedExperiment(assays = assays,
                                             rowData = one_tuples))
 
             # Ensure "seed" is set as an attribute of the returned value.

@@ -1,7 +1,7 @@
 Package: methsim
 Type: Package
 Title: An R package to simulate DNA methylation data
-Version: 0.4.0.9033
+Version: 0.4.0.9034
 Date: 2015-04-08
 Author: Peter Hickey <peter.hickey@gmail.com>
 Maintainer: Peter Hickey <peter.hickey@gmail.com>
@@ -43,7 +43,7 @@ Collate:
     'RcppExports.R'
     'SimulatedMethylome-class.R'
     'SimulateBSParam-class.R'
-    'SimulateMethylome2-class.R'
+    'SimulatedMethylome2-class.R'
     'SimulateMethylomeParam-class.R'
     'SimulatedBS-class.R'
     'addDMRs.R'

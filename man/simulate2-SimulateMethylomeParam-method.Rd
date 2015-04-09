@@ -3,7 +3,7 @@
 \docType{methods}
 \name{simulate2,SimulateMethylomeParam-method}
 \alias{simulate2,SimulateMethylomeParam-method}
-\title{Simulate a methylome the second method.}
+\title{Simulate a methylome using the second method.}
 \usage{
 \S4method{simulate2}{SimulateMethylomeParam}(object, nsim = 1, seed = NULL,
   epsilon = 0.01, comethylation_function, seqlevels, mc_order = 1L, ...)
