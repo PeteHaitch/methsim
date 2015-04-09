@@ -6,7 +6,8 @@
 \title{Simulate a bisulfite-sequencing experiment.}
 \usage{
 \S4method{simulate}{SimulateBSParam}(object, nsim = 1, seed = NULL,
-  BPPARAM = bpparam(), sequencingType = "SE", readLength = 100L, ...)
+  BPPARAM = bpparam(), sequencingType = "SE", readLength = 100L,
+  seqlevels, ...)
 }
 \arguments{
 \item{object}{a \code{\link{SimulateBSParam}} object.}
@@ -31,6 +32,10 @@ paired-end ('PE'). \strong{NOTE}: Only single-end data is currently
 supported.}
 
 \item{readLength}{an integer specifying the read length.}
+
+\item{seqlevels}{A vector of seqlevels at which to bisulfite-sequencing
+reads. Will use all available seqlevels if missing, where availability is
+defined by the seqlevels "in use" in the SimulatedMethylome slot.}
 }
 \value{
 a SimulatedBS object.

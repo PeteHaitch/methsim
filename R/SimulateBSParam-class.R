@@ -40,7 +40,7 @@ setClassUnion("GRangesORNULL",
 #' SimulateBSParam class
 #'
 #' An S4 class for the parameters used by
-#' \code{\link{simulate,SimulateBS-method}}.
+#' \code{\link{simulate,SimulateBSParam-method}}.
 #'
 #' @include SimulatedMethylome-class.R
 #'
@@ -142,6 +142,12 @@ SimulateBSParam <- function(SimulatedMethylome,
 }
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### seqlevels()
+###
+
+# TODO
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### simulate()
 ###
 
@@ -167,6 +173,9 @@ SimulateBSParam <- function(SimulatedMethylome,
 #' @param sequencingType a character specifying either single-end ('SE') or
 #' paired-end ('PE'). \strong{NOTE}: Only single-end data is currently
 #' supported.
+#' @param seqlevels A vector of seqlevels at which to bisulfite-sequencing
+#' reads. Will use all available seqlevels if missing, where availability is
+#' defined by the seqlevels "in use" in the SimulatedMethylome slot.
 #' @param readLength an integer specifying the read length.
 #'
 #' @note Currently only simulates whole-genome bisulfite-sequencing data.
@@ -184,14 +193,30 @@ setMethod("simulate",
                    BPPARAM = bpparam(),
                    sequencingType = "SE",
                    readLength = 100L,
+                   seqlevels,
                    ...) {
 
-            # TODO (long term): Support stranded data.
-            warning("Currently only simulates unstranded data.")
-            # TOOD: Add support for paired-end reads.
-            warning("Currently only simulates single-end reads.")
-
             # Argument checks
+            # TODO: Is this the best way to set default seqlevels? Can't use
+            # seqlevels = seqlevels(object@PartitionedMethylome) in function
+            # signature because of 'recursive default argument reference' error.
+            # TODO: Propose a seqlevelsInUse,SummarizedExperiment-method.
+            valid_seqlevels <- GenomeInfoDb::seqlevelsInUse(
+              rowRanges(object@SimulatedMethylome))
+            if (missing(seqlevels)) {
+              # Only use seqlevels that are "active" in the SimulatedMethylome
+              # object
+              seqlevels <- valid_seqlevels
+            } else {
+              # Check that supplied seqlevels are valid
+              if (!all(seqlevels %in% valid_seqlevels)) {
+                stop(paste0("Unexpected seqlevels.\n",
+                            paste0(seqlevels[!seqlevels %in% valid_seqlevels],
+                                   collapse = ", "), " are not seqlevels of ",
+                            "'SimulateBSParam'."))
+              }
+            }
+            # Only single-end sequencing currently supported
             stopifnot(sequencingType == "SE")
 
             # TODO: Will need to revisit how seed is set and (pseudo) random
@@ -217,14 +242,20 @@ setMethod("simulate",
               stop("'nsim' must be equal to 1.")
             }
 
+            # TODO (long term): Support stranded data.
+            warning("Currently only simulates unstranded data.")
+            # TOOD: Add support for paired-end reads.
+            warning("Currently only simulates single-end reads.")
+
             message("Simulating ", nsim, " bisulfite-sequencing sample...")
 
             # Sample read start sites based on uniform sampling with given
             # average sequencing coverage (aveCov).
             # TODO: This assumes constant readLength; this code will need
             # modification if this assumption is changed.
-            n_reads <- as.list(trunc(object@aveCov / readLength *
-                                       seqlengths(object@SimulatedMethylome)))
+            n_reads <- as.list(trunc(
+              object@aveCov / readLength *
+                seqlengths(object@SimulatedMethylome)[seqlevels]))
             # TODO: Perhaps the number of reads per-chromosome should be
             # sampled from a multinomial(sum(n_reads), n_reads)?
             # Don't simulate read_start in parallel, e.g., via bpmapply().
@@ -233,19 +264,20 @@ setMethod("simulate",
             # swamped by the running times of other steps in this function.
             read_start <- mapply(function(n, seqlength) {
               .sampleReadStart(n, seqlength)
-            }, n = n_reads, seqlength = seqlengths(object@SimulatedMethylome),
+            }, n = n_reads,
+            seqlength = seqlengths(object@SimulatedMethylome)[seqlevels],
             SIMPLIFY = FALSE)
             read_start <- bplapply(read_start, sort, BPPARAM = BPPARAM)
 
-            # Find reads that overlap methylation loci (and then sample a
-            # methylation pattern for each such read). It's 2-3x faster to
+            # Find reads that overlap methylation loci and then sample a
+            # methylation pattern for each such read. It's 2-3x faster to
             # subset by chromosome and use findOverlaps on the resulting
             # IRanges than it is to run findOverlaps on the GRanges (but this
-            # the subsetting destroys the common index).
+            # the subsetting would destroy the common index so I don't use it).
             # TODO: Take care if simulate() itself is being run in parallel
             # (or at least document that it could spawn heaps of processes).
             z <- bplapply(names(read_start), function(seqname, read_start,
-                                                         readLength, sm) {
+                                                      readLength, sm) {
 
               # Circular chromosomes are hard. While the read automatically
               # gets wrapped around, it makes subsequent functions, e.g.,
@@ -253,7 +285,8 @@ setMethod("simulate",
               # simulation of reads for circular chromosomes.
               if (isCircular(seqinfo(sm))[seqname]) {
                 # TODO: This warning isn't displayed when run via bplapply()
-                # (but is displayed when using lapply()).
+                # (but is displayed when using lapply()). Move outside the
+                # bplapply(), e.g., make it top-level argument check.
                 warning(paste0("No reads simulated for ", seqname,
                                " (circular chromosomes not yet supported)."))
                 return(data.table("pos" = integer(0),
@@ -279,6 +312,8 @@ setMethod("simulate",
               # I only sample a haplotype for the first methylation locus in
               # each read.
               first_hit <- selectHits(ol, "first")
+              # TODO: This requests 10x the memory it ends up using; why? Also,
+              # why is this does in RcppArmadillo?
               sampled_W <- .sampleW(assay(sm, "W",
                                           withDimnames = FALSE)[first_hit, ])
 
@@ -291,9 +326,12 @@ setMethod("simulate",
               # Return as a data.table
               data.table("pos" = start(sm)[subjectHits(ol)],
                          "readID" = queryHits(ol),
-                         "z" = unlist(z, use.names = FALSE))
-            }, read_start = read_start, readLength = readLength,
-            sm = object@SimulatedMethylome, BPPARAM = BPPARAM)
+                         "z" = z)
+            },
+            read_start = read_start,
+            readLength = readLength,
+            sm = object@SimulatedMethylome,
+            BPPARAM = BPPARAM)
 
             # Don't rbindlist(z). Instead, keeping as list will
             # actually save memory (no need to retain seqnames for every row)

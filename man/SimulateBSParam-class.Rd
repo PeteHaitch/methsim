@@ -7,6 +7,6 @@
 \title{SimulateBSParam class}
 \description{
 An S4 class for the parameters used by
-\code{\link{simulate,SimulateBS-method}}.
+\code{\link{simulate,SimulateBSParam-method}}.
 }
 

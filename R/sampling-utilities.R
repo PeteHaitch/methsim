@@ -120,6 +120,7 @@
                         two_tuples_reduced_dt[i, type]))
     }
   }, two_tuples_reduced_dt, cometh_dt, min_n)
+
   # Extract values from lor_list and insert them appropriately for the
   # two_tuples based on IPD-type combination.
   two_tuples_dt[, idx := .I]
