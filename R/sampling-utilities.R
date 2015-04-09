@@ -92,7 +92,6 @@
     regionType(partitioned_methylome)[c(subjectHits(within_ol), end_ol)]
   region_type <- regionType(partitioned_methylome)
   region_type_levels <- levels(region_type)
-  lor <- rep(NA_real_, length(two_tuples))
 
   two_tuples_dt <- data.table(IPD = as.vector(IPD(two_tuples)),
                               type = regionType(partitioned_methylome)[
