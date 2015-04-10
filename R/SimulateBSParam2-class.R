@@ -309,7 +309,7 @@ setMethod("simulate2",
             # methylation pattern for each such read.
             # TODO: Take care if simulate() itself is being run in parallel
             # (or at least document that it could spawn heaps of processes).
-            z <- bpmapply(function(seqname, rs, readLength, row_ranges_sm, P) {
+            z <- bpmapply(function(seqname, rs, readLength, sm, P) {
 
               # TODO: This may cause warnings (at least when this isn't run
               # in parallel, which causes warning()s to be suppressed). These
@@ -317,8 +317,8 @@ setMethod("simulate2",
               # seqlevel.
               gr <- GRanges(seqname,
                             IRanges(rs, width = readLength),
-                            seqinfo = seqinfo(row_ranges_sm))
-              ol <- findOverlaps(gr, row_ranges_sm)
+                            seqinfo = seqinfo(sm))
+              ol <- findOverlaps(gr, sm)
 
               # Find all reads with the same overlaps;
               # This assumes that a read sequences contiguous methylation loci,
@@ -361,15 +361,18 @@ setMethod("simulate2",
                                       "marginalProb", withDimnames = FALSE),
                                 P)
                 setDT(z)
-                z <- cbind(z, pos = start(row_ranges_sm)[z[, h]])
+                z <- cbind(z, pos = start(sm)[z[, h]])
                 z[, h := NULL]
                 setcolorder(z, c("pos", "readID", "z"))
               }
               z
-            }, seqname = names(read_start), rs = read_start,
+            }, seqname = names(read_start),
+            rs = read_start,
             MoreArgs = list(readLength = readLength,
-                            row_ranges_sm = rowRanges(object@SimulatedMethylome2),
+                            sm = object@SimulatedMethylome2,
                             P = P),
+            SIMPLIFY = FALSE,
+            USE.NAMES = FALSE,
             BPPARAM = BPPARAM)
 
             # Don't rbindlist(z). Instead, keeping as list will
