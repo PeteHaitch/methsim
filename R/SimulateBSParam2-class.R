@@ -247,6 +247,8 @@ setMethod("simulate2",
             warning("Currently only simulates unstranded data.")
             # TOOD: Add support for paired-end reads.
             warning("Currently only simulates single-end reads.")
+            # TODO: Fix RNG
+            warning("Random number generation is not yet reproducible.")
 
             message("Simulating ", nsim, " bisulfite-sequencing sample...")
 
@@ -259,13 +261,13 @@ setMethod("simulate2",
             if (any(is_circ)) {
               warning(paste0("No reads will be simulated for ",
                              paste0(seqlevels[is_circ], collapse = ", "),
-                             " (circular chromosomes not yet supported)."))
+                             " (circular seqlevels not yet supported)."))
             }
             # Update seqlevels
             seqlevels <- seqlevels[!is_circ]
             if (length(seqlevels) == 0L) {
               # TODO: Return the "empty" object instead of a warning message.
-              stop("No reads simulated")
+              stop("No reads simulated (all seqlevels are circular).")
             }
 
             # Sample read start sites based on uniform sampling with given
@@ -292,112 +294,23 @@ setMethod("simulate2",
             read_start <- bplapply(read_start, sort, BPPARAM = BPPARAM)
 
             # Compute the transition probabilities.
+            # TODO: mc_order is currently hard-coded.
+            mc_order <- 1L
             P <- .computeP(assay(object@SimulatedMethylome2, "marginalProb",
                                  withDimnames = FALSE),
                            assay(object@SimulatedMethylome2, "LOR",
                                  withDimnames = FALSE),
                            mc_order)
 
+            # UP TO HERE: bpmapply() seems to be very slow; why?
             # TODO: This is currently not RNG-safe since random
             # numbers are generated within the parallel process.
             # Find reads that overlap methylation loci and then sample a
             # methylation pattern for each such read.
             # TODO: Take care if simulate() itself is being run in parallel
             # (or at least document that it could spawn heaps of processes).
-            z <- bpmapply(function(seqname, rs, readLength, sm, P) {
+            z <- bpmapply(function(seqname, rs, readLength, row_ranges_sm, P) {
 
-              # TODO: This may cause warnings (at least when this isn't run
-              # in parallel, which causes warning()s to be suppressed). These
-              # warnings will occur if a read runs "off the end" of the
-              # seqlevel.
-              gr <- GRanges(seqname,
-                            IRanges(rs, width = readLength),
-                            seqinfo = seqinfo(sm))
-
-              # Only retain reads that overlap at least one methylation locus.
-              gr <- subsetByOverlaps(gr, sm)
-              ol <- findOverlaps(gr, sm)
-
-              # UP TO HERE
-              # Find all reads with the same overlaps;
-              x <- data.table(qh = queryHits(ol),
-                              sh = subjectHits(ol),
-                              key = "qh")
-
-              pc <- function(sh) {
-                paste0(sh, collapse = ",")
-              }
-              y <- x[, pc(sh), by = key(x)]
-              setnames(y, "V1", "all_hits")
-              setkey(y, all_hits)
-              z <- y[, .N, by = key(y)]
-              # Extract the start of each element of all_hits and its length.
-              # Then, simulate N paths using a Rcpp function.
-              #
-              # simulate the paths of these reads and tabulate the results.
-
-
-              # Sample from marginalProb to determine the probability that
-              # the read starts at a methylated locus.
-              first_hit <- selectHits(ol, "first")
-              first_hit_state <- rbinom(length(first_hit), 1,
-                                        assay(object@SimulatedMethylome2,
-                                              "marginalProb",
-                                              withDimnames = FALSE)[first_hit])
-
-
-            }, seqname = names(read_start), rs = read_start,
-            MoreArgs = list(readLength = readLength,
-                            sm = object@SimulatedMethylome2,
-                            P = P))
-
-
-            # Find reads that overlap methylation loci and then sample a
-            # methylation pattern for each such read.
-            # TODO: Take care if simulate() itself is being run in parallel
-            # (or at least document that it could spawn heaps of processes).
-            # TODO: Switch to bpmapply to avoid passing the entire read_start
-            # list to each parallel process.
-            z <- bplapply(names(read_start), function(seqname, read_start,
-                                                      readLength, sm) {
-
-              # TODO: This may cause warnings (at least when this isn't run
-              # in parallel, which causes warning()s to be suppressed). These
-              # warnings will occur if a read runs "off the end" of the
-              # seqlevel.
-              gr <- GRanges(seqname,
-                            IRanges(read_start[[seqname]], width = readLength),
-                            seqinfo = seqinfo(sm))
-
-              # Only retain reads that overlap at least one methylation locus.
-              gr <- subsetByOverlaps(gr, sm)
-              ol <- findOverlaps(gr, sm)
-
-              # Sample from beta_by_region to determine the probability that
-              # the first methylation locus in the read is methylated.
-              first_hit <- selectHits(ol, "first")
-
-              #  to determine from which each haplotype each read
-              # should be sampled.
-              # NOTE: Make sure this is only done once per read; to ensure this
-              # I only sample a haplotype for the first methylation locus in
-              # each read.
-              first_hit <- selectHits(ol, "first")
-
-
-            }, read_start = read_start, readLength = readLength,
-            sm = object@SimulatedMethylome, BPPARAM = BPPARAM)
-
-
-
-
-
-
-
-
-            # Remove reads that don't overlap any methylation loci (and sort
-            # those that remain).
-            read_start <- bpmapply(function(rs, seqname, row_ranges_sm) {
               # TODO: This may cause warnings (at least when this isn't run
               # in parallel, which causes warning()s to be suppressed). These
               # warnings will occur if a read runs "off the end" of the
@@ -405,10 +318,86 @@ setMethod("simulate2",
               gr <- GRanges(seqname,
                             IRanges(rs, width = readLength),
                             seqinfo = seqinfo(row_ranges_sm))
-              gr <- subsetByOverlaps(gr, row_ranges_sm)
-              sort(gr)
-            }, rs = read_start,
-            seqname = names(read_start),
-            MoreArgs =
-              list(row_ranges_sm = rowRanges(object@SimulatedMethylome2)),
+              ol <- findOverlaps(gr, row_ranges_sm)
+
+              # Find all reads with the same overlaps;
+              # This assumes that a read sequences contiguous methylation loci,
+              # i.e., no gaps.
+              # TODO: Re-write if allowing gaps (i.e., if
+              # sequencingType = "PE" is implemented).
+              nh <- countQueryHits(ol)
+              # Exclude reads with no hits
+              nh <- nh[nh > 0L]
+              hits_dt <- data.table(qh = unique(queryHits(ol)),
+                                    fh = na.omit(selectHits(ol, "first")),
+                                    nh = nh,
+                                    key = c("fh", "nh"))
+              hits_dt <- hits_dt[, .N, by = key(hits_dt)]
+              # Simulate N paths for each row of hits_dt
+              # TODO: What if sum(nh * n) is larger than .Machine$integer.max?
+              # Rcpp can't yet return long vectors, nor can mclapply()-based
+              # functions.
+              # TODO: Add test if sum(nh * as.numeric(M)) > .Machine$integer.max
+              #
+              if (sum(hits_dt[, nh] * as.numeric(hits_dt[, N])) >
+                  .Machine$integer.max) {
+                # Rcpp can't yet return long vectors nor can mclapply()-based
+                # functions.
+                # We could get around the Rcpp limitation by processing in
+                # suitably sized batches, as implemented below. However, this
+                # won't work for the data.table-based portions of this code
+                # because it also can't work with long vectors. Furthermore,
+                # there is likely to be problems with returning such a large
+                # object when running in parallel. Therefore, we throw an error
+                # if this occurs. A general solution will be difficult.
+                stop(paste0(seqname, ": Number of simulated methylation loci ",
+                            "> .Machine$integer.max. Sorry, can't yet do ",
+                            "this."))
+              } else {
+                z <- .simulatez(hits_dt[, fh],
+                                hits_dt[, nh],
+                                hits_dt[, N],
+                                assay(object@SimulatedMethylome2,
+                                      "marginalProb", withDimnames = FALSE),
+                                P)
+                setDT(z)
+                z <- cbind(z, pos = start(row_ranges_sm)[z[, h]])
+                z[, h := NULL]
+                setcolorder(z, c("pos", "readID", "z"))
+              }
+              z
+            }, seqname = names(read_start), rs = read_start,
+            MoreArgs = list(readLength = readLength,
+                            row_ranges_sm = rowRanges(object@SimulatedMethylome2),
+                            P = P),
             BPPARAM = BPPARAM)
+
+            # Don't rbindlist(z). Instead, keeping as list will
+            # actually save memory (no need to retain seqnames for every row)
+            # and allow easier parallelisation by seqlevel.
+            # Ensure seqlevels are set as names(z).
+            names(z) <- names(read_start)
+
+            # Introduce sequencing error + bisulfite-conversion error i.e.,
+            # flip elements of z[[i]]$z s.t. Prob(flip) = object@errorRate.
+            # Don't simulate errors in parallel, e.g., via bplapply().
+            # It needlessly complicates things (reproducibility of random
+            # numbers when generated in parallel is hard) and any speed ups are
+            # swamped by the running times of other steps in this function.
+            lapply(z, function(z_, errorRate) {
+              .simErrorInPlace(z_[["z"]], runif(nrow(z_)), errorRate)
+            }, errorRate = object@errorRate)
+
+            # Construct SimulatedBS object.
+            sbs <- new("SimulatedBS",
+                       z = z,
+                       seqinfo = seqinfo(object@SimulatedMethylome),
+                       methinfo = methinfo(object@SimulatedMethylome))
+
+            # Ensure "seed" is set as an attribute of the returned value.
+            attr(sbs, "seed") <- rng_state
+            sbs
+          }
+)
+
+

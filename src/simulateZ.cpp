@@ -293,7 +293,6 @@ std::vector<int> simulateZ(NumericVector beta_by_region,
   return Z;
 }
 
-// TODO: Switch beta_by_region = marginalProb and lor_by_pair = LOR.
 // TODO (long term): Allow beta_by_region and seqnames_one_tuple to be
 // S4Vectors::Rleobjects to avoid the requirement to pre-expand these via
 // as.vector().
@@ -387,4 +386,80 @@ Rcpp::NumericMatrix computeP(NumericVector marginalProb,
   // history, i.e., left-to-right or right-to-left.
   P.attr("dimnames") = List::create(R_NilValue, seq_len(pow(2.0, mc_order)));
   return P;
+}
+
+
+//' Simulate reads (z)
+//'
+//' @param fh An integer vector containing the "first hit" for each read.
+//' @param nh An integer vector containing the "number of hits" for each read.
+//' @param N An integervector giving the number of reads with the same
+//' "first hit" and "number of hits".
+//' @param marginalProb A vector of marginal probabilities that each
+//' methylation locus is methylated.
+//' @param P A matrix of transition probabilities that the methylation
+//' locus is methylated given the state of the previous locus.
+//'
+//' @return A list(h, readID, z), where h is the "hit", readID is a read ID,
+//' and z is the observed methylation state. Each vector has length sum(nh * N).
+//'
+//' @note Assumes that sum(nh * N) < .Machine$integer.max, because Rcpp cannot
+//' yet work with long vectors.
+// [[Rcpp::export(".simulatez")]]
+Rcpp::List simulatez(IntegerVector fh,
+                     IntegerVector nh,
+                     IntegerVector N,
+                     NumericVector marginalProb,
+                     NumericMatrix P) {
+
+  // TODO: Do I need to manually "RNGScope scope" or does
+  // Rcpp::compileAttributes() do this for me?
+
+  // Argument checks
+  if (fh.size() != nh.size() or fh.size() != N.size()) {
+    std::string error_msg = "length(fh) != length(nh) != length(N) "
+      "!= length(marginalProb) != nrow(P)";
+    Rcpp::stop(error_msg);
+  }
+  if (marginalProb.size() != P.nrow()) {
+    Rcpp::stop("length(marginalProb) != nrow(P)");
+  }
+  // Make sure we don't try to access out of bounds elements of P.
+  if (max(fh + nh - 1) >= P.nrow()) {
+    Rcpp::stop("max(fh + nh) > nrow(P)");
+  }
+
+  // Variable initialisations
+  // nr is the number of reads
+  int nr = fh.size();
+  // n is the length of the output vectors
+  int n = sum(nh * N);
+  IntegerVector h(n);
+  IntegerVector readID(n);
+  IntegerVector z(n);
+  // l indexes h, readID and z.
+  int l = 0;
+  // rid is the current value of readID
+  int rid = 0;
+
+  // Loop over fh (i) and simulate N (j) paths of length nh (k).
+  for (int i = 0; i < nr; i++) {
+    for (int j = 0; j < N[i]; j++) {
+      h[l] = fh[i];
+      readID[l] = rid;
+      l += 1;
+      // Index of marginalProb has -1 because C++ is 0-indexed.
+      z[l] = R::rbinom(1, marginalProb[fh[i] - 1]);
+      for (int k = 1; k < nh[i]; k++) {
+        h[l] = fh[i] + j;
+        readID[l] = rid;
+        // Row index of P has -1 because C++ is 0-indexed.
+        z[l] = R::rbinom(1, P(fh[i] + k - 1, z[l - 1]));
+        l += 1;
+      }
+      rid += 1;
+    }
+  }
+
+  return List::create(_["h"] = h, _["readID"] = readID, _["z"] = z);
 }

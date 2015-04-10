@@ -70,6 +70,21 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// simulatez
+Rcpp::List simulatez(IntegerVector fh, IntegerVector nh, IntegerVector N, NumericVector marginalProb, NumericMatrix P);
+RcppExport SEXP methsim_simulatez(SEXP fhSEXP, SEXP nhSEXP, SEXP NSEXP, SEXP marginalProbSEXP, SEXP PSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< IntegerVector >::type fh(fhSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type nh(nhSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type N(NSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type marginalProb(marginalProbSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type P(PSEXP);
+    __result = Rcpp::wrap(simulatez(fh, nh, N, marginalProb, P));
+    return __result;
+END_RCPP
+}
 // tabulatez
 std::map<std::string, std::vector<int> > tabulatez(IntegerVector readID, IntegerVector z, IntegerVector pos, int size);
 RcppExport SEXP methsim_tabulatez(SEXP readIDSEXP, SEXP zSEXP, SEXP posSEXP, SEXP sizeSEXP) {
