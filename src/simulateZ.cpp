@@ -414,6 +414,7 @@ Rcpp::List simulatez(IntegerVector fh,
 
   // TODO: Do I need to manually "RNGScope scope" or does
   // Rcpp::compileAttributes() do this for me?
+  RNGScope scope;
 
   // Argument checks
   if (fh.size() != nh.size() or fh.size() != N.size()) {
