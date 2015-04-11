@@ -56,10 +56,10 @@ std::map<std::string, std::vector<int> > tabulatez(IntegerVector readID,
                                                    int size) {
 
   // Argument checks.
-  if (readID.length() != z.length()) {
+  if (readID.size() != z.size()) {
     Rcpp::stop("length(readID) != length(z)");
   }
-  if (readID.length() != pos.length()) {
+  if (readID.size() != pos.size()) {
     Rcpp::stop("length(readID) != length(pos)");
   }
   if (size < 2) {
@@ -77,7 +77,7 @@ std::map<std::string, std::vector<int> > tabulatez(IntegerVector readID,
   // Initialise the map of all adjacent m-tuples
   IntegerVector unique_pos = clone(unique(pos));
   std::sort(unique_pos.begin(), unique_pos.end());
-  int n = unique_pos.length() - size + 1;
+  int n = unique_pos.size() - size + 1;
   for (int i = 0; i < n; i++) {
     mtuples_key << unique_pos[i] << ",";
     for (int j = (i + 1); j < (i + size - 1); j++) {
@@ -90,7 +90,7 @@ std::map<std::string, std::vector<int> > tabulatez(IntegerVector readID,
 
   // Fill the map with the counts of each methylation pattern
   int k = 0;
-  int N = readID.length() - size + 1;
+  int N = readID.size() - size + 1;
   int idx;
   int idx0 = (pow(2, size) - 1);
   while (k < N) {
