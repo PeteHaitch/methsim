@@ -346,7 +346,7 @@ setMethod("simulate",
             # numbers when generated in parallel is hard) and any speed ups are
             # swamped by the running times of other steps in this function.
             lapply(z, function(z_, errorRate) {
-              .simErrorInPlace(z_[["z"]], runif(nrow(z_)), errorRate)
+              .simulateErrorInPlace(z_[["z"]], runif(nrow(z_)), errorRate)
             }, errorRate = object@errorRate)
 
             # Construct SimulatedBS object.

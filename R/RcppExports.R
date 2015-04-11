@@ -56,8 +56,8 @@
 #' @return \code{NULL}. \code{z} is modified \strong{in place}.
 #'
 #' @keywords internal
-.simErrorInPlace <- function(z, u, errorRate) {
-    invisible(.Call('methsim_simErrorInPlace', PACKAGE = 'methsim', z, u, errorRate))
+.simulateErrorInPlace <- function(z, u, errorRate) {
+    invisible(.Call('methsim_simulateErrorInPlace', PACKAGE = 'methsim', z, u, errorRate))
 }
 
 #' Simulate a single "haplotype" of a methylome (Z).

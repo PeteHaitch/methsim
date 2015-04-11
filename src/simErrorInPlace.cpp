@@ -33,8 +33,8 @@ using namespace Rcpp;
 //' @return \code{NULL}. \code{z} is modified \strong{in place}.
 //'
 //' @keywords internal
-// [[Rcpp::export(".simErrorInPlace")]]
-void simErrorInPlace(IntegerVector z, NumericVector u, double errorRate) {
+// [[Rcpp::export(".simulateErrorInPlace")]]
+void simulateErrorInPlace(IntegerVector z, NumericVector u, double errorRate) {
   // WARNING: This function modifies the input z, i.e., it acts on z
   // **in place**.
 
