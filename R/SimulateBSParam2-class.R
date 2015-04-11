@@ -323,7 +323,8 @@ setMethod("simulate2",
             # methylation pattern for each such read.
             # TODO: Take care if simulate() itself is being run in parallel
             # (or at least document that it could spawn heaps of processes).
-            z <- bpmapply(function(seqname, rs, SimulateBSParam2, P, simplify) {
+            z <- bpmapply(function(seqname, rs, readLength, sbsp2, P,
+                                   simplify) {
 
               # TODO: This may cause warnings (at least when this isn't run
               # in parallel, which causes warning()s to be suppressed). These
@@ -331,9 +332,8 @@ setMethod("simulate2",
               # seqlevel.
               gr <- GRanges(seqname,
                             IRanges(rs, width = readLength),
-                            seqinfo = seqinfo(
-                              SimulateBSParam2@SimulatedMethylome2))
-              ol <- findOverlaps(gr, SimulateBSParam2@SimulatedMethylome2)
+                            seqinfo = seqinfo(sbsp2@SimulatedMethylome2))
+              ol <- findOverlaps(gr, sbsp2@SimulatedMethylome2)
 
               # Find all reads with the same overlaps;
               # This assumes that a read sequences contiguous methylation loci,
@@ -352,8 +352,6 @@ setMethod("simulate2",
               # TODO: What if sum(nh * n) is larger than .Machine$integer.max?
               # Rcpp can't yet return long vectors, nor can mclapply()-based
               # functions.
-              # TODO: Add test if sum(nh * as.numeric(M)) > .Machine$integer.max
-              #
               if (sum(hits_dt[, nh] * as.numeric(hits_dt[, N])) >
                   .Machine$integer.max) {
                 # Rcpp can't yet return long vectors nor can mclapply()-based
@@ -372,7 +370,7 @@ setMethod("simulate2",
                 zz <- .simulatez(hits_dt[, fh],
                                  hits_dt[, nh],
                                  hits_dt[, N],
-                                 assay(SimulateBSParam2@SimulatedMethylome2,
+                                 assay(sbsp2@SimulatedMethylome2,
                                        "marginalProb", withDimnames = FALSE),
                                  P)
                 # Introduce sequencing error + bisulfite-conversion error i.e.,
@@ -380,26 +378,23 @@ setMethod("simulate2",
                 # TODO: RNG at C++ level if possible
                 .simulateErrorInPlace(zz$z,
                                       runif(length(zz$z)),
-                                      SimulateBSParam2@errorRate)
+                                      sbsp2@errorRate)
                 setDT(zz)
-                zz <- cbind(zz,
-                            pos = start(
-                              SimulateBSParam2@SimulatedMethylome2)[zz[, h]])
+                zz <- cbind(zz, pos = start(sbsp2@SimulatedMethylome2)[zz[, h]])
                 zz[, h := NULL]
                 setcolorder(zz, c("pos", "readID", "z"))
 
                 if (simplify) {
                   # TODO: Handle simplify > 0 case.
-                  .asMethPat(zz, size = simplify)
+                  return(.asMethPat(zz, size = simplify))
                 }
               }
               z
             }, seqname = names(read_start),
             rs = read_start,
             MoreArgs = list(readLength = readLength,
-                            SimulateBSParam2 = object,
+                            sbsp2 = object,
                             P = P,
-                            errorRate = errorRate,
                             simplify = simplify),
             SIMPLIFY = FALSE,
             USE.NAMES = FALSE,
@@ -410,8 +405,8 @@ setMethod("simulate2",
             # and allow easier parallelisation by seqlevel.
             # Ensure seqlevels are set as names(z).
             names(z) <- names(read_start)
-            seqinfo <- seqinfo(object@SimulatedMethylome)
-            methinfo <- methinfo(object@SimulatedMethylome)
+            seqinfo <- seqinfo(object@SimulatedMethylome2)
+            methinfo <- methinfo(object@SimulatedMethylome2)
 
             if (!simplify) {
               # Construct SimulatedBS object.
@@ -424,6 +419,7 @@ setMethod("simulate2",
               attr(sbs, "seed") <- rng_state
               return(sbs)
             } else {
+              # TODO: Test simplify > 0 branch. The first few lines are wrong.
               # Construct the simplified MethPat object.
               l <- bplapply(z, .makePosAndCounts, size = simplify,
                             BPPARAM = BPPARAM)
