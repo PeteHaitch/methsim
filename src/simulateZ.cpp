@@ -451,7 +451,7 @@ Rcpp::List simulatez(IntegerVector fh,
       // Index of marginalProb has -1 because C++ is 0-indexed.
       z[l] = R::rbinom(1, marginalProb[fh[i] - 1]);
       for (int k = 1; k < nh[i]; k++) {
-        h[l] = fh[i] + j;
+        h[l] = fh[i] + k;
         readID[l] = rid;
         // Row index of P has -1 because C++ is 0-indexed.
         z[l] = R::rbinom(1, P(fh[i] + k - 1, z[l - 1]));
