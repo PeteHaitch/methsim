@@ -163,6 +163,8 @@ setMethod("methinfo",
 ### Coercion
 ###
 
+# TODO: Is it necessary to specify sampleName or is it part of the SimulatedBS
+# object?
 # Coercion from SimulatedBS object to MethPat
 # TODO: Can't use setAs() because it doesn't allow extra arguments (i.e,
 # 'size'). Could perhaps make MethPat constructor a generic (ala
@@ -189,103 +191,23 @@ asMethPat <- function(SimulatedBS, sampleName, size = 1L,
   size <- as.integer(size)
   stopifnot(size > 0L)
   stopifnot(is.character(sampleName))
-
-  # If 'size' > 1 then want to subset the data to only include those
-  # reads with at least 'size' methylation loci (all reads contain at
-  # least 1 methylation loci by definition, hence no need to run this
-  # filter if 'size' = 1).
   if (size > 1L) {
-
     warning(paste0("Only adjacent ", size, "-tuples are created."))
-
-    l <- bplapply(SimulatedBS@z, function(x, size) {
-
-      # Special handling for the case where there are no reads mapped to this
-      # particular seqlevel.
-      if (nrow(x) == 0L) {
-        pos <- matrix(integer(0), ncol = size)
-        counts <- matrix(integer(0), ncol = 2 ^ size,
-                         dimnames =
-                           list(NULL,
-                                MethylationTuples:::.makeMethPatNames(size)))
-        return(list(pos = pos, counts = counts))
-      }
-      # Remove reads with less than 'size' methylation loci.
-      setkey(x, readID)
-      y <- x[, n := .N, by = key(x)][n >= size, ][, n := NULL]
-
-      # Special handling of the case when there are no reads with sufficient
-      # methylation loci.
-      # NB: Slightly different to the case of there being no reads mapped to
-      # this particular seqlevel.
-      if (nrow(y) == 0L) {
-        pos <- matrix(integer(0), ncol = size)
-        counts <- matrix(integer(0), ncol = 2 ^ size,
-                         dimnames =
-                           list(NULL,
-                                MethylationTuples:::.makeMethPatNames(size)))
-        return(list(pos = pos, counts = counts))
-      }
-
-      # Create m-tuples from each read (where m = size).
-      setkey(y, readID, pos)
-      # Tabulate methylation patterns at each m-tuple.
-      counts <- .tabulatez(y[, readID], y[, z], y[, pos], size)
-      pos <- strsplit(names(counts), ",")
-      counts <- matrix(unlist(counts, use.names = FALSE),
-                       ncol = 2 ^ size,
-                       byrow = TRUE,
-                       dimnames =
-                         list(NULL,
-                              MethylationTuples:::.makeMethPatNames(size)))
-      # Drop zero rows
-      nonzero_rows <- (rowSums(counts) > 0)
-      counts <- counts[nonzero_rows, ]
-      pos <- pos[nonzero_rows]
-      pos <- matrix(as.integer(unlist(pos, use.names = FALSE)),
-             ncol = size,
-             byrow = TRUE)
-      order_idx <- do.call(order, lapply(1:NCOL(pos), function(i) pos[, i]))
-      list(pos = pos[order_idx, ], counts = counts[order_idx, ])
-    }, size = size, BPPARAM = BPPARAM)
-
-    # Construct the MethPat object
-    seqnames <- Rle(names(l),
-                    sapply(lapply(l, "[[", "pos"), nrow))
-    pos <- do.call(rbind, lapply(l, "[[", "pos"))
-    counts <- do.call(rbind, lapply(l, "[[", "counts"))
-    assays <- lapply(seq_len(ncol(counts)), function(i, counts, sampleName) {
-      x <- counts[, i, drop = FALSE]
-      colnames(x) <- sampleName
-      x
-    }, counts = counts, sampleName = sampleName)
-    assays <- SimpleList(assays)
-    names(assays) <- colnames(counts)
-    methpat <- MethPat(assays = assays,
-                       rowData = MTuples(GTuples(seqnames, pos, "*",
-                                                 seqinfo =
-                                                   seqinfo(SimulatedBS)),
-                                         methinfo(SimulatedBS)))
-  } else {
-    l <- bplapply(SimulatedBS@z, function(x) {
-      setkey(x, pos)
-      x[, list(M = sum(z), U = sum(!z)), by = key(x)]
-    })
-
-    # Construct the MethPat object
-    seqnames <- Rle(names(l), sapply(l, nrow))
-    pos <- matrix(unlist(lapply(l, function(dt) dt[, pos]), use.names = FALSE),
-                  ncol = 1)
-    M <- matrix(unlist(lapply(l, function(dt) dt[, M]), use.names = FALSE),
-                ncol = 1, dimnames = list(NULL, sampleName))
-    U <- matrix(unlist(lapply(l, function(dt) dt[, U]), use.names = FALSE),
-                ncol = 1, dimnames = list(NULL, sampleName))
-    methpat <- MethPat(assays = SimpleList(M = M, U = U),
-                       rowData = MTuples(GTuples(seqnames, pos, "*",
-                                                 seqinfo =
-                                                   seqinfo(SimulatedBS)),
-                                         methinfo(SimulatedBS)))
   }
 
-  methpat
+  l <- bplapply(SimulatedBS@z, .makePosAndCounts, size)
+  names(l) <- names(SimulatedBS@z)
+
+  # Create MethPat object from pos and counts
+  seqnames <- Rle(names(l), sapply(lapply(l, "[[", "pos"), nrow))
+  pos <- do.call(rbind, lapply(l, "[[", "pos"))
+  counts <- lapply(seq_len(2 ^ size), function(i, l) {
+    do.call(rbind, lapply(lapply(l, "[[", "counts"), "[[", i))
+  }, l = l)
+  names(counts) <- MethylationTuples:::.makeMethPatNames(size)
+  counts <- lapply(counts, `colnames<-`, sampleName)
+  MethPat(assays = counts,
+          rowData = MTuples(GTuples(seqnames, pos, "*",
+                                    seqinfo = seqinfo(SimulatedBS)),
+                            methinfo(SimulatedBS)))
 }
