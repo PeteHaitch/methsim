@@ -7,7 +7,7 @@
 \usage{
 \S4method{simulate2}{SimulateBSParam2}(object, nsim = 1, seed = NULL,
   BPPARAM = bpparam(), sequencingType = "SE", readLength = 100L,
-  seqlevels, ...)
+  seqlevels, simplify = 0L, ...)
 }
 \arguments{
 \item{object}{a \code{\link{SimulateBSParam2}} object.}
@@ -36,6 +36,15 @@ supported.}
 \item{seqlevels}{A vector of seqlevels at which to bisulfite-sequencing
 reads. Will use all available seqlevels if missing, where availability is
 defined by the seqlevels "in use" in the SimulatedMethylome slot.}
+
+\item{simplify}{An integer specifying whether, and by how much, the object
+should be simplified. The default value, \code{simplify = 0}, means no
+simplification and the returned object is a \code{\link{SimulatedBS}} object.
+A value greater than zero simplifies the returned object as a
+\code{MethylationTuples::\link[MethylationTuples]{MethPat}} object
+containing tuples with \code{size = simplify}, e.g., \code{simplify = 1}
+will return a \code{MethylationTuples::\link[MethylationTuples]{MethPat}}
+containing 1-tuples.}
 }
 \value{
 a SimulatedBS2 object.
