@@ -323,14 +323,19 @@ setMethod("simulate2",
             # methylation pattern for each such read.
             # TODO: Take care if simulate() itself is being run in parallel
             # (or at least document that it could spawn heaps of processes).
-            z <- bpmapply(function(seqname, rs, readLength, sbsp2, P,
-                                   simplify) {
+            z <- bplapply(names(read_start), function(seqlevel,
+                                                      read_start,
+                                                      readLength,
+                                                      sbsp2,
+                                                      P,
+                                                      simplify) {
 
               # TODO: This may cause warnings (at least when this isn't run
               # in parallel, which causes warning()s to be suppressed). These
               # warnings will occur if a read runs "off the end" of the
               # seqlevel.
-              gr <- GRanges(seqname,
+              rs <- read_start[[seqlevel]]
+              gr <- GRanges(seqlevel,
                             IRanges(rs, width = readLength),
                             seqinfo = seqinfo(sbsp2@SimulatedMethylome2))
               ol <- findOverlaps(gr, sbsp2@SimulatedMethylome2)
@@ -363,7 +368,7 @@ setMethod("simulate2",
                 # there is likely to be problems with returning such a large
                 # object when running in parallel. Therefore, we throw an error
                 # if this occurs. A general solution will be difficult.
-                stop(paste0(seqname, ": Number of simulated methylation loci ",
+                stop(paste0(seqlevel, ": Number of simulated methylation loci ",
                             "> .Machine$integer.max. Sorry, can't yet do ",
                             "this."))
               } else {
@@ -386,18 +391,15 @@ setMethod("simulate2",
 
                 if (simplify) {
                   # TODO: Handle simplify > 0 case.
-                  return(.asMethPat(zz, size = simplify))
+                  return(.makePosAndCounts(zz, size = simplify))
                 }
               }
-              z
-            }, seqname = names(read_start),
-            rs = read_start,
-            MoreArgs = list(readLength = readLength,
-                            sbsp2 = object,
-                            P = P,
-                            simplify = simplify),
-            SIMPLIFY = FALSE,
-            USE.NAMES = FALSE,
+              zz
+            }, read_start = read_start,
+            readLength = readLength,
+            sbsp2 = object,
+            P = P,
+            simplify = simplify,
             BPPARAM = BPPARAM)
 
             # Don't rbindlist(z). Instead, keeping as list will

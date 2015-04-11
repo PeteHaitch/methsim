@@ -28,6 +28,7 @@
 
 #' A helper function called by asMethPat
 #' @keywords internal
+#' @export
 .makePosAndCounts <- function(zz, size) {
 
   if (size > 1L) {

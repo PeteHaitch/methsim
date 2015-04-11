@@ -163,6 +163,7 @@ setMethod("methinfo",
 ### Coercion
 ###
 
+# UP TO HERE: Test asMethPat()
 # TODO: Is it necessary to specify sampleName or is it part of the SimulatedBS
 # object?
 # Coercion from SimulatedBS object to MethPat
