@@ -388,7 +388,9 @@ Rcpp::NumericMatrix computeP(NumericVector marginalProb,
   return P;
 }
 
-
+// WARNING: Does not support long vectors.
+// TODO: Will to switch index variables from int to something else if
+// supporting long vectors.
 //' Simulate reads (z)
 //'
 //' @param fh An integer vector containing the "first hit" for each read.
@@ -448,9 +450,9 @@ Rcpp::List simulatez(IntegerVector fh,
     for (int j = 0; j < N[i]; j++) {
       h[l] = fh[i];
       readID[l] = rid;
-      l += 1;
       // Index of marginalProb has -1 because C++ is 0-indexed.
       z[l] = R::rbinom(1, marginalProb[fh[i] - 1]);
+      l += 1;
       for (int k = 1; k < nh[i]; k++) {
         h[l] = fh[i] + k;
         readID[l] = rid;
