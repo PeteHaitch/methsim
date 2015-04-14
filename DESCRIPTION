@@ -1,8 +1,8 @@
 Package: methsim
 Type: Package
 Title: An R package to simulate DNA methylation data
-Version: 0.4.0.9048
-Date: 2015-04-14
+Version: 0.5.0.9000
+Date: 2015-04-43
 Author: Peter Hickey <peter.hickey@gmail.com>
 Maintainer: Peter Hickey <peter.hickey@gmail.com>
 Description: methsim is software to simulate DNA methylation sequencing data.
@@ -16,7 +16,7 @@ biocViews: DNAMethylation, Software, MethylSeq
 License: GPL (>= 2)
 Depends:
     R (>= 3.2),
-    MethylationTuples (>= 0.3.0.9000),
+    MethylationTuples (>= 0.3.0.9005),
     MethylSeekR
 Suggests:
     testthat,
@@ -41,12 +41,12 @@ Collate:
     'MethylSeekRGR-class.R'
     'MethylSeekRGR-utilities.R'
     'PartitionedMethylome-class.R'
+    'MethylomeParam-class.R'
     'RcppExports.R'
     'SimulatedMethylome-class.R'
     'SimulateBSParam-class.R'
     'SimulatedMethylome2-class.R'
     'SimulateBSParam2-class.R'
-    'SimulateMethylomeParam-class.R'
     'SimulatedBS-class.R'
     'addDMRs.R'
     'findMostOverlapping.R'
