@@ -1,0 +1,47 @@
+---
+title: "TODOs"
+author: "Peter Hickey"
+date: `r Sys.Date()`
+output: html_document
+---
+
+# TODOs
+
+## Confirm validity of "2" classes and methods
+
+Confirm that the new "2" classes (e.g., `SimulateMethylome2`, `SimualteBSParam2`) and methods (`simulate2()`) work as intended. 
+
+- [x] Empirical co-methylation model
+  - [x] $\beta$-values. 
+    - __Looks great.__
+  - [x] Correlation of $\beta$-values. 
+    - __Way too correlated.__
+  - [x] Within-fragment co-methylation. 
+    - __Looks pretty good, probably upwardly biased due to inherent bias in LOR with small $d$ and extreme `marginalProb`.__
+- [x] Empirical co-methylation model with perturbed `marginalProb`.
+  - [x] $\beta$-values. 
+    - __Looks great.__
+  - [x] Correlation of $\beta$-values. 
+    - __Reduced from above, but still probably too correlated.__
+  - [x] Within-fragment co-methylation.
+    - __Looks pretty good, probably upwardly biased due to inherent bias in LOR with small $d$ and extreme `marginalProb`.__
+- [x] Independence model, i.e., $LOR = 0$ uniformly.
+  - [x] $\beta$-values. 
+    - __Looks great.__
+  - [x] Correlation of $\beta$-values.
+    - __Way too correlated.__
+  - [x] Within-fragment co-methylation.
+    - __Looks pretty good, approximately flat as a function of $IPD$. However, there is clear evidence of bias because $LOR \approx 1$ meaning $OR \approx 2^1 = 2$.__
+- [x] Independence model, i.e., $LOR = 0$ uniformly, with perturbed `marginalProb`
+  - [x] $\beta$-values. 
+    - __Looks great.__
+  - [x] Correlation of $\beta$-values.
+    - __Reduced from above, but still probably too correlated.__
+  - [x] Within-fragment co-methylation.
+    - __Looks pretty good, probably upwardly biased due to inherent bias in LOR with small $d$ and extreme `marginalProb`.__
+
+Once confirmed, deprecate the old "1" classes and methods in favour of the "2" classes and methods.
+
+__UP TO HERE__
+
+- [ ] Classes and methods deprecated. 

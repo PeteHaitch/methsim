@@ -1,0 +1,158 @@
+---
+title: "Miscellaneous notes"
+author: "Peter Hickey"
+date: `r Sys.Date()`
+output:
+  html_document:
+    toc: yes
+---
+
+# Package name
+
+Consider alternative names for package and GitHub repo, e.g., `bsbs`, `bssim`. Should package name be `CamelCase`, `lowercase`, etc., e.g.:
+
+- __`MethSim`__: Consistent with `GenomicTuples`, `MethylationTuples`, etc.
+- __`methsim`__: Simpler to type.
+
+# Partioning a methylome
+
+The steps to partitioning a single methylome are:
+
+1. Read in the CpG 1-tuples data and create a `GenomicRanges::GRanges` object with `mcols` named `T` and `M` storing the total number of reads and number of methylated reads, respectively. This object must also contain the `seqlengths`, which are most easily stored as a complete `Seqinfo` object in the `seqinfo` slot.
+2. Remove CpGs overlapping known SNPs.
+3. Identify PMRs
+    - Compute the $\alpha$ distribution for a single chromosome. If the $\alpha$ distribution is "bimodal or long-tailed with a significant fraction of $\alpha$ values larger or equal to 1", the `MethylSeekR` authors take this as evidence of PMRs and recommend that these by masked.
+    - If required, mask the PMRs.
+4. Identify UMRs and LMRs
+    - Selection of parameters to control FDR. Requires CGIs.
+    - Identification of UMRs and LMRs
+5. Post-processing
+    - Identify MMRs, really the 'rest of the methylome'.
+    - Ensure this is a true partition, i.e., no overlapping regions.
+    
+Steps 1-4 are basically the job of `MethylSeekR`. Step 5, however, is specific to `methsim`.
+    
+## Implementation
+
+### Option 1: The `MethlySeekR` way
+
+Just follow the `MethylSeekR` vignette to achieve Steps 1-4. Step 5 is specific to `methsim`.
+
+### Option 2: The `MethylationTuples` way
+
+Use the convenience functions provided by `methsim` to work with existing `MethylationTuples::MethtPat` objects to achieve Steps 1-4. Step 5 is specific to `methsim`.
+
+1. Steps 1-4 
+    - Option A: Just use `MethylSeekR` from 1-4.
+    - Option B: Provide some convenience functions to work with `MethPat` 
+    objects.
+      - Step 1 and 2: Use `MethylationTuples::readMethtuple` -> 
+      `MethylationTuples::filterOutVariants` -> `as(MethPat, "MethylSeekRGR")` 
+      __or__ `MethylationTuples::readMethtuple` -> 
+      `as(MethPat, "MethylSeekRGR")` -> 
+      `lapply(list_of_msrgr, MethylSeekR::removeSNPs)`.
+      - Step 3: Use `MethylSeekR::plotAlphaDistributionOneChr` and 
+      `MethylSeekR::segmentPMDs`.
+      - Step 4: Use `MethylSeekR::calculateFDRs` and 
+      `MethylSeekR::segmentUMRsLMRs`.
+2. Step 5
+    - Use `methsim::partitionMethylome`
+    
+__TODO__: Run a `MethylSeekRGR` object through the `MethylSeekR` pipeline and get to writing the "Step 5" functionality, i.e., `partitionMethylome`.
+
+# `extractSimulateMethylomeParams()`
+
+It would be nice to have a function that creates a `SimulateMethylomeParam` object. Input would be two `MethPat` objects containing 1-tuples and 2-tuples, respectively. See `processOneTuples()` and `processTwoTuples()` below:
+
+```{r, eval = FALSE}
+processOneTuples <- function(dataset, seqlevels, min_cov) {
+  
+  if (missing(seqlevels)) {
+    stop("Must supply 'seqlevels'.")
+  }
+  
+  # Read in data
+  methpat <- readRDS(paste0("../processed_data/", dataset, "/", dataset,
+                            "_1_tuples_strand_collapsed.rds"))
+  l_pm <- readRDS(paste0("rds/", dataset, "/PartitionedMethylome/", dataset, 
+                       "_pm.rds"))
+  
+  # Compute beta-values and annotate by region type
+  beta <- bplapply(names(l_pm), function(sn, methpat, l_pm, min_cov, 
+                                         seqlevels) {
+    pm <- l_pm[[sn]]
+    # Only want data on sample 'sn'.
+    methpat <- methpat[, sn]
+    # Retain only the relevant seqlevels.
+    methpat <- keepSeqlevels(methpat, seqlevels)
+    # Apply MethylationTuples::methLevel()
+    val <- funByPM(FUN = MethylationTuples::methLevel, pm = pm, 
+                   methpat = methpat, min_cov = min_cov)
+    # Add information not returned by methLevel()
+    val[, sample := sn]
+    setnames(val, c("beta", "type", "sample"))
+    setkeyv(val, c("sample", "type", "beta"))
+    val
+    }, methpat = methpat, l_pm = l_pm, min_cov = min_cov, seqlevels = seqlevels)
+  beta <- rbindlist(beta)
+  # Tabulate frequency of each beta-value by sample and type.
+  beta[, .N, by = list(sample, type, beta)]
+}
+
+processTwoTuples <- function(dataset, seqlevels, min_cov) {
+  
+  if (missing(seqlevels)) {
+    stop("Must supply 'seqlevels'.")
+  }
+  
+  # Read in data
+  methpat <- readRDS(paste0("../processed_data/", dataset, "/", dataset,
+                            "_2_tuples_strand_collapsed.rds"))
+  l_pm <- readRDS(paste0("rds/", dataset, "/PartitionedMethylome/", dataset, 
+                       "_pm.rds"))
+  
+  # Compute beta-values and annotate by region type
+  lor <- bplapply(names(l_pm), function(sn, methpat, l_pm, min_cov, seqlevels,  
+                                        method, offset) {
+    pm <- l_pm[[sn]]
+    # Only want data on sample 'sn'.
+    methpat <- methpat[, sn]
+    # Retain only the relevant seqlevels.
+    methpat <- keepSeqlevels(methpat, seqlevels)
+    # Apply MethylationTuples::cometh()
+    funByPM(MethylationTuples::cometh, pm = pm, methpat = methpat, 
+            min_cov = min_cov, method = method, offset = offset)
+    }, methpat = methpat, l_pm = l_pm, min_cov = min_cov, seqlevels = seqlevels, 
+    method = "lor", offset = 0.5)
+  lor <- rbindlist(lor)
+  # NOTE: This ignores strand.
+  lor_reduced <- lor[, IPD := pos2 - pos1][
+    , list(IPD, sample, type, statistic)][
+      , .N, by = list(sample, IPD, type, statistic)]
+  setorder(lor_reduced, sample, IPD, type, -N)
+  lor_reduced
+}
+```
+# Source of variability
+
+Each sample needs an underlying "true" methylome ("truth") from which the reads are simulated.
+
+In order of increasing biological variability in the truth:
+
+1. Same truth.
+2. Same partition and same region-specific parameters but an independent realisation of the process.
+3. Same partition but different region-specific parameters.
+4. Different partition with different parameters.
+
+Technical replicates correspond to 1. Biological replicates fall somewhere between 2-3. I suspect that 4 doesn't allow for sufficient control over the process to be generally useful.
+
+# DMRs
+
+To add DMRs requires introducing (known) biological differences between experimental conditions. I think this is best done by altering the region-specific parameters of one experimental condition.
+
+# Questions to explore
+
+These are questions to explore once I am able to simulate a single sample's worth of data (in order of simplicity):
+
+1. Simulate multiple samples' worth of reads from a single truth to see the effect of sequencing variability.
+2. Simulate multiple samples' worth of reads from a truths with the same partition but with different region-specific parameters.
