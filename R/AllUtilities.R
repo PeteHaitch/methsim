@@ -81,7 +81,7 @@
                                         use.names = FALSE)),
                       ncol = size,
                       byrow = TRUE)
-        # A sanity check to ensure data are sorted by positions
+        # Order data by positions (pos is currently sorted lexicographically)
         order_idx <- do.call(order, lapply(seq_len(ncol(pos)),
                                            function(i) pos[, i]))
         pos <- pos[order_idx, ]
