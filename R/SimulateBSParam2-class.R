@@ -152,6 +152,8 @@ SimulateBSParam2 <- function(SimulatedMethylome2,
 ### simulate2()
 ###
 
+# TODO: Support SimulateBSParam2 objects with multiple samples by looping over
+# samples (possibly in parallel).
 # TODO: Should information about the type of sequencing (e.g., single-end or
 # paired-end, read length distribution, fragment length distribution, etc.)
 # and other parameters be a part of the SimulateBSParam2 object rather than passed via ...?
@@ -316,7 +318,6 @@ setMethod("simulate2",
                                  withDimnames = FALSE),
                            mc_order)
 
-            # UP TO HERE: bpmapply() seems to be very slow; why?
             # TODO: This is currently not RNG-safe since random
             # numbers are generated within the parallel process.
             # Find reads that overlap methylation loci and then sample a
@@ -421,17 +422,13 @@ setMethod("simulate2",
               attr(sbs, "seed") <- rng_state
               return(sbs)
             } else {
-              # TODO: Test simplify > 0 branch. The first few lines are wrong.
-              # Construct the simplified MethPat object.
-              l <- bplapply(z, .makePosAndCounts, size = simplify,
-                            BPPARAM = BPPARAM)
-              names(l) <- names(SimulatedBS@z)
-              seqnames <- Rle(names(l), sapply(lapply(l, "[[", "pos"), nrow))
-              pos <- do.call(rbind, lapply(l, "[[", "pos"))
-              counts <- lapply(seq_len(2 ^ size), function(i, l) {
-                do.call(rbind, lapply(lapply(l, "[[", "counts"), "[[", i))
-              }, l = l)
-              names(counts) <- MethylationTuples:::.makeMethPatNames(size)
+              seqnames <- Rle(names(z), sapply(lapply(z, "[[", "pos"), nrow))
+              pos <- do.call(rbind, lapply(z, "[[", "pos"))
+              counts <- lapply(seq_len(2 ^ simplify), function(i, z) {
+                matrix(unlist(lapply(lapply(z, "[[", "counts"), "[[", i),
+                              use.names = FALSE), ncol = 1L)
+              }, z = z)
+              names(counts) <- MethylationTuples:::.makeMethPatNames(simplify)
               # TODO: Is this a good choice of sampleName?
               counts <- lapply(counts, `colnames<-`,
                                colnames(object@SimulatedMethylome2))
