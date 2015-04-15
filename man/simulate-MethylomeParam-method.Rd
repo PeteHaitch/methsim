@@ -33,9 +33,9 @@ co-methylation distribution. If not specified, uses the default, see
 
 \item{seqlevels}{A character vector of
 \code{GenomeInfoDb::\link[GenomeInfoDb]{seqlevels}} at which to simulate a
-methylome. If not supplied, the default is to use all available seqlevels.}
+methylome. If missing, the default is to use all available seqlevels.}
 
-\item{BPPARAM}{an optional
+\item{BPPARAM}{An optional
 \code{BiocParallel::\link[BiocParallel]{BiocParallelParam}} instance
 determining the parallel back-end to be used during evaluation.}
 

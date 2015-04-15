@@ -9,6 +9,6 @@
 SimulatedMethylome class.
 }
 \details{
-An S4 class to store a single simulated methylome.
+An S4 class to store a simulated methylomes.
 }
 

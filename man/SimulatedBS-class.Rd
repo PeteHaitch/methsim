@@ -29,6 +29,8 @@ An S4 class to store a single simulated bisulfite-sequencing
 experiment.
 }
 \note{
-When \code{size} > 1, only adjacent m-tuples are created.
+When \code{size} > 1, only adjacent m-tuples are created. This
+function will preserve the \code{seed} attribute of the \code{SimulatedBS}
+object.
 }
 

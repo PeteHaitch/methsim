@@ -21,6 +21,8 @@
 ### -------------------------------------------------------------------------
 ###
 
+# TODO: Add sampleName slot.
+
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Design
 ###
@@ -51,7 +53,8 @@ setClass("SimulatedBS",
          slots = list(
            z = "list",
            seqinfo = "Seqinfo",
-           methinfo = "MethInfo"
+           methinfo = "MethInfo",
+           SampleName = "character"
          )
 )
 
@@ -114,12 +117,22 @@ setClass("SimulatedBS",
   msg
 }
 
+.valid.SimulatedBS.SampleName <- function(object) {
+  msg <- NULL
+
+  if (!is.character(object@SampleName) | length(object@SampleName) != 1L) {
+    msg <- Biobase::validMsg(msg, paste0("'SampleName' slot must be a ",
+                                         "'character' vector with length 1."))
+  }
+}
+
 .valid.SimulatedBS <- function(object) {
 
   # Include all other .valid.SimulatedBS.* functions in this vector
   msg <- c(.valid.SimulatedBS.z(object),
            .valid.SimulatedBS.seqinfo(object),
-           .valid.SimulatedBS.methinfo(object))
+           .valid.SimulatedBS.methinfo(object),
+           .valid.SimulatedBS.SampleName(object))
 
   if (is.null(msg)) {
     return(TRUE)
@@ -135,7 +148,7 @@ setValidity2("SimulatedBS", .valid.SimulatedBS)
 ###
 
 # None because I don't want the user constructing these manually, rather they
-# should be constructed by simulate,SimulateBSParam-method.
+# should be constructed by simulate,BSParam-method.
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### seqinfo()
@@ -163,9 +176,7 @@ setMethod("methinfo",
 ### Coercion
 ###
 
-# UP TO HERE: Test asMethPat()
-# TODO: Is it necessary to specify sampleName or is it part of the SimulatedBS
-# object?
+# TODO: Deprecate sampleName argument once added as slot to SimulatedBS.
 # Coercion from SimulatedBS object to MethPat
 # TODO: Can't use setAs() because it doesn't allow extra arguments (i.e,
 # 'size'). Could perhaps make MethPat constructor a generic (ala
@@ -179,7 +190,9 @@ setMethod("methinfo",
 #' of the returned \code{\link[MethylationTuples]{MethPat}} object.
 #' @return A \code{\link[MethylationTuples]{MethPat}} object.
 #'
-#' @note When \code{size} > 1, only adjacent m-tuples are created.
+#' @note When \code{size} > 1, only adjacent m-tuples are created. This
+#' function will preserve the \code{seed} attribute of the \code{SimulatedBS}
+#' object.
 #'
 #' @rdname SimulatedBS-class
 #' @name asMethPat
@@ -196,19 +209,24 @@ asMethPat <- function(SimulatedBS, sampleName, size = 1L,
     warning(paste0("Only adjacent ", size, "-tuples are created."))
   }
 
-  l <- bplapply(SimulatedBS@z, .makePosAndCounts, size)
-  names(l) <- names(SimulatedBS@z)
+  z <- bplapply(SimulatedBS@z, .makePosAndCounts, size)
+  names(z) <- names(SimulatedBS@z)
 
   # Create MethPat object from pos and counts
-  seqnames <- Rle(names(l), sapply(lapply(l, "[[", "pos"), nrow))
-  pos <- do.call(rbind, lapply(l, "[[", "pos"))
-  counts <- lapply(seq_len(2 ^ size), function(i, l) {
-    do.call(rbind, lapply(lapply(l, "[[", "counts"), "[[", i))
-  }, l = l)
+  seqnames <- Rle(names(z), sapply(lapply(z, "[[", "pos"), nrow))
+  pos <- do.call(rbind, lapply(z, "[[", "pos"))
+  counts <- lapply(seq_len(2 ^ size), function(i, z) {
+    matrix(unlist(lapply(lapply(z, "[[", "counts"), "[[", i),
+                  use.names = FALSE), ncol = 1L)
+  }, z = z)
   names(counts) <- MethylationTuples:::.makeMethPatNames(size)
+  # TODO: Use sampleName from SimulatedBS object
   counts <- lapply(counts, `colnames<-`, sampleName)
-  MethPat(assays = counts,
-          rowData = MTuples(GTuples(seqnames, pos, "*",
-                                    seqinfo = seqinfo(SimulatedBS)),
-                            methinfo(SimulatedBS)))
+  methpat <- MethPat(assays = counts,
+                     rowData = MTuples(
+                       GTuples(seqnames, pos, "*",
+                               seqinfo = seqinfo(SimulatedBS)),
+                       methinfo = methinfo(SimulatedBS)))
+  attr(methpat, "seed") <- attr(SimulatedBS, "seed")
+  methpat
 }
