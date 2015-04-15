@@ -16,8 +16,7 @@
 # along with methsim  If not, see <http://www.gnu.org/licenses/>.
 
 ### =========================================================================
-### Prepare Lister data for use as internal data. This internal data is
-### eventually made external via the call to utils::data()
+### Prepare Lister data for inclusion as exported data.
 ### -------------------------------------------------------------------------
 ###
 
@@ -28,8 +27,8 @@
 # WARNING: The creation of the example data is not yet fully reproducible. The
 # raw data (output files of 'methtuple') are very large, and depend on their
 # own set of parameters. More relevant, the PartitionedMethylome depends on
-# random number generation, and beta_by_pm_region, lor_by_my_region,
-# pattern_freqs_by_pm_region all depend on the original PartitionedMethylome.
+# random number generation, and beta_by_pm_region and lor_by_my_region all
+# depend on the original PartitionedMethylome.
 #
 # This script is was written to run in
 # ~/hickey/methylation_m-tuples/analyses/methsim and assumes the following
@@ -39,7 +38,6 @@
 #    |-----beta_by_pm_region
 #    |-----lor_by_pm_region
 #    |-----PartitionedMethylome
-#    |-----pattern_freqs_by_pm_region
 
 library(methsim)
 
@@ -55,20 +53,16 @@ prepare <- function(sample_name) {
                                "_beta_by_pm_region.rds"))
   cometh <- readRDS(paste0("rds/", dataset, "/lor_by_pm_region/", dataset,
                            "_lor_by_pm_region.rds"))
-  pattern_freqs <- readRDS(paste0("rds/", dataset,
-                                  "/pattern_freqs_by_pm_region/", dataset,
-                                  "_pattern_freqs_by_pm_region.rds"))
   pm <- l_pm[[sample_name]]
   meth_level <- meth_level[sample == sample_name, ][, sample := NULL]
   cometh <- cometh[sample == sample_name, ][, sample := NULL]
-  pattern_freqs <- pattern_freqs[sample == sample_name][, sample := NULL]
 
-  SimulateMethylomeParam(BSgenome = BSgenomeName,
-                         PartitionedMethylome = pm,
-                         MethLevelDT = meth_level,
-                         ComethDT = cometh,
-                         PatternFreqsDT = pattern_freqs,
-                         SampleName = sample_name)
+  MethylomeParam(BSgenomeName = BSgenomeName,
+                 PartitionedMethylome = pm,
+                 MethLevelDT = meth_level,
+                 ComethDT = cometh,
+                 MixtureWeights = 1L,
+                 SampleName = sample_name)
 }
 
 ADS <- prepare("ADS")
