@@ -6,8 +6,7 @@
 \title{Simulate a methylome.}
 \usage{
 \S4method{simulate}{MethylomeParam}(object, nsim = 1, seed = NULL,
-  epsilon = 0.01, comethylation_function, seqlevels, BPPARAM = bpparam(),
-  ...)
+  epsilon = 0.01, seqlevels, BPPARAM = bpparam(), ...)
 }
 \arguments{
 \item{object}{A \code{\link{MethylomeParam}} object.}
@@ -27,10 +26,6 @@ attribute, see 'Value'.}
 \item{epsilon}{An offset added/subtracted to a region's sampled methylation
 level to avoid zero/one values.}
 
-\item{comethylation_function}{A function used to sample from the
-co-methylation distribution. If not specified, uses the default, see
-'Co-methylation'.}
-
 \item{seqlevels}{A character vector of
 \code{GenomeInfoDb::\link[GenomeInfoDb]{seqlevels}} at which to simulate a
 methylome. If missing, the default is to use all available seqlevels.}
@@ -39,7 +34,8 @@ methylome. If missing, the default is to use all available seqlevels.}
 \code{BiocParallel::\link[BiocParallel]{BiocParallelParam}} instance
 determining the parallel back-end to be used during evaluation.}
 
-\item{...}{Additional arguments passed to the \code{comethylation_function}.}
+\item{...}{Additional arguments passed to the
+\code{methsim:::.sampleComethDT()}.}
 }
 \value{
 A list of length \code{nsim} of SimulatedMethylome objects.
@@ -56,7 +52,6 @@ methylomes.
 }
 \section{Co-methylation}{
 
-\strong{TODO}: Describe \code{comethylation_function}, \code{mean_fun},
-\code{sd_fun}, etc.
+\strong{TODO}: Describe  \code{mean_fun} and\code{sd_fun}.
 }
 
