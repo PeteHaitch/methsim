@@ -208,7 +208,12 @@ setMethod("seqlengths",
 ###
 
 # A helper function called by simulate,BSParam-method
-.simulateBSParam <- function(i, object, seqlevels, BPPARAM) {
+.simulateBSParam <- function(i, object, seqlevels, simplify, BPPARAM) {
+
+  # Need to simulate compute a transition matrix, P, for all components.
+  # object@MixtureWeights
+  n_components <- ncol(object@SimulatedMethylome)
+
   # Sample read start sites based on uniform sampling with given
   # average sequencing coverage (aveCov).
   # TODO: This assumes constant readLength; this code will need
@@ -230,13 +235,16 @@ setMethod("seqlengths",
   read_start <- bplapply(read_start, sort, BPPARAM = BPPARAM)
 
   # Compute the transition probabilities.
-  # TODO: mc_order is currently hard-coded.
+  # TODO: The order of the Markov chain (mc_order) is currently hard-coded.
   mc_order <- 1L
-  P <- .computeP(assay(object@SimulatedMethylome, "marginalProb",
-                       withDimnames = FALSE),
-                 assay(object@SimulatedMethylome, "LOR",
-                       withDimnames = FALSE),
-                 mc_order)
+  P <- bplapply(seq_len(n_components),
+                function(i, object, mc_order) {
+                  .computeP(assay(object@SimulatedMethylome, "MarginalProb",
+                                  withDimnames = FALSE)[, i, drop = FALSE],
+                            assay(object@SimulatedMethylome, "LOR",
+                                  withDimnames = FALSE)[, i, drop = FALSE],
+                            mc_order)
+                }, object = object, mc_order = mc_order, BPPARAM = BPPARAM)
 
   # TODO: This is currently not RNG-safe since random
   # numbers are generated within the parallel process.
@@ -273,10 +281,19 @@ setMethod("seqlengths",
     nh <- countQueryHits(ol)
     # Exclude reads with no hits
     nh <- nh[nh > 0L]
+    # Assign reads to components of the mixture
+    mixture_weights <- as.vector(
+      unlist(assay(object@SimulatedMethylome, "MixtureWeights",
+                   withDimnames = FALSE)[1, ], use.names = FALSE))
+    component <- sample(x = n_components,
+                        size = length(nh),
+                        replace = TRUE,
+                        prob = mixture_weights)
     hits_dt <- data.table(qh = unique(queryHits(ol)),
                           fh = na.omit(selectHits(ol, "first")),
                           nh = nh,
-                          key = c("fh", "nh"))
+                          component = component,
+                          key = c("fh", "nh", "component"))
     hits_dt <- hits_dt[, .N, by = key(hits_dt)]
 
     # Rcpp can't yet return long vectors nor can mclapply()-based
@@ -295,14 +312,13 @@ setMethod("seqlengths",
                   "object)."))
     }
 
-    # UP TO HERE: Need to stratify simulation of reads by
-    # object@SimulatedMethylome@MixtureWeights
-    # Simulate N paths for each row of hits_dt
+    # Simulate N paths for each row of hits_dt, stratified by mixture component.
     zz <- .simulatez(hits_dt[, fh],
                      hits_dt[, nh],
                      hits_dt[, N],
+                     hits_dt[, component],
                      assay(object@SimulatedMethylome,
-                           "marginalProb", withDimnames = FALSE),
+                           "MarginalProb", withDimnames = FALSE),
                      P)
 
     # Introduce sequencing error + bisulfite-conversion error i.e.,
@@ -337,7 +353,8 @@ setMethod("seqlengths",
     sbs <- new("SimulatedBS",
                z = z,
                seqinfo = seqinfo,
-               methinfo = methinfo)
+               methinfo = methinfo,
+               SampleName = paste("sim", i, sep = "_"))
     return(sbs)
   } else {
     seqnames <- Rle(names(z), sapply(lapply(z, "[[", "pos"), nrow))
@@ -347,12 +364,10 @@ setMethod("seqlengths",
                     use.names = FALSE), ncol = 1L)
     }, z = z)
     names(counts) <- MethylationTuples:::.makeMethPatNames(simplify)
-    # TODO: Is this a good choice of sampleName?
-    counts <- lapply(counts, `colnames<-`, colnames(object@SimulatedMethylome))
+    counts <- lapply(counts, `colnames<-`, paste("sim", i, sep = "_"))
     MethPat(assays = counts,
-            rowData = MTuples(GTuples(seqnames, pos, "*", seqinfo = seqinfo),
+            rowRanges = MTuples(GTuples(seqnames, pos, "*", seqinfo = seqinfo),
                               methinfo = methinfo))
-    methpat
   }
 }
 
@@ -376,17 +391,17 @@ setMethod("seqlengths",
 #' seqlevels.
 #' @param simplify An integer specifying whether, and by how much, the object
 #' should be simplified, see 'Value'.
-#'
-#' @return A list of length \code{nsim}. The default (\code{simplify = 0})
-#' means no simplification and the returned object is a \code{list} of
-#' \code{\link{SimulatedBS}} objects. A value of \code{simplify}
-#' greater than zero simplifies the returned object by coercing the
-#' \code{\link{SimulatedBS}} objects to
-#' \code{MethylationTuples::\link[MethylationTuples]{MethPat}} objects, each
-#' with \code{\link[MethylationTuples]{size} = simplify}.
 #' @param BPPARAM an optional
 #' \code{BiocParallel::\link[BiocParallel]{BiocParallelParam}} instance
 #' determining the parallel back-end to be used during evaluation.
+#'
+#' @return The return value depends on the value of \code{simplify}. The
+#' default (\code{simplify = 0}) means no simplification and the returned
+#' object is a \code{list} of length \code{nsim} containing
+#' \code{\link{SimulatedBS}} objects. If \code{simplify} is greater than zero,
+#' the returned object is a
+#' \code{MethylationTuples::\link[MethylationTuples]{MethPat}} object with
+#' \code{\link[MethylationTuples]{size} = simplify} and \code{ncol = simplify}.
 #'
 #' @note Currently only simulates whole-genome bisulfite-sequencing data.
 #'
@@ -411,8 +426,7 @@ setMethod("simulate",
                    seed = NULL,
                    seqlevels,
                    simplify = 0L,
-                   BPPARAM = bpparam(),
-                   ...) {
+                   BPPARAM = bpparam()) {
 
             # Argument checks
             # Only single-end sequencing currently supported
@@ -488,19 +502,27 @@ setMethod("simulate",
               stop("No reads simulated (all seqlevels are circular).")
             }
 
-            # TODO: Allow simulation in parallel.
-            # Simulate nsim SimulatedMethylome objects in *serial*.
-            list_of_bs <- bplapply(seq_len(nsim),
-                                   .simulateBSParam(i,
-                                                    object,
-                                                    seqlevels,
-                                                    BPPARAM2
-                                   ), object = object, seqlevels = seqlevels,
-                                   BPPARAM2 = BPPARAM, BPPARAM = SerialParam())
-
+            if (!simplify) {
+              # TODO: Allow simulation in parallel.
+              # Simulate nsim SimulatedMethylome objects in *serial*.
+              val <- lapply(seq_len(nsim),
+                            .simulateBSParam,
+                            object = object, seqlevels = seqlevels,
+                            simplify = simplify, BPPARAM = BPPARAM)
+            } else {
+              # TODO: Allow simulation in parallel.
+              # Simulate nsim MethPat objects in *serial*.
+              val <- lapply(seq_len(nsim),
+                                   .simulateBSParam,
+                                   object = object, seqlevels = seqlevels,
+                                   simplify = simplify, BPPARAM = BPPARAM)
+              # Combine MethPat objects into one.
+              val <- do.call(combine, val)
+            }
             # Ensure "seed" is set as an attribute of the returned value.
-            attr(list_of_bs, "seed") <- rng_state
-            list_of_bs
+            attr(val, "seed") <- rng_state
+            val
+
           }
 )
 

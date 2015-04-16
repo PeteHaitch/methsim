@@ -6,7 +6,7 @@
 \title{Simulate a bisulfite-sequencing experiment.}
 \usage{
 \S4method{simulate}{BSParam}(object, nsim = 1, seed = NULL, seqlevels,
-  simplify = 0L, BPPARAM = bpparam(), ...)
+  simplify = 0L, BPPARAM = bpparam())
 }
 \arguments{
 \item{object}{A \code{\link{BSParam}} object.}
@@ -35,13 +35,13 @@ should be simplified, see 'Value'.}
 determining the parallel back-end to be used during evaluation.}
 }
 \value{
-A list of length \code{nsim}. The default (\code{simplify = 0})
-means no simplification and the returned object is a \code{list} of
-\code{\link{SimulatedBS}} objects. A value of \code{simplify}
-greater than zero simplifies the returned object by coercing the
-\code{\link{SimulatedBS}} objects to
-\code{MethylationTuples::\link[MethylationTuples]{MethPat}} objects, each
-with \code{\link[MethylationTuples]{size} = simplify}.
+The return value depends on the value of \code{simplify}. The
+default (\code{simplify = 0}) means no simplification and the returned
+object is a \code{list} of length \code{nsim} containing
+\code{\link{SimulatedBS}} objects. If \code{simplify} is greater than zero,
+the returned object is a
+\code{MethylationTuples::\link[MethylationTuples]{MethPat}} object with
+\code{\link[MethylationTuples]{size} = simplify} and \code{ncol = simplify}.
 }
 \description{
 Simulate a bisulfite-sequencing experiment.
