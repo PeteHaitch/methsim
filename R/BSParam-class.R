@@ -122,12 +122,12 @@ setClass("BSParam",
 
 .valid.BSParam.Target <- function(object) {
   msg <- NULL
-  if (!is(object@target, "GRangesOrNULL")) {
+  if (!is(object@Target, "GRangesOrNULL")) {
     msg <- Biobase::validMsg(msg, paste0("'target' slot must be a 'GRanges' ",
                                          "object or NULL."))
   } else {
-    if (is(object@target, "GRanges")) {
-      if (!identical(seqinfo(object@target),
+    if (is(object@Target, "GRanges")) {
+      if (!identical(seqinfo(object@Target),
                      seqinfo(object@SimulatedMethylome))) {
         msg <- Biobase::validMsg(msg, paste0("'target' slot and ",
                                              "'SimulatedMethylome' slot must ",
