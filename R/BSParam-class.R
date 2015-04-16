@@ -482,7 +482,11 @@ setMethod("simulate",
             # TODO: Fix RNG
             warning("Random number generation is not yet reproducible.")
 
-            message("Simulating ", nsim, " bisulfite-sequencing sample...")
+            if (nsim >= 2) {
+              message("Simulating ", nsim, " bisulfite-sequencing samples...")
+            } else {
+              message("Simulating ", nsim, " bisulfite-sequencing sample...")
+            }
 
             # TODO: Circular chromosomes are hard. While the read automatically
             # gets wrapped around by GRanges(), it makes subsequent functions,
@@ -502,27 +506,23 @@ setMethod("simulate",
               stop("No reads simulated (all seqlevels are circular).")
             }
 
-            if (!simplify) {
-              # TODO: Allow simulation in parallel.
-              # Simulate nsim SimulatedMethylome objects in *serial*.
-              val <- lapply(seq_len(nsim),
-                            .simulateBSParam,
-                            object = object, seqlevels = seqlevels,
-                            simplify = simplify, BPPARAM = BPPARAM)
-            } else {
-              # TODO: Allow simulation in parallel.
-              # Simulate nsim MethPat objects in *serial*.
-              val <- lapply(seq_len(nsim),
-                                   .simulateBSParam,
-                                   object = object, seqlevels = seqlevels,
-                                   simplify = simplify, BPPARAM = BPPARAM)
+            # TODO: Allow simulation in parallel.
+            # Simulate nsim objects in *serial*.
+            # UP TO HERE: This works if BPPARAM is SerialParam but not if
+            # BPPARAM is MulticorePARAM (at least on WEHI unix boxes).
+            val <- lapply(seq_len(nsim),
+                          .simulateBSParam,
+                          object = object, seqlevels = seqlevels,
+                          simplify = simplify, BPPARAM = BPPARAM)
+            names(val) <- paste("sim", seq_len(nsim), sep = "_")
+
+            if (simplify) {
               # Combine MethPat objects into one.
               val <- do.call(combine, val)
             }
             # Ensure "seed" is set as an attribute of the returned value.
             attr(val, "seed") <- rng_state
             val
-
           }
 )
 

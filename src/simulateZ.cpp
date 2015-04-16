@@ -440,8 +440,8 @@ Rcpp::List simulatez(IntegerVector fh,
     Rcpp::stop("length(marginalProb) != nrow(P[[1]])");
   }
   // Make sure we don't try to access out of bounds elements of P.
-  if (max(fh + nh - 1) >= P[1].nrow()) {
-    Rcpp::stop("max(fh + nh) > nrow(P)");
+  if (max(fh + nh - 1) > P[1].nrow()) {
+    Rcpp::stop("max(fh + nh - 1) > nrow(P)");
   }
 
   // Variable initialisations
