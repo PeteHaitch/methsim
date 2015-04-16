@@ -71,17 +71,18 @@ BEGIN_RCPP
 END_RCPP
 }
 // simulatez
-Rcpp::List simulatez(IntegerVector fh, IntegerVector nh, IntegerVector N, NumericVector marginalProb, NumericMatrix P);
-RcppExport SEXP methsim_simulatez(SEXP fhSEXP, SEXP nhSEXP, SEXP NSEXP, SEXP marginalProbSEXP, SEXP PSEXP) {
+Rcpp::List simulatez(IntegerVector fh, IntegerVector nh, IntegerVector N, IntegerVector component, NumericMatrix MarginalProb, ListOf<NumericMatrix> P);
+RcppExport SEXP methsim_simulatez(SEXP fhSEXP, SEXP nhSEXP, SEXP NSEXP, SEXP componentSEXP, SEXP MarginalProbSEXP, SEXP PSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< IntegerVector >::type fh(fhSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type nh(nhSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type N(NSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type marginalProb(marginalProbSEXP);
-    Rcpp::traits::input_parameter< NumericMatrix >::type P(PSEXP);
-    __result = Rcpp::wrap(simulatez(fh, nh, N, marginalProb, P));
+    Rcpp::traits::input_parameter< IntegerVector >::type component(componentSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type MarginalProb(MarginalProbSEXP);
+    Rcpp::traits::input_parameter< ListOf<NumericMatrix> >::type P(PSEXP);
+    __result = Rcpp::wrap(simulatez(fh, nh, N, component, MarginalProb, P));
     return __result;
 END_RCPP
 }

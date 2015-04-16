@@ -115,18 +115,22 @@
 #' @param nh An integer vector containing the "number of hits" for each read.
 #' @param N An integervector giving the number of reads with the same
 #' "first hit" and "number of hits".
-#' @param marginalProb A vector of marginal probabilities that each
-#' methylation locus is methylated.
-#' @param P A matrix of transition probabilities that the methylation
-#' locus is methylated given the state of the previous locus.
+#' @param marginalProb A matrix of marginal probabilities that each
+#' methylation locus is methylated (rows) for each componentn (columns).
+#' @param component An integer vector giving the mixture component from
+#' which to simulate each read.
+#' @param P A list of transition matrices. Each element of P should give the
+#' transition probabilities that the methylation locus is methylated given the
+#' state of the previous locus. The length of P is equal to the number of
+#' mixture components.
 #'
 #' @return A list(h, readID, z), where h is the "hit", readID is a read ID,
 #' and z is the observed methylation state. Each vector has length sum(nh * N).
 #'
 #' @note Assumes that sum(nh * N) < .Machine$integer.max, because Rcpp cannot
 #' yet work with long vectors.
-.simulatez <- function(fh, nh, N, marginalProb, P) {
-    .Call('methsim_simulatez', PACKAGE = 'methsim', fh, nh, N, marginalProb, P)
+.simulatez <- function(fh, nh, N, component, MarginalProb, P) {
+    .Call('methsim_simulatez', PACKAGE = 'methsim', fh, nh, N, component, MarginalProb, P)
 }
 
 #' Tabulate methylation patterns.

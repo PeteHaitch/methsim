@@ -397,10 +397,14 @@ Rcpp::NumericMatrix computeP(NumericVector marginalProb,
 //' @param nh An integer vector containing the "number of hits" for each read.
 //' @param N An integervector giving the number of reads with the same
 //' "first hit" and "number of hits".
-//' @param marginalProb A vector of marginal probabilities that each
-//' methylation locus is methylated.
-//' @param P A matrix of transition probabilities that the methylation
-//' locus is methylated given the state of the previous locus.
+//' @param marginalProb A matrix of marginal probabilities that each
+//' methylation locus is methylated (rows) for each componentn (columns).
+//' @param component An integer vector giving the mixture component from
+//' which to simulate each read.
+//' @param P A list of transition matrices. Each element of P should give the
+//' transition probabilities that the methylation locus is methylated given the
+//' state of the previous locus. The length of P is equal to the number of
+//' mixture components.
 //'
 //' @return A list(h, readID, z), where h is the "hit", readID is a read ID,
 //' and z is the observed methylation state. Each vector has length sum(nh * N).
@@ -411,24 +415,32 @@ Rcpp::NumericMatrix computeP(NumericVector marginalProb,
 Rcpp::List simulatez(IntegerVector fh,
                      IntegerVector nh,
                      IntegerVector N,
-                     NumericVector marginalProb,
-                     NumericMatrix P) {
+                     IntegerVector component,
+                     NumericMatrix MarginalProb,
+                     ListOf<NumericMatrix> P) {
 
   // TODO: Do I need to manually "RNGScope scope" or does
   // Rcpp::compileAttributes() do this for me?
   RNGScope scope;
 
   // Argument checks
-  if (fh.size() != nh.size() or fh.size() != N.size()) {
+  if (fh.size() != nh.size() or fh.size() != N.size() or
+        fh.size() != component.size()) {
     std::string error_msg = "length(fh) != length(nh) != length(N) "
-      "!= length(marginalProb) != nrow(P)";
+      "!= length(component)";
     Rcpp::stop(error_msg);
   }
-  if (marginalProb.size() != P.nrow()) {
-    Rcpp::stop("length(marginalProb) != nrow(P)");
+  if (MarginalProb.ncol() != P.size()) {
+    Rcpp::stop("ncol(MarginalProb) != length(P)");
+  }
+  // TODO: Check that all elements of P have the identical and proper
+  // dimensions.
+  // The below only checks the first element has the proper nrow.
+  if (MarginalProb.nrow() != P[1].nrow()) {
+    Rcpp::stop("length(marginalProb) != nrow(P[[1]])");
   }
   // Make sure we don't try to access out of bounds elements of P.
-  if (max(fh + nh - 1) >= P.nrow()) {
+  if (max(fh + nh - 1) >= P[1].nrow()) {
     Rcpp::stop("max(fh + nh) > nrow(P)");
   }
 
@@ -450,14 +462,14 @@ Rcpp::List simulatez(IntegerVector fh,
     for (int j = 0; j < N[i]; j++) {
       h[l] = fh[i];
       readID[l] = rid;
-      // Index of marginalProb has -1 because C++ is 0-indexed.
-      z[l] = R::rbinom(1, marginalProb[fh[i] - 1]);
+      // Indices of MarginalProb have -1 because C++ is 0-indexed.
+      z[l] = R::rbinom(1, MarginalProb(fh[i] - 1, component[i] - 1));
       l += 1;
       for (int k = 1; k < nh[i]; k++) {
         h[l] = fh[i] + k;
         readID[l] = rid;
-        // Row index of P has -1 because C++ is 0-indexed.
-        z[l] = R::rbinom(1, P(fh[i] + k - 1, z[l - 1]));
+        // Indices of P have -1 because C++ is 0-indexed.
+        z[l] = R::rbinom(1, P[component[i] - 1](fh[i] + k - 1, z[l - 1]));
         l += 1;
       }
       rid += 1;
