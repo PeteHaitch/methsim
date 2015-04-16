@@ -34,8 +34,8 @@ methylome. If missing, the default is to use all available seqlevels.}
 \code{BiocParallel::\link[BiocParallel]{BiocParallelParam}} instance
 determining the parallel back-end to be used during evaluation.}
 
-\item{...}{Additional arguments passed to the
-\code{methsim:::.sampleComethDT()}.}
+\item{...}{Optional arguments passed to the internal function
+\code{methsim:::.sampleComethDT()}. Best avoided.}
 }
 \value{
 A list of length \code{nsim} of SimulatedMethylome objects.
@@ -47,11 +47,11 @@ co-methylation (\code{ComethDT} slot) to compute the transition
 probabilities under a first-order Markov process.
 }
 \note{
-Currently only support simulation of CpG methylation and unstranded
+Currently only supports simulation of CpG methylation and unstranded
 methylomes.
 }
 \section{Co-methylation}{
 
-\strong{TODO}: Describe  \code{mean_fun} and\code{sd_fun}.
+\strong{TODO}: Describe \code{min_n}, \code{mean_fun}, \code{sd_fun}, etc.
 }
 

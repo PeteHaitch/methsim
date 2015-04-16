@@ -190,14 +190,12 @@ MethylomeParam <- function(BSgenomeName,
 
 # A helper function called by simulate,MethylomeParam-method
 .simulateMethylomeParam <- function(i, object, epsilon, ol, one_tuples,
-                                    two_tuples, ...) {
+                                    two_tuples, dots) {
 
-  message("1")
   # Need to simulate a MarginalProb and LOR for all positive
   # object@MixtureWeights
   n_components <- sum(object@MixtureWeights > 0)
 
-  message("2")
   # Sample average methylation levels in each region
   mldt <- object@MethLevelDT
   rt <- regionType(object@PartitionedMethylome)
@@ -211,7 +209,6 @@ MethylomeParam <- function(BSgenomeName,
   marginal_prob_by_region[marginal_prob_by_region == 0] <- epsilon
   n_loci_per_region <- countSubjectHits(ol)
 
-  message("3")
   # Sample within-fragment co-methylation for each IPD-region_type
   # combination.
   # dots (...) are passed to methsim:::.sampleComethDT().
@@ -219,36 +216,27 @@ MethylomeParam <- function(BSgenomeName,
   # lor_by_pair; there is no value for the first 1-tuple because it
   # has no predecessor (hence the need below to add a value of zero
   # for the first 1-tuple on each seqlevel)
-  message("A")
   cdt <- object@ComethDT
-  message("B")
   pm <- object@PartitionedMethylome
   # TODO: This is the slowest part, and it would be good to run the
   # n_component replications in parallel. Need to pass down BPPARAM in a clever
   # way to respect inheritance so that it doesn't blow up.
-  message("C")
   lor_by_pair <- replicate(n_components,
-                           .sampleComethDT(two_tuples,
-                                           cdt,
-                                           pm,
-                                           ...),
+                           .sampleComethDT(two_tuples = two_tuples,
+                                           cometh_dt = cdt,
+                                           partitioned_methylome = pm,
+                                           dots),
                            simplify = "array")
-  message("D")
   # Add a value of LOR = 0 for the first methylation locus of each
   # seqlevel.
-  message("E")
   cn <- paste0("component_", seq_len(n_components))
-  message("F")
   lor <- matrix(0,
                 nrow = sum(as.numeric(n_loci_per_region)),
                 ncol = n_components,
                 dimnames = list(NULL, cn))
-  message("G")
   first_loci <- start(seqnames(one_tuples))
-  message("H")
   lor[-c(first_loci), ] <- lor_by_pair
 
-  message("4")
   # Create SimulatedMethylome object
   # NOTE: The column names are 'component1', ..., 'componentW',
   # where W = n_components
@@ -262,9 +250,6 @@ MethylomeParam <- function(BSgenomeName,
   assays <- S4Vectors::SimpleList(MarginalProb = marginal_prob,
                                   LOR = lor,
                                   MixtureWeights = mixture_weights)
-  message("5")
-  # UP TO HERE: Need to re-write SimulatedMethylome class before I can test
-  # the rest of simulate,MethylomeParam-method.
   new("SimulatedMethylome",
       SummarizedExperiment(assays = assays, rowRanges = one_tuples))
 }
@@ -273,13 +258,12 @@ MethylomeParam <- function(BSgenomeName,
 # reading some advice from Hadley on this issue).
 # TODO: Investigate locus-specific average methylation levels rather than
 # region-specifc methylation levels.
-# TODO: Should epsilon be part of the MethylomeParam object? No. It specifies
-# how to construct the SimulatedMethylome; the same MethylomeParam can be used
-# to create multiple SimulatedMethylome objects by different sampling schemes.
+# TODO: Should arguments to .sampleComethDT() and/or epsilon be part of the
+# MethylomeParam object? No. They specify how to construct the
+# SimulatedMethylome; the same MethylomeParam can be used to create multiple
+# SimulatedMethylome objects by different sampling schemes.
 # TODO: Should user-messages be suppressible via suppressMessages() or a
 # 'verbose' option.
-# TODO: Need to document the methsim:::.sampleComethDT parameters (at least
-# mean_fun and sd_fun).
 #' Simulate a methylome.
 #'
 #' \code{simulate()} samples the distribution of average methylation level
@@ -306,13 +290,13 @@ MethylomeParam <- function(BSgenomeName,
 #' @param BPPARAM An optional
 #' \code{BiocParallel::\link[BiocParallel]{BiocParallelParam}} instance
 #' determining the parallel back-end to be used during evaluation.
-#' @param ... Additional arguments passed to the
-#' \code{methsim:::.sampleComethDT()}.
+#' @param ... Optional arguments passed to the internal function
+#' \code{methsim:::.sampleComethDT()}. Best avoided.
 #'
 #' @section Co-methylation:
-#' \strong{TODO}: Describe  \code{mean_fun} and\code{sd_fun}.
+#' \strong{TODO}: Describe \code{min_n}, \code{mean_fun}, \code{sd_fun}, etc.
 #'
-#' @note Currently only support simulation of CpG methylation and unstranded
+#' @note Currently only supports simulation of CpG methylation and unstranded
 #' methylomes.
 #'
 #' @return A list of length \code{nsim} of SimulatedMethylome objects.
@@ -327,6 +311,15 @@ setMethod("simulate",
                    seqlevels,
                    BPPARAM = bpparam(),
                    ...) {
+
+            # TODO: dots are tricky things; see
+            # http://adv-r.had.co.nz/Functions.html and
+            # http://adv-r.had.co.nz/Computing-on-the-language.html#capturing-dots
+            # Would like a more robust way to pass arguments to
+            # .sampleComethDT(), e.g. min_n, mean_fun, sd_fun. Currently,
+            # if the user includes a nonsense argument in dots then it will
+            # cause a (difficult to diagnose) error.
+            dots <- list(...)
 
             # Argument checks
             # Load the namespace for the BSgenome
@@ -415,21 +408,17 @@ setMethod("simulate",
             two_tuples <- unlist(two_tuples, use.names = FALSE)
 
             # Simulate nsim SimulatedMethylome objects in parallel.
-            list_of_sm <- bplapply(
-              seq_len(nsim),
-              .simulateMethylomeParam(i,
-                                      object,
-                                      epsilon,
-                                      ol,
-                                      one_tuples,
-                                      two_tuples
-              ), object = object, epsilon = epsilon,
-              ol = ol, one_tuples = one_tuples, two_tuples = two_tuples,
-              BPPARAM = BPPARAM)
+            val <- bplapply(seq_len(nsim),
+                            .simulateMethylomeParam,
+                            object = object, epsilon = epsilon, ol = ol,
+                            one_tuples = one_tuples,
+                            two_tuples = two_tuples, dots = dots,
+                            BPPARAM = BPPARAM)
 
             # Ensure "seed" is set as an attribute of the returned value.
-            attr(list_of_simulated_methylomes, "seed") <- rng_state
-            list_of_simulated_methylomes
+            names(val) <- paste("sim", seq_len(nsim), sep = "_")
+            attr(val, "seed") <- rng_state
+            val
           }
 )
 
