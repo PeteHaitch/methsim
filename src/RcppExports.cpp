@@ -6,28 +6,16 @@
 
 using namespace Rcpp;
 
-// sampleW
-IntegerVector sampleW(NumericMatrix W);
-RcppExport SEXP methsim_sampleW(SEXP WSEXP) {
+// computeP
+Rcpp::NumericMatrix computeP(NumericVector marginalProb, NumericVector LOR, int mc_order);
+RcppExport SEXP methsim_computeP(SEXP marginalProbSEXP, SEXP LORSEXP, SEXP mc_orderSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< NumericMatrix >::type W(WSEXP);
-    __result = Rcpp::wrap(sampleW(W));
-    return __result;
-END_RCPP
-}
-// sampleZ
-Rcpp::IntegerVector sampleZ(IntegerMatrix Z, IntegerVector sampled_W, IntegerVector fh, IntegerVector cqh);
-RcppExport SEXP methsim_sampleZ(SEXP ZSEXP, SEXP sampled_WSEXP, SEXP fhSEXP, SEXP cqhSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< IntegerMatrix >::type Z(ZSEXP);
-    Rcpp::traits::input_parameter< IntegerVector >::type sampled_W(sampled_WSEXP);
-    Rcpp::traits::input_parameter< IntegerVector >::type fh(fhSEXP);
-    Rcpp::traits::input_parameter< IntegerVector >::type cqh(cqhSEXP);
-    __result = Rcpp::wrap(sampleZ(Z, sampled_W, fh, cqh));
+    Rcpp::traits::input_parameter< NumericVector >::type marginalProb(marginalProbSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type LOR(LORSEXP);
+    Rcpp::traits::input_parameter< int >::type mc_order(mc_orderSEXP);
+    __result = Rcpp::wrap(computeP(marginalProb, LOR, mc_order));
     return __result;
 END_RCPP
 }
@@ -41,33 +29,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type errorRate(errorRateSEXP);
     simulateErrorInPlace(z, u, errorRate);
     return R_NilValue;
-END_RCPP
-}
-// simulateZ
-std::vector<int> simulateZ(NumericVector beta_by_region, NumericVector lor_by_pair, CharacterVector seqnames_one_tuples, NumericVector u);
-RcppExport SEXP methsim_simulateZ(SEXP beta_by_regionSEXP, SEXP lor_by_pairSEXP, SEXP seqnames_one_tuplesSEXP, SEXP uSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< NumericVector >::type beta_by_region(beta_by_regionSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type lor_by_pair(lor_by_pairSEXP);
-    Rcpp::traits::input_parameter< CharacterVector >::type seqnames_one_tuples(seqnames_one_tuplesSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type u(uSEXP);
-    __result = Rcpp::wrap(simulateZ(beta_by_region, lor_by_pair, seqnames_one_tuples, u));
-    return __result;
-END_RCPP
-}
-// computeP
-Rcpp::NumericMatrix computeP(NumericVector marginalProb, NumericVector LOR, int mc_order);
-RcppExport SEXP methsim_computeP(SEXP marginalProbSEXP, SEXP LORSEXP, SEXP mc_orderSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< NumericVector >::type marginalProb(marginalProbSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type LOR(LORSEXP);
-    Rcpp::traits::input_parameter< int >::type mc_order(mc_orderSEXP);
-    __result = Rcpp::wrap(computeP(marginalProb, LOR, mc_order));
-    return __result;
 END_RCPP
 }
 // simulatez
