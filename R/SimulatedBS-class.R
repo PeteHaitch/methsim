@@ -197,14 +197,12 @@ setMethod("methinfo",
 #' @rdname SimulatedBS-class
 #' @name asMethPat
 #' @export
-asMethPat <- function(SimulatedBS, sampleName, size = 1L,
-                      BPPARAM = bpparam()) {
+asMethPat <- function(SimulatedBS, size = 1L, BPPARAM = bpparam()) {
 
   # Argument checks
   stopifnot(is(SimulatedBS, "SimulatedBS"))
   size <- as.integer(size)
   stopifnot(size > 0L)
-  stopifnot(is.character(sampleName))
   if (size > 1L) {
     warning(paste0("Only adjacent ", size, "-tuples are created."))
   }
@@ -221,12 +219,11 @@ asMethPat <- function(SimulatedBS, sampleName, size = 1L,
   }, z = z)
   names(counts) <- MethylationTuples:::.makeMethPatNames(size)
   # TODO: Use sampleName from SimulatedBS object
-  counts <- lapply(counts, `colnames<-`, sampleName)
+  counts <- lapply(counts, `colnames<-`, SimulatedBS@SampleName)
   methpat <- MethPat(assays = counts,
-                     rowData = MTuples(
+                     rowRanges = MTuples(
                        GTuples(seqnames, pos, "*",
                                seqinfo = seqinfo(SimulatedBS)),
                        methinfo = methinfo(SimulatedBS)))
-  attr(methpat, "seed") <- attr(SimulatedBS, "seed")
   methpat
 }
