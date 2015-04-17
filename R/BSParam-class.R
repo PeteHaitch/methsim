@@ -515,7 +515,9 @@ setMethod("simulate",
 
             if (simplify) {
               # Combine MethPat objects into one.
-              val <- do.call(combine, val)
+              # TODO: Why doesn't do.call(combine, val) work? Check out
+              # other combine methods, e.g., combine,data.frame-method.
+              val <- Reduce(combine, val)
             }
             # Ensure "seed" is set as an attribute of the returned value.
             attr(val, "seed") <- rng_state
