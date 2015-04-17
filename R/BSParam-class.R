@@ -349,7 +349,6 @@ setMethod("seqlengths",
 
   if (!simplify) {
     # Construct SimulatedBS object.
-    # UP TO HERE: Modified SimulatedBS object with a sampleName slot.
     sbs <- new("SimulatedBS",
                z = z,
                seqinfo = seqinfo,
@@ -508,8 +507,6 @@ setMethod("simulate",
 
             # TODO: Allow simulation in parallel.
             # Simulate nsim objects in *serial*.
-            # UP TO HERE: This works if BPPARAM is SerialParam but not if
-            # BPPARAM is MulticorePARAM (at least on WEHI unix boxes).
             val <- lapply(seq_len(nsim),
                           .simulateBSParam,
                           object = object, seqlevels = seqlevels,
