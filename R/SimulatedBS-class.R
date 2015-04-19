@@ -40,7 +40,7 @@
 ###           SimulatedBS object was simulated.
 ###
 ### An object of this class is returned by the
-### simulate,SimulateBSParam-method.
+### simulate,SimulateWGBSParam-method.
 ### This class will only retain those reads overlapping at least one
 ### methylation locus.
 
@@ -148,7 +148,7 @@ setValidity2("SimulatedBS", .valid.SimulatedBS)
 ###
 
 # None because I don't want the user constructing these manually, rather they
-# should be constructed by simulate,BSParam-method.
+# should be constructed by simulate,WGBSParam-method.
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### seqinfo()

@@ -29,13 +29,13 @@
 ###
 ###   Methods
 ###     (1) simulate,SimulateMethylomeParam-method
-###     (2) simulate,SimulateBSParam-method
+###     (2) simulate,SimulateWGBSParam-method
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Process
 ###
 ### (1) Simulate a methylome with simulate,SimulatedMethylomeParam-method.
-### (2) Simulate an assay with simulate,SimulatedBSParam-method.
+### (2) Simulate an assay with simulate,WGBSParam
 ### (3) Analyse simulated data with as(SimulatedBS, MethPat, size) and
 ###     methods for working with MethylationTuples::MethPat objects.
 

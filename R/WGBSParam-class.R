@@ -16,10 +16,8 @@
 # along with methsim  If not, see <http://www.gnu.org/licenses/>.
 
 ### =========================================================================
-### BSParam: An S4 class to store the parameters used to simulate a
+### WGBSParam: An S4 class to store the parameters used to simulate a
 ### SimulatedBS object.
-### BS = [WGBS | RRBS | eRRBS]
-### TODO: Currently only WGBS is implemented.
 ### -------------------------------------------------------------------------
 ###
 
@@ -38,28 +36,25 @@
 ###             Target: The co-ordinates of baits/enriched regions used in
 ###                     simulating RRBS/eRRBS data.
 
-setClassUnion("GRangesOrNULL",
-              members = c("GRanges", "NULL")
-)
-
-#' BSParam class
+# TODO: Create a VIRTUAL class that WGBSParam inherits from. Eventually
+# RRBSParam, ERRBSParam, etc. will also inherit from this VIRTUAL class.
+#' WGBSParam class
 #'
 #' An S4 class for the parameters used by
-#' \code{\link{simulate,BSParam-method}}.
+#' \code{\link{simulate,WGBSParam-method}}.
 #'
 #' @include SimulatedMethylome-class.R
 #'
-#' @aliases BSParam
+#' @aliases WGBSParam
 #'
 #' @export
-setClass("BSParam",
+setClass("WGBSParam",
          slots = list(
            SimulatedMethylome = "SimulatedMethylome",
            AveCov = "numeric",
            ErrorRate = "numeric",
            SequencingType = "character",
-           ReadLength = "integer",
-           Target = "GRangesOrNULL")
+           ReadLength = "integer")
 )
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -68,8 +63,7 @@ setClass("BSParam",
 
 # TODO: Explicit checks of class types isn't necessary for S4 classes. Leaving
 # for now as the conservative option until unit tests are added.
-
-.valid.BSParam.SimulatedMethylome <- function(object) {
+.valid.WGBSParam.SimulatedMethylome <- function(object) {
   msg <- NULL
   if (!is(object@SimulatedMethylome, "SimulatedMethylome")) {
     msg <- Biobase::validMsg(msg, paste0("'SimulatedMethylome' slot must be ",
@@ -78,7 +72,7 @@ setClass("BSParam",
   msg
 }
 
-.valid.BSParam.AveCov <- function(object) {
+.valid.WGBSParam.AveCov <- function(object) {
   msg <- NULL
   if (!is.numeric(object@AveCov) ||
       length(object@AveCov) != 1L ||
@@ -89,7 +83,7 @@ setClass("BSParam",
   msg
 }
 
-.valid.BSParam.ErrorRate <- function(object) {
+.valid.WGBSParam.ErrorRate <- function(object) {
   msg <- NULL
   if (!is.numeric(object@ErrorRate) ||
       length(object@ErrorRate) != 1L ||
@@ -101,7 +95,7 @@ setClass("BSParam",
   msg
 }
 
-.valid.BSParam.SequencingType <- function(object) {
+.valid.WGBSParam.SequencingType <- function(object) {
   msg <- NULL
   if (!is.character(object@SequencingType) ||
      length(object@SequencingType) != 1L ||
@@ -111,7 +105,7 @@ setClass("BSParam",
   }
 }
 
-.valid.BSParam.ReadLength <- function(object) {
+.valid.WGBSParam.ReadLength <- function(object) {
   msg <- NULL
   if (!is.integer(object@ReadLength) ||
       length(object@ReadLength) != 1L ||
@@ -120,7 +114,7 @@ setClass("BSParam",
                                          "positive integer."))
 }
 
-.valid.BSParam.Target <- function(object) {
+.valid.WGBSParam.Target <- function(object) {
   msg <- NULL
   if (!is(object@Target, "GRangesOrNULL")) {
     msg <- Biobase::validMsg(msg, paste0("'target' slot must be a 'GRanges' ",
@@ -138,14 +132,14 @@ setClass("BSParam",
   msg
 }
 
-.valid.BSParam <- function(object) {
-  # Include all .valid.BSParam.* functions in this vector
-  msg <- c(.valid.BSParam.SimulatedMethylome(object),
-           .valid.BSParam.AveCov(object),
-           .valid.BSParam.ErrorRate(object),
-           .valid.BSParam.SequencingType(object),
-           .valid.BSParam.ReadLength(object),
-           .valid.BSParam.Target(object))
+.valid.WGBSParam <- function(object) {
+  # Include all .valid.WGBSParam.* functions in this vector
+  msg <- c(.valid.WGBSParam.SimulatedMethylome(object),
+           .valid.WGBSParam.AveCov(object),
+           .valid.WGBSParam.ErrorRate(object),
+           .valid.WGBSParam.SequencingType(object),
+           .valid.WGBSParam.ReadLength(object),
+           .valid.WGBSParam.Target(object))
 
   if (is.null(msg)) {
     return(TRUE)
@@ -154,14 +148,14 @@ setClass("BSParam",
   }
 }
 
-S4Vectors::setValidity2("BSParam", .valid.BSParam)
+S4Vectors::setValidity2("WGBSParam", .valid.WGBSParam)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Constructor
 ###
 
 #' @export
-BSParam <- function(SimulatedMethylome,
+WGBSParam <- function(SimulatedMethylome,
                     AveCov = 30L,
                     ErrorRate = 0.01,
                     SequencingType = "SE",
@@ -172,7 +166,7 @@ BSParam <- function(SimulatedMethylome,
   ReadLength <- as.integer(ReadLength)
 
   # TODO: Argument checks
-  new("BSParam",
+  new("WGBSParam",
       SimulatedMethylome = SimulatedMethylome,
       AveCov = AveCov,
       ErrorRate = ErrorRate,
@@ -186,7 +180,7 @@ BSParam <- function(SimulatedMethylome,
 ###
 
 setMethod("seqlevels",
-          "BSParam",
+          "WGBSParam",
           function(x) {
             seqlevels(x@SimulatedMethylome)
           }
@@ -197,7 +191,7 @@ setMethod("seqlevels",
 ###
 
 setMethod("seqlengths",
-          "BSParam",
+          "WGBSParam",
           function(x) {
             seqlengths(x@SimulatedMethylome)
           }
@@ -207,8 +201,8 @@ setMethod("seqlengths",
 ### simulate()
 ###
 
-# A helper function called by simulate,BSParam-method
-.simulateBSParam <- function(i, object, seqlevels, simplify, BPPARAM) {
+# A helper function called by simulate,WGBSParam-method
+.simulateWGBSParam <- function(i, object, seqlevels, simplify, BPPARAM) {
 
   # Need to simulate compute a transition matrix, P, for all components.
   # object@MixtureWeights
@@ -308,7 +302,7 @@ setMethod("seqlengths",
       stop(paste0(seqlevel, ": Number of simulated methylation loci ",
                   "> ", .Machine$integer.max, " (.Machine$integer.max). ",
                   "Sorry, this is not yet supported. Try reducing the average",
-                  "sequencing coverage ('AveCov' slot of the 'BSParam' ",
+                  "sequencing coverage ('AveCov' slot of the 'WGBSParam' ",
                   "object)."))
     }
 
@@ -374,11 +368,11 @@ setMethod("seqlengths",
 # 'verbose' option.
 #' Simulate a bisulfite-sequencing experiment.
 #'
-#' @param object A \code{\link{BSParam}} object.
+#' @param object A \code{\link{WGBSParam}} object.
 #' @param nsim The number of samples to simulate using the parameters given in
 #' \code{object}. Additional samples will be technical replicates.
 #' @param seed An object specifying if and how the random number generator
-#' should be initialized ('seeded'). For the "BSParam" method, either
+#' should be initialized ('seeded'). For the "WGBSParam" method, either
 #' \code{NULL} or an integer that will be used in a call to
 #' \code{base::\link[base]{set.seed}} before simulating the samples. If set,
 #' the value is saved as the "\code{seed}" attribute of the returned value. The
@@ -419,7 +413,7 @@ setMethod("seqlengths",
 #'
 #' @export
 setMethod("simulate",
-          "BSParam",
+          "WGBSParam",
           function(object,
                    nsim = 1,
                    seed = NULL,
@@ -431,7 +425,7 @@ setMethod("simulate",
             # Only single-end sequencing currently supported
             if (object@SequencingType != "SE") {
               stop(paste0("Only single-end sequencing is currently supported.",
-                          "\nPlease modify the 'BSParam' object accordingly."))
+                          "\nPlease modify the 'WGBSParam' object accordingly."))
             }
             # TODO: Is this the best way to set default seqlevels? Can't use
             # seqlevels = seqlevels(object@PartitionedMethylome) in function
@@ -449,7 +443,7 @@ setMethod("simulate",
               stop(paste0("Unexpected seqlevels.\n",
                           paste0(seqlevels[!seqlevels %in% valid_seqlevels],
                                  collapse = ", "), " are not seqlevels of ",
-                          "'BSParam'."))
+                          "'WGBSParam'."))
               }
             }
             if (simplify < 0 || simplify != as.integer(simplify)) {
@@ -508,7 +502,7 @@ setMethod("simulate",
             # TODO: Allow simulation in parallel.
             # Simulate nsim objects in *serial*.
             val <- lapply(seq_len(nsim),
-                          .simulateBSParam,
+                          .simulateWGBSParam,
                           object = object, seqlevels = seqlevels,
                           simplify = simplify, BPPARAM = BPPARAM)
             names(val) <- paste("sim", seq_len(nsim), sep = "_")
