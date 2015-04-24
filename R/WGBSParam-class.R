@@ -24,8 +24,7 @@
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Design
 ###
-### list(SimulatedMethylome, AveCov, ErrorRate, SequencingType, ReadLength,
-###      Target)
+### list(SimulatedMethylome, AveCov, ErrorRate, SequencingType, ReadLength)
 ### SimulatedMethylome: A SimulatedMethylome object.
 ###             AveCov: The average sequencing coverage to simulate.
 ###          ErrorRate: The error rate (combined sequencing error and
@@ -33,8 +32,6 @@
 ###     SequencingType: The sequencing type: 'SE' (single-end) or 'PE'
 ###                     (paired-end).
 ###         ReadLength: The read-length.
-###             Target: The co-ordinates of baits/enriched regions used in
-###                     simulating RRBS/eRRBS data.
 
 # TODO: Create a VIRTUAL class that WGBSParam inherits from. Eventually
 # RRBSParam, ERRBSParam, etc. will also inherit from this VIRTUAL class.
@@ -114,32 +111,13 @@ setClass("WGBSParam",
                                          "positive integer."))
 }
 
-.valid.WGBSParam.Target <- function(object) {
-  msg <- NULL
-  if (!is(object@Target, "GRangesOrNULL")) {
-    msg <- Biobase::validMsg(msg, paste0("'target' slot must be a 'GRanges' ",
-                                         "object or NULL."))
-  } else {
-    if (is(object@Target, "GRanges")) {
-      if (!identical(seqinfo(object@Target),
-                     seqinfo(object@SimulatedMethylome))) {
-        msg <- Biobase::validMsg(msg, paste0("'target' slot and ",
-                                             "'SimulatedMethylome' slot must ",
-                                             " have identical 'seqinfo'."))
-      }
-    }
-  }
-  msg
-}
-
 .valid.WGBSParam <- function(object) {
   # Include all .valid.WGBSParam.* functions in this vector
   msg <- c(.valid.WGBSParam.SimulatedMethylome(object),
            .valid.WGBSParam.AveCov(object),
            .valid.WGBSParam.ErrorRate(object),
            .valid.WGBSParam.SequencingType(object),
-           .valid.WGBSParam.ReadLength(object),
-           .valid.WGBSParam.Target(object))
+           .valid.WGBSParam.ReadLength(object))
 
   if (is.null(msg)) {
     return(TRUE)
@@ -159,8 +137,7 @@ WGBSParam <- function(SimulatedMethylome,
                     AveCov = 30L,
                     ErrorRate = 0.01,
                     SequencingType = "SE",
-                    ReadLength = 100L,
-                    Target = NULL) {
+                    ReadLength = 100L) {
 
   # Avoid problem when user specifies ReadLength as numeric, e.g., 100 vs. 100L.
   ReadLength <- as.integer(ReadLength)
@@ -171,8 +148,7 @@ WGBSParam <- function(SimulatedMethylome,
       AveCov = AveCov,
       ErrorRate = ErrorRate,
       SequencingType = SequencingType,
-      ReadLength = ReadLength,
-      Target = Target)
+      ReadLength = ReadLength)
 }
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
