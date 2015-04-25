@@ -66,11 +66,11 @@ Rcpp::List simulatez(IntegerVector fh,
   // TODO: Check that all elements of P have the identical and proper
   // dimensions.
   // The below only checks the first element has the proper nrow.
-  if (MarginalProb.nrow() != P[1].nrow()) {
+  if (MarginalProb.nrow() != P[0].nrow()) {
     Rcpp::stop("length(marginalProb) != nrow(P[[1]])");
   }
   // Make sure we don't try to access out of bounds elements of P.
-  if (max(fh + nh - 1) > P[1].nrow()) {
+  if (max(fh + nh - 1) > P[0].nrow()) {
     Rcpp::stop("max(fh + nh - 1) > nrow(P)");
   }
 
