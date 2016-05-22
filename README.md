@@ -1,6 +1,10 @@
-# R package: methsim
+[![Project Status: Abandoned - Initial development has started, but there has not yet been a stable, usable release; the project has been abandoned and the author\(s\) do not intend on continuing development.](http://www.repostatus.org/badges/latest/abandoned.svg)]
 
-__This package is in early development. Key functionality is missing and the interface may change without notice__.
+# R package: methsim
+------------------------
+
+
+__This package is no longer under active development. It was developed as an experiment as part of my PhD research. The repository remains available mostly for archival purposes, but forks are of course welcome under the GPL (>= 2) license.__
 
 `methsim` is software to simulate DNA methylation sequencing data. `methsim` 
 can currently simulate data from bisulfite-sequencing assays such as 
