@@ -21,6 +21,8 @@ version of Bioconductor. Please first read
 if (suppressWarnings(!require(devtools))) {
   install.packages('devtools')
 }
+# Install 'phd-thesis' version of MethylationTuples
+devtools::install_github("PeteHaitch/MethylationTuples@phd-thesis")
 # Install development version of methsim
 devtools::install_github("PeteHaitch/methsim")
 ```
